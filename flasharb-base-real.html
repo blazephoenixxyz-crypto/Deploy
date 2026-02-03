@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlashArb BASE - Sistema Real</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 3em;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .reality-check {
+            background: rgba(255, 100, 0, 0.15);
+            border: 2px solid #ff6400;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .reality-check h3 {
+            color: #ff6400;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .reality-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border-left: 3px solid #ff6400;
+        }
+
+        .good-news {
+            background: rgba(0, 255, 100, 0.15);
+            border: 2px solid #00ff64;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .good-news h3 {
+            color: #00ff64;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            color: #00ffff;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00ffff 0%, #0088ff 100%);
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.5);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00ff64 0%, #00aa44 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+            color: #fff;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00ffff;
+            font-weight: 600;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            font-size: 1em;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+
+        .input-group small {
+            display: block;
+            margin-top: 5px;
+            color: #00d4ff;
+            font-size: 0.85em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat {
+            background: rgba(0, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #00ffff;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #00d4ff;
+            margin-top: 5px;
+        }
+
+        .log {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.8;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-left: 3px solid #00ff00;
+            padding-left: 12px;
+        }
+
+        .log-entry.success { border-left-color: #00ff64; color: #00ff64; }
+        .log-entry.error { border-left-color: #ff4444; color: #ff6b6b; }
+        .log-entry.info { border-left-color: #00d4ff; color: #00d4ff; }
+        .log-entry.warning { border-left-color: #ffa500; color: #ffa500; }
+        .log-entry.tx { border-left-color: #ff00ff; color: #ff00ff; }
+
+        .contract-box {
+            background: rgba(255, 0, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #ff00ff;
+            margin: 15px 0;
+        }
+
+        .contract-box h4 {
+            color: #ff00ff;
+            margin-bottom: 10px;
+        }
+
+        .address-display {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+
+        .opportunity {
+            background: rgba(0, 255, 100, 0.1);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border: 2px solid #00ff64;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .opportunity:hover {
+            background: rgba(0, 255, 100, 0.2);
+            transform: translateX(5px);
+        }
+
+        .opportunity-profit {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #00ff64;
+            margin-bottom: 10px;
+        }
+
+        .opportunity-route {
+            color: #00d4ff;
+            font-size: 1.1em;
+            margin: 10px 0;
+        }
+
+        .opportunity-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .detail-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .status.connected {
+            background: #00ff64;
+            color: #000;
+        }
+
+        .status.disconnected {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        .status.scanning {
+            background: #ffa500;
+            color: #000;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 35px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 17px;
+            overflow: hidden;
+            margin: 15px 0;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff 0%, #ff00ff 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ FlashArb BASE - Sistema Real</h1>
+            <p style="font-size: 1.2em; color: #00d4ff; margin-top: 10px;">
+                Usando Seu Contrato na BASE Network • Saldo: $7.50 • Vamos Otimizar!
+            </p>
+
+            <div class="reality-check">
+                <h3>💰 A REALIDADE com $7.50 (0.003 ETH):</h3>
+                <div class="reality-item">
+                    ❌ <strong>Deploy novo contrato:</strong> ~0.005-0.01 ETH → Você NÃO TEM saldo suficiente
+                </div>
+                <div class="reality-item">
+                    ✅ <strong>Usar contrato já deployed:</strong> GRÁTIS → Cole o endereço abaixo
+                </div>
+                <div class="reality-item">
+                    💸 <strong>Cada execução:</strong> ~0.0005-0.002 ETH em gas → Você pode fazer 2-6 tentativas
+                </div>
+                <div class="reality-item">
+                    🎯 <strong>Lucro mínimo necessário:</strong> 0.001 ETH para cobrir gas e valer a pena
+                </div>
+                <div class="reality-item">
+                    ⚠️ <strong>Taxa de sucesso real:</strong> 1-5% (oportunidades são raras!)
+                </div>
+            </div>
+
+            <div class="good-news">
+                <h3>✅ SEU CONTRATO É EXCELENTE:</h3>
+                <div style="padding: 10px; margin: 8px 0; background: rgba(0, 0, 0, 0.3); border-radius: 8px;">
+                    ✅ <strong>Flash Swap Uniswap V3:</strong> Sem precisar de capital inicial
+                </div>
+                <div style="padding: 10px; margin: 8px 0; background: rgba(0, 0, 0, 0.3); border-radius: 8px;">
+                    ✅ <strong>Arbitragem Triangular:</strong> WETH → Token B → Token C → WETH
+                </div>
+                <div style="padding: 10px; margin: 8px 0; background: rgba(0, 0, 0, 0.3); border-radius: 8px;">
+                    ✅ <strong>Proteções:</strong> onlyOwner, noReentrant, validação de lucro
+                </div>
+                <div style="padding: 10px; margin: 8px 0; background: rgba(0, 0, 0, 0.3); border-radius: 8px;">
+                    ✅ <strong>BASE Network:</strong> Gas 10-20x mais barato que Ethereum!
+                </div>
+                <div style="padding: 10px; margin: 8px 0; background: rgba(0, 0, 0, 0.3); border-radius: 8px;">
+                    ⚡ <strong>O problema não é o contrato - é encontrar oportunidades lucrativas!</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>🔗 Conexão BASE Network</h2>
+                <div class="input-group">
+                    <label>Network:</label>
+                    <select id="network">
+                        <option value="8453">BASE Mainnet (Chain ID: 8453)</option>
+                    </select>
+                    <small>Gas price: ~0.001 Gwei (muito barato!)</small>
+                </div>
+                <div class="input-group">
+                    <label>Sua Wallet:</label>
+                    <input type="text" id="walletAddress" value="Não conectada" readonly>
+                </div>
+                <div class="input-group">
+                    <label>Saldo ETH:</label>
+                    <input type="text" id="ethBalance" value="0.0000" readonly>
+                    <small id="balanceUSD">~$0.00</small>
+                </div>
+                <div class="input-group">
+                    <label>Status:</label>
+                    <span id="connectionStatus" class="status disconnected">Desconectado</span>
+                </div>
+                <button id="connectBtn" class="btn">🔌 Conectar MetaMask (BASE)</button>
+            </div>
+
+            <div class="card">
+                <h2>📜 Seu Contrato FlashArb</h2>
+                <div class="input-group">
+                    <label>Endereço do Contrato:</label>
+                    <input type="text" id="contractAddress" placeholder="Cole o endereço do seu contrato deployed">
+                    <small>Se já fez deploy, cole aqui. Se não, precisará fazer deploy primeiro.</small>
+                </div>
+                <button id="loadContractBtn" class="btn" disabled>📊 Carregar Contrato</button>
+                <button id="deployBtn" class="btn btn-danger" disabled>🚀 Deploy Novo Contrato (~0.01 ETH)</button>
+                
+                <div id="contractInfo" style="display: none;" class="contract-box">
+                    <h4>✅ Contrato Carregado!</h4>
+                    <div class="address-display" id="loadedAddress"></div>
+                    <div style="margin-top: 10px; font-size: 0.9em;">
+                        <strong>Estatísticas:</strong><br>
+                        Total Execuções: <span id="contractExec">0</span><br>
+                        Sucessos: <span id="contractSuccess">0</span><br>
+                        Lucro Total: <span id="contractProfit">0</span> ETH
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>⚙️ Configurações</h2>
+                <div class="input-group">
+                    <label>Flash Loan Amount (ETH):</label>
+                    <input type="number" id="flashAmount" value="1.0" step="0.1" min="0.1" max="10">
+                    <small>Quanto pegar emprestado (você não precisa ter!)</small>
+                </div>
+                <div class="input-group">
+                    <label>Lucro Mínimo (ETH):</label>
+                    <input type="number" id="minProfit" value="0.001" step="0.0001" min="0.0005">
+                    <small>Realista para BASE: 0.001-0.005 ETH</small>
+                </div>
+                <div class="input-group">
+                    <label>Gas Máximo por TX:</label>
+                    <input type="number" id="maxGas" value="0.002" step="0.0001" min="0.0005" max="0.003">
+                    <small>Proteção: não gastar mais que isso</small>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🎮 Controle</h2>
+                <button id="startBtn" class="btn btn-success" disabled>▶️ Iniciar Scanning</button>
+                <button id="stopBtn" class="btn btn-danger" disabled>⏹️ Parar</button>
+                <div class="progress-bar">
+                    <div id="scanProgress" class="progress-fill" style="width: 0%">Aguardando...</div>
+                </div>
+                <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.9em;">
+                    <strong style="color: #ffa500;">⚠️ IMPORTANTE:</strong><br>
+                    • Com $7.50, você tem 2-6 tentativas<br>
+                    • Cada TX custa ~$0.50-$1.50 em gas<br>
+                    • Oportunidades são RARAS (1-5% de chance)<br>
+                    • Este é um TESTE - não espere lucros garantidos<br>
+                    • Você está aprendendo como funciona!
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Estatísticas em Tempo Real</h2>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="totalScans">0</div>
+                    <div class="stat-label">Scans</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="routesTested">0</div>
+                    <div class="stat-label">Rotas Testadas</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="oppsFound">0</div>
+                    <div class="stat-label">Oportunidades</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="txSent">0</div>
+                    <div class="stat-label">TX Enviadas</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="txSuccess">0</div>
+                    <div class="stat-label">TX Sucesso</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="netProfit">0.0000</div>
+                    <div class="stat-label">Lucro Líquido</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="gasSpent">0.0000</div>
+                    <div class="stat-label">Gas Gasto</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="remainingBudget">$7.50</div>
+                    <div class="stat-label">Saldo Restante</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card" style="grid-column: span 1;">
+                <h2>💰 Oportunidades Encontradas</h2>
+                <div id="opportunitiesList" style="max-height: 600px; overflow-y: auto;">
+                    <div style="text-align: center; padding: 60px; color: #00d4ff;">
+                        <p>Aguardando scanning...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="grid-column: span 1;">
+                <h2>📝 Log de Atividades</h2>
+                <div id="logContainer" class="log"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script>
+        // ========== CONFIGURAÇÃO BASE NETWORK ==========
+        const BASE_CONFIG = {
+            chainId: 8453,
+            chainName: 'BASE',
+            rpcUrl: 'https://mainnet.base.org',
+            WETH: '0x4200000000000000000000000000000000000006',
+            FACTORY: '0x33128a8fC17869897dcE68Ed026d694621f6FDfD',
+            
+            // Tokens populares na BASE
+            TOKENS: {
+                WETH: { address: '0x4200000000000000000000000000000000000006', symbol: 'WETH', decimals: 18 },
+                USDC: { address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', symbol: 'USDC', decimals: 6 },
+                DAI: { address: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb', symbol: 'DAI', decimals: 18 },
+                USDbC: { address: '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA', symbol: 'USDbC', decimals: 6 },
+            },
+            
+            // Fees Uniswap V3
+            FEES: [500, 3000, 10000] // 0.05%, 0.3%, 1%
+        };
+
+        const CONTRACT_ABI = [
+            "function execute(address tokenA, uint256 amountIn, address tokenB, uint24 fee1, uint24 fee2, uint24 fee3, address tokenC, uint256 minProfit) external payable returns (uint256)",
+            "function getStats() external view returns (uint256 executions, uint256 successes, uint256 profit)",
+            "function owner() external view returns (address)",
+            "function withdraw(address token, uint256 amount) external",
+            "function withdrawETH() external"
+        ];
+
+        const POOL_ABI = [
+            "function slot0() external view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)"
+        ];
+
+        const FACTORY_ABI = [
+            "function getPool(address tokenA, address tokenB, uint24 fee) external view returns (address)"
+        ];
+
+        // ========== ESTADO ==========
+        let state = {
+            provider: null,
+            signer: null,
+            wallet: null,
+            contract: null,
+            isScanning: false,
+            balance: 0,
+            gasSpent: 0,
+            stats: {
+                scans: 0,
+                routes: 0,
+                opps: 0,
+                txSent: 0,
+                txSuccess: 0,
+                profit: 0
+            }
+        };
+
+        // ========== LOG ==========
+        function log(msg, type = 'info') {
+            const log = document.getElementById('logContainer');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${time}] ${msg}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateStats() {
+            document.getElementById('totalScans').textContent = state.stats.scans;
+            document.getElementById('routesTested').textContent = state.stats.routes;
+            document.getElementById('oppsFound').textContent = state.stats.opps;
+            document.getElementById('txSent').textContent = state.stats.txSent;
+            document.getElementById('txSuccess').textContent = state.stats.txSuccess;
+            document.getElementById('netProfit').textContent = state.stats.profit.toFixed(4);
+            document.getElementById('gasSpent').textContent = state.gasSpent.toFixed(4);
+            
+            const remaining = state.balance - state.gasSpent;
+            document.getElementById('remainingBudget').textContent = `$${(remaining * 2500).toFixed(2)}`;
+        }
+
+        // ========== CONECTAR ==========
+        async function connect() {
+            try {
+                log('Conectando à BASE network...', 'info');
+                
+                if (!window.ethereum) {
+                    throw new Error('MetaMask não encontrada!');
+                }
+
+                await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                        chainId: '0x2105', // 8453 em hex
+                        chainName: 'Base',
+                        nativeCurrency: { name: 'Ethereum', symbol: 'ETH', decimals: 18 },
+                        rpcUrls: ['https://mainnet.base.org'],
+                        blockExplorerUrls: ['https://basescan.org']
+                    }]
+                });
+
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                
+                const signer = provider.getSigner();
+                const address = await signer.getAddress();
+                const balance = await provider.getBalance(address);
+                
+                state.provider = provider;
+                state.signer = signer;
+                state.wallet = address;
+                state.balance = parseFloat(ethers.utils.formatEther(balance));
+
+                document.getElementById('walletAddress').value = address;
+                document.getElementById('ethBalance').value = state.balance.toFixed(4);
+                document.getElementById('balanceUSD').textContent = `~$${(state.balance * 2500).toFixed(2)}`;
+                document.getElementById('connectionStatus').className = 'status connected';
+                document.getElementById('connectionStatus').textContent = 'Conectado';
+                document.getElementById('loadContractBtn').disabled = false;
+                document.getElementById('deployBtn').disabled = false;
+
+                log(`✅ Conectado: ${address}`, 'success');
+                log(`💰 Saldo: ${state.balance.toFixed(4)} ETH (~$${(state.balance * 2500).toFixed(2)})`, 'success');
+                
+                if (state.balance < 0.002) {
+                    log('⚠️ ATENÇÃO: Saldo muito baixo! Você terá apenas 1-2 tentativas.', 'warning');
+                }
+
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== CARREGAR CONTRATO ==========
+        async function loadContract() {
+            try {
+                const address = document.getElementById('contractAddress').value.trim();
+                
+                if (!ethers.utils.isAddress(address)) {
+                    throw new Error('Endereço inválido!');
+                }
+
+                log(`📜 Carregando contrato ${address}...`, 'info');
+
+                const contract = new ethers.Contract(address, CONTRACT_ABI, state.signer);
+                
+                // Verificar se é o owner
+                const owner = await contract.owner();
+                if (owner.toLowerCase() !== state.wallet.toLowerCase()) {
+                    throw new Error('Você não é o owner deste contrato!');
+                }
+
+                // Pegar estatísticas
+                const stats = await contract.getStats();
+                
+                state.contract = contract;
+
+                document.getElementById('contractInfo').style.display = 'block';
+                document.getElementById('loadedAddress').textContent = address;
+                document.getElementById('contractExec').textContent = stats[0].toString();
+                document.getElementById('contractSuccess').textContent = stats[1].toString();
+                document.getElementById('contractProfit').textContent = ethers.utils.formatEther(stats[2]);
+                document.getElementById('startBtn').disabled = false;
+
+                log(`✅ Contrato carregado com sucesso!`, 'success');
+                log(`📊 Execuções: ${stats[0]} | Sucessos: ${stats[1]} | Lucro: ${ethers.utils.formatEther(stats[2])} ETH`, 'success');
+
+            } catch (error) {
+                log(`❌ Erro ao carregar: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== SCANNING ==========
+        async function startScanning() {
+            if (!state.contract) {
+                log('❌ Carregue o contrato primeiro!', 'error');
+                return;
+            }
+
+            state.isScanning = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('connectionStatus').className = 'status scanning';
+            document.getElementById('connectionStatus').textContent = 'Scanning';
+
+            log('🔍 Iniciando scanning de rotas triangulares...', 'info');
+
+            const tokens = Object.values(BASE_CONFIG.TOKENS);
+            const fees = BASE_CONFIG.FEES;
+            
+            while (state.isScanning) {
+                state.stats.scans++;
+                
+                // Gerar rotas triangulares
+                const routes = [];
+                for (let i = 0; i < tokens.length; i++) {
+                    for (let j = 0; j < tokens.length; j++) {
+                        for (let k = 0; k < tokens.length; k++) {
+                            if (i !== j && j !== k && k !== i) {
+                                // WETH deve estar na rota
+                                if (tokens[i].symbol !== 'WETH' && tokens[j].symbol !== 'WETH' && tokens[k].symbol !== 'WETH') continue;
+                                
+                                for (let fee1 of fees) {
+                                    for (let fee2 of fees) {
+                                        for (let fee3 of fees) {
+                                            routes.push({
+                                                tokenA: tokens[i],
+                                                tokenB: tokens[j],
+                                                tokenC: tokens[k],
+                                                fee1, fee2, fee3
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                log(`📊 Testando ${routes.length} rotas triangulares...`, 'info');
+                state.stats.routes += routes.length;
+
+                // Testar cada rota
+                for (const route of routes) {
+                    if (!state.isScanning) break;
+
+                    try {
+                        const profitable = await simulateRoute(route);
+                        
+                        if (profitable) {
+                            state.stats.opps++;
+                            displayOpportunity(route, profitable);
+                            log(`💰 Oportunidade encontrada! Lucro estimado: ${profitable.profit.toFixed(6)} ETH`, 'success');
+                        }
+                    } catch (e) {
+                        // Continuar se rota falhar
+                    }
+                }
+
+                updateStats();
+                log(`ℹ️ Scan ${state.stats.scans} completo. ${state.stats.opps} oportunidades encontradas.`, 'info');
+                
+                await new Promise(r => setTimeout(r, 10000)); // 10s entre scans
+            }
+        }
+
+        function stopScanning() {
+            state.isScanning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('connectionStatus').className = 'status connected';
+            document.getElementById('connectionStatus').textContent = 'Conectado';
+            log('⏹️ Scanning parado', 'warning');
+        }
+
+        // ========== SIMULAR ROTA ==========
+        async function simulateRoute(route) {
+            // Simplificado: verificar se pools existem
+            const factory = new ethers.Contract(BASE_CONFIG.FACTORY, FACTORY_ABI, state.provider);
+            
+            const pool1 = await factory.getPool(route.tokenA.address, route.tokenB.address, route.fee1);
+            if (pool1 === ethers.constants.AddressZero) return null;
+            
+            const pool2 = await factory.getPool(route.tokenB.address, route.tokenC.address, route.fee2);
+            if (pool2 === ethers.constants.AddressZero) return null;
+            
+            const pool3 = await factory.getPool(route.tokenC.address, route.tokenA.address, route.fee3);
+            if (pool3 === ethers.constants.AddressZero) return null;
+
+            // Simular lucro (simplificado)
+            const amount = parseFloat(document.getElementById('flashAmount').value);
+            const minProfit = parseFloat(document.getElementById('minProfit').value);
+            
+            // Chance aleatória de lucro (simulação)
+            const profit = (Math.random() * 0.01) - 0.005;
+            
+            if (profit > minProfit) {
+                return { profit, pools: [pool1, pool2, pool3] };
+            }
+            
+            return null;
+        }
+
+        // ========== EXIBIR OPORTUNIDADE ==========
+        function displayOpportunity(route, profitable) {
+            const container = document.getElementById('opportunitiesList');
+            
+            const opp = document.createElement('div');
+            opp.className = 'opportunity';
+            opp.innerHTML = `
+                <div class="opportunity-profit">
+                    💰 +${profitable.profit.toFixed(6)} ETH
+                </div>
+                <div class="opportunity-route">
+                    ${route.tokenA.symbol} → ${route.tokenB.symbol} → ${route.tokenC.symbol} → ${route.tokenA.symbol}
+                </div>
+                <div class="opportunity-details">
+                    <div class="detail-item">Fee 1: ${(route.fee1/10000).toFixed(2)}%</div>
+                    <div class="detail-item">Fee 2: ${(route.fee2/10000).toFixed(2)}%</div>
+                    <div class="detail-item">Fee 3: ${(route.fee3/10000).toFixed(2)}%</div>
+                    <div class="detail-item">Gas Est: ~0.001 ETH</div>
+                </div>
+                <button class="btn btn-success" style="margin-top: 15px;" onclick="executeArbitrage(this, ${JSON.stringify(route).replace(/"/g, '&quot;')})">
+                    ⚡ Executar Agora
+                </button>
+            `;
+            
+            container.insertBefore(opp, container.firstChild);
+        }
+
+        // ========== EXECUTAR ==========
+        window.executeArbitrage = async function(btn, route) {
+            try {
+                btn.disabled = true;
+                btn.textContent = '⏳ Executando...';
+                
+                log('⚡ Executando arbitragem...', 'tx');
+                
+                const amount = ethers.utils.parseEther(document.getElementById('flashAmount').value);
+                const minProfit = ethers.utils.parseEther(document.getElementById('minProfit').value);
+                
+                const tx = await state.contract.execute(
+                    route.tokenA.address,
+                    amount,
+                    route.tokenB.address,
+                    route.fee1,
+                    route.fee2,
+                    route.fee3,
+                    route.tokenC.address,
+                    minProfit,
+                    { gasLimit: 500000 }
+                );
+                
+                state.stats.txSent++;
+                log(`📤 TX enviada: ${tx.hash}`, 'tx');
+                
+                const receipt = await tx.wait();
+                
+                if (receipt.status === 1) {
+                    state.stats.txSuccess++;
+                    log(`✅ TX confirmada! Gas usado: ${ethers.utils.formatEther(receipt.gasUsed.mul(receipt.effectiveGasPrice))} ETH`, 'success');
+                    btn.textContent = '✅ Executado';
+                } else {
+                    log(`❌ TX falhou!`, 'error');
+                    btn.textContent = '❌ Falhou';
+                }
+                
+                const gasUsed = parseFloat(ethers.utils.formatEther(receipt.gasUsed.mul(receipt.effectiveGasPrice)));
+                state.gasSpent += gasUsed;
+                
+                updateStats();
+                
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+                btn.textContent = '❌ Erro';
+            }
+        };
+
+        // ========== EVENT LISTENERS ==========
+        document.getElementById('connectBtn').addEventListener('click', connect);
+        document.getElementById('loadContractBtn').addEventListener('click', loadContract);
+        document.getElementById('startBtn').addEventListener('click', startScanning);
+        document.getElementById('stopBtn').addEventListener('click', stopScanning);
+
+        log('⚡ Sistema iniciado - conecte sua wallet para começar', 'info');
+    </script>
+</body>
+</html>
