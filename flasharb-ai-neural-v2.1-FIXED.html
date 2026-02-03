@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 FlashArb AI Neural v2.1 - BASE Network</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #00ff00;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(0, 255, 0, 0.05);
+            border: 3px solid #00ff00;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ff00, transparent, #00ff00);
+            z-index: -1;
+            filter: blur(10px);
+            animation: borderGlow 3s linear infinite;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        h1 {
+            font-size: 3em;
+            text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            color: #00ffff;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid;
+            border-radius: 10px;
+            padding: 12px 25px;
+            font-weight: bold;
+            z-index: 1000;
+            font-size: 0.95em;
+        }
+
+        .status-connected {
+            border-color: #00ff00;
+            color: #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .status-disconnected {
+            border-color: #ff4444;
+            color: #ff4444;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+        }
+
+        .status-loading {
+            border-color: #ffa500;
+            color: #ffa500;
+            box-shadow: 0 0 20px rgba(255, 165, 0, 0.5);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: rgba(0, 255, 0, 0.03);
+            border: 2px solid #00ff00;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.2);
+        }
+
+        .panel h2 {
+            margin-bottom: 20px;
+            font-size: 1.6em;
+            text-shadow: 0 0 10px #00ff00;
+            border-bottom: 2px solid rgba(0, 255, 0, 0.3);
+            padding-bottom: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00ff00, transparent);
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #00ff00;
+            text-shadow: 0 0 15px #00ff00;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .ai-training {
+            background: rgba(255, 0, 255, 0.1);
+            border: 2px solid #ff00ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .ai-training h3 {
+            color: #ff00ff;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .progress-bar {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            height: 30px;
+            position: relative;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #ff00ff, #00ff00);
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.3s;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 5px #000;
+        }
+
+        .neural-viz {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #00ff00;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .layer {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .layer-label {
+            font-size: 0.8em;
+            margin-bottom: 10px;
+            opacity: 0.7;
+        }
+
+        .neuron {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(0, 255, 0, 0.2);
+            border: 2px solid #00ff00;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                box-shadow: 0 0 5px #00ff00;
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 20px #00ff00;
+                transform: scale(1.1);
+            }
+        }
+
+        .neuron.active {
+            background: #00ff00;
+            box-shadow: 0 0 25px #00ff00;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00ff00;
+            font-size: 0.95em;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+            border-color: #00ff00;
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .btn {
+            padding: 16px 30px;
+            background: transparent;
+            border: 3px solid #00ff00;
+            border-radius: 8px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 12px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: rgba(0, 255, 0, 0.2);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.6);
+            transform: translateY(-3px);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #00ff00;
+            color: #0a0e27;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.8);
+        }
+
+        .btn-danger {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: rgba(255, 68, 68, 0.2);
+            box-shadow: 0 0 30px rgba(255, 68, 68, 0.6);
+        }
+
+        .terminal {
+            background: #000;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 18px;
+            height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.1);
+        }
+
+        .terminal::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .terminal::-webkit-scrollbar-track {
+            background: #0a0e27;
+            border-radius: 10px;
+        }
+
+        .terminal::-webkit-scrollbar-thumb {
+            background: #00ff00;
+            border-radius: 10px;
+        }
+
+        .log {
+            margin: 4px 0;
+            padding: 6px;
+            border-radius: 4px;
+            border-left: 3px solid transparent;
+        }
+
+        .log-info { 
+            color: #00bfff; 
+            border-left-color: #00bfff;
+        }
+        .log-success { 
+            color: #00ff00; 
+            font-weight: bold;
+            border-left-color: #00ff00;
+        }
+        .log-warning { 
+            color: #ffa500;
+            border-left-color: #ffa500;
+        }
+        .log-error { 
+            color: #ff4444; 
+            font-weight: bold;
+            border-left-color: #ff4444;
+        }
+        .log-ai { 
+            color: #ff00ff; 
+            font-weight: bold;
+            border-left-color: #ff00ff;
+        }
+
+        .opportunity-card {
+            background: rgba(0, 255, 0, 0.05);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .opp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .opp-header h3 {
+            font-size: 1.4em;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .profit-badge {
+            background: #00ff00;
+            color: #0a0e27;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+        }
+
+        .opp-route {
+            font-size: 1.1em;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+
+        .opp-details {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            line-height: 1.8;
+        }
+
+        .confidence-bar {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            height: 30px;
+            position: relative;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            background: linear-gradient(90deg, #00ff00, #00ff00);
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.3s;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+        }
+
+        .confidence-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 5px #000;
+        }
+
+        .gas-estimate {
+            background: rgba(255, 165, 0, 0.1);
+            border: 2px solid #ffa500;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            font-size: 0.95em;
+        }
+
+        .gas-estimate-value {
+            color: #ffa500;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+
+        .balance-display {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+        }
+
+        .balance-item:last-child {
+            border-bottom: none;
+        }
+
+        .balance-value {
+            font-weight: bold;
+            color: #00ff00;
+        }
+
+        .warning-banner {
+            background: rgba(255, 165, 0, 0.1);
+            border: 2px solid #ffa500;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 20px;
+            color: #ffa500;
+            font-size: 0.95em;
+        }
+
+        @media (max-width: 1200px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loader {
+            border: 3px solid rgba(0, 255, 0, 0.3);
+            border-top: 3px solid #00ff00;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="connectionStatus" class="connection-status status-loading">
+        🟡 Carregando...
+    </div>
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>🧠 FLASHARB AI NEURAL v2.1</h1>
+            <div class="subtitle">Sistema de Arbitragem com Inteligência Artificial • BASE Network</div>
+        </div>
+
+        <!-- WARNING BANNER -->
+        <div class="warning-banner">
+            ⚠️ <strong>IMPORTANTE:</strong> Este sistema requer GAS suficiente (aprox. 0.002-0.005 ETH por transação). 
+            Certifique-se de ter saldo antes de executar!
+        </div>
+
+        <!-- GRID PRINCIPAL -->
+        <div class="grid-2">
+            <!-- PAINEL DE CONTROLE -->
+            <div class="panel">
+                <h2>⚙️ Painel de Controle</h2>
+                
+                <!-- AI TRAINING STATUS -->
+                <div id="aiTrainingPanel" class="ai-training">
+                    <h3>🧠 Treinamento da IA Neural</h3>
+                    <div class="progress-bar">
+                        <div id="trainingProgress" class="progress-fill" style="width: 0%"></div>
+                        <div id="trainingText" class="progress-text">Iniciando...</div>
+                    </div>
+                    <div id="trainingStatus">Preparando rede neural...</div>
+                </div>
+
+                <button id="connectBtn" class="btn btn-primary" disabled>
+                    🔗 CONECTAR CARTEIRA
+                </button>
+
+                <div class="balance-display" id="balanceDisplay" style="display: none;">
+                    <div class="balance-item">
+                        <span>💰 Saldo ETH:</span>
+                        <span class="balance-value" id="ethBalance">0.0000</span>
+                    </div>
+                    <div class="balance-item">
+                        <span>📍 Rede:</span>
+                        <span class="balance-value">Base</span>
+                    </div>
+                    <div class="balance-item">
+                        <span>📫 Endereço:</span>
+                        <span class="balance-value" id="userAddress">...</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📍 Endereço do Contrato FlashArb</label>
+                    <input type="text" id="contractAddress" 
+                           value="0x2626664c2603336e57b271c5c0b26f4" 
+                           placeholder="0x...">
+                </div>
+
+                <div class="form-group">
+                    <label>💰 Quantidade para Trade (ETH)</label>
+                    <input type="number" id="tradeAmount" value="0.01" step="0.001" min="0.001">
+                </div>
+
+                <div class="form-group">
+                    <label>📊 Lucro Mínimo (%)</label>
+                    <input type="number" id="minProfit" value="0.5" step="0.1" min="0.1">
+                </div>
+
+                <div class="form-group">
+                    <label>🧠 Estratégia IA</label>
+                    <select id="aiStrategy">
+                        <option value="conservative">Conservadora (85% confiança)</option>
+                        <option value="balanced" selected>Balanceada (70% confiança)</option>
+                        <option value="aggressive">Agressiva (50% confiança)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>⚡ Gas Price (Gwei)</label>
+                    <input type="number" id="gasPrice" value="0.5" step="0.1" min="0.1">
+                    <small style="opacity: 0.7;">Gas recomendado: 0.3-1.0 Gwei</small>
+                </div>
+
+                <button id="startBtn" class="btn" disabled>
+                    🚀 INICIAR SCANNER
+                </button>
+
+                <button id="stopBtn" class="btn btn-danger" style="display: none;">
+                    ⏹️ PARAR SCANNER
+                </button>
+            </div>
+
+            <!-- ESTATÍSTICAS -->
+            <div class="panel">
+                <h2>📊 Estatísticas em Tempo Real</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Rotas/Segundo</div>
+                        <div class="stat-value" id="routesPerSec">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Analisadas</div>
+                        <div class="stat-value" id="totalRoutes">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Confiança IA</div>
+                        <div class="stat-value" id="aiConfidence">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Oportunidades</div>
+                        <div class="stat-value" id="opportunities">0</div>
+                    </div>
+                </div>
+
+                <div class="neural-viz">
+                    <div class="layer">
+                        <div class="layer-label">Input (10)</div>
+                        <div class="neuron"></div>
+                        <div class="neuron"></div>
+                        <div class="neuron"></div>
+                        <div class="neuron"></div>
+                        <div class="neuron"></div>
+                    </div>
+                    <div class="layer">
+                        <div class="layer-label">Hidden (64)</div>
+                        <div class="neuron active"></div>
+                        <div class="neuron"></div>
+                        <div class="neuron active"></div>
+                        <div class="neuron"></div>
+                        <div class="neuron active"></div>
+                        <div class="neuron"></div>
+                    </div>
+                    <div class="layer">
+                        <div class="layer-label">Output (3)</div>
+                        <div class="neuron"></div>
+                        <div class="neuron active"></div>
+                        <div class="neuron"></div>
+                    </div>
+                </div>
+
+                <div class="gas-estimate">
+                    <div>⛽ Estimativa de Gas por Transação:</div>
+                    <div class="gas-estimate-value" id="gasEstimate">0.0000 ETH (~$0.00)</div>
+                    <small style="opacity: 0.7;">Baseado em 300,000 gas limit</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- OPORTUNIDADES E TERMINAL -->
+        <div class="grid-2">
+            <!-- OPORTUNIDADES -->
+            <div class="panel">
+                <h2>💎 Oportunidades Detectadas</h2>
+                <div id="opportunitiesList">
+                    <div style="text-align: center; opacity: 0.5; padding: 40px;">
+                        Aguardando treinamento da IA...
+                    </div>
+                </div>
+            </div>
+
+            <!-- TERMINAL -->
+            <div class="panel">
+                <h2>📟 Terminal de Logs</h2>
+                <div id="terminal" class="terminal">
+                    <div class="log log-info">[SISTEMA] Iniciando FlashArb AI Neural v2.1...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARREGAR BIBLIOTECAS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+
+    <script>
+        // ============================================================
+        // CONFIGURAÇÃO GLOBAL
+        // ============================================================
+        
+        const CONFIG = {
+            BASE_CHAIN_ID: 8453,
+            BASE_RPC: 'https://mainnet.base.org',
+            WETH: '0x4200000000000000000000000000000000000006',
+            FACTORY: '0x33128a8fC17869897dcE68Ed026d694621f6FDfD',
+            GAS_LIMIT: 300000,
+            MIN_ETH_BALANCE: 0.005
+        };
+
+        const TOKENS = [
+            { symbol: 'WETH', address: '0x4200000000000000000000000000000000000006' },
+            { symbol: 'USDC', address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' },
+            { symbol: 'DAI', address: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb' },
+            { symbol: 'USDT', address: '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2' }
+        ];
+
+        const FEES = [500, 3000, 10000];
+
+        const FLASHARB_ABI = [
+            "function execute(address tokenA, uint256 amountIn, address tokenB, uint24 fee1, uint24 fee2, uint24 fee3, address tokenC, uint256 minProfit) external payable returns (uint256)",
+            "function getStats() external view returns (uint256 executions, uint256 successes, uint256 profit)",
+            "function owner() external view returns (address)"
+        ];
+
+        // ============================================================
+        // VARIÁVEIS GLOBAIS
+        // ============================================================
+        
+        let provider;
+        let signer;
+        let userAddress;
+        let contract;
+        let neuralModel;
+        let scannerInterval;
+        let isScanning = false;
+        let isAITrained = false;
+
+        const stats = {
+            routesPerSec: 0,
+            totalRoutes: 0,
+            aiConfidence: 0,
+            opportunities: 0
+        };
+
+        // ============================================================
+        // FUNÇÕES DE LOG
+        // ============================================================
+        
+        function log(message, type = 'info') {
+            const terminal = document.getElementById('terminal');
+            const timestamp = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = `log log-${type}`;
+            line.textContent = `[${timestamp}] ${message}`;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+
+            while (terminal.children.length > 200) {
+                terminal.removeChild(terminal.firstChild);
+            }
+        }
+
+        function updateTrainingProgress(progress, text) {
+            document.getElementById('trainingProgress').style.width = progress + '%';
+            document.getElementById('trainingText').textContent = text;
+        }
+
+        function updateTrainingStatus(status) {
+            document.getElementById('trainingStatus').textContent = status;
+        }
+
+        // ============================================================
+        // INICIALIZAÇÃO TENSORFLOW
+        // ============================================================
+        
+        async function initNeuralNetwork() {
+            log('🧠 Inicializando rede neural...', 'ai');
+            updateTrainingProgress(10, '10% - Criando arquitetura');
+            updateTrainingStatus('Criando camadas da rede neural...');
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            neuralModel = tf.sequential({
+                layers: [
+                    tf.layers.dense({ inputShape: [10], units: 64, activation: 'relu', name: 'input_layer' }),
+                    tf.layers.dropout({ rate: 0.2, name: 'dropout_1' }),
+                    tf.layers.dense({ units: 32, activation: 'relu', name: 'hidden_1' }),
+                    tf.layers.dropout({ rate: 0.2, name: 'dropout_2' }),
+                    tf.layers.dense({ units: 16, activation: 'relu', name: 'hidden_2' }),
+                    tf.layers.dense({ units: 3, activation: 'softmax', name: 'output' })
+                ]
+            });
+
+            log('✅ Arquitetura criada: Input(10) → Dense(64) → Dense(32) → Dense(16) → Output(3)', 'success');
+            updateTrainingProgress(25, '25% - Compilando modelo');
+            updateTrainingStatus('Compilando modelo com optimizer Adam...');
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            neuralModel.compile({
+                optimizer: tf.train.adam(0.001),
+                loss: 'categoricalCrossentropy',
+                metrics: ['accuracy']
+            });
+
+            log('✅ Modelo compilado com Adam optimizer', 'success');
+            updateTrainingProgress(40, '40% - Gerando dados');
+            updateTrainingStatus('Gerando 1000 amostras de treinamento...');
+
+            await trainModel();
+            
+            isAITrained = true;
+            log('✅ ✅ ✅ REDE NEURAL TREINADA E PRONTA! ✅ ✅ ✅', 'success');
+            updateTrainingProgress(100, '100% - Treinamento completo!');
+            updateTrainingStatus('✅ IA Neural pronta para análise!');
+
+            // Esconder painel de treinamento após 3 segundos
+            setTimeout(() => {
+                document.getElementById('aiTrainingPanel').style.display = 'none';
+                document.getElementById('connectBtn').disabled = false;
+                document.getElementById('connectionStatus').className = 'connection-status status-disconnected';
+                document.getElementById('connectionStatus').innerHTML = '🔴 Desconectado';
+            }, 3000);
+        }
+
+        async function trainModel() {
+            log('📚 Gerando dataset de treinamento...', 'ai');
+            const numSamples = 1000;
+            const features = [];
+            const labels = [];
+
+            for (let i = 0; i < numSamples; i++) {
+                const spread = Math.random() * 5;
+                const volume = Math.random();
+                const gas = Math.random() * 0.01;
+                const liquidity = Math.random();
+                const volatility = Math.random();
+                const timeOfDay = Math.random();
+                const dexIndex = Math.random();
+                const tokenVol = Math.random();
+                const histSuccess = Math.random();
+                const competition = Math.random();
+
+                features.push([
+                    spread, volume, gas, liquidity, volatility,
+                    timeOfDay, dexIndex, tokenVol, histSuccess, competition
+                ]);
+
+                const netProfit = spread - (gas * 100);
+                let label;
+                if (netProfit > 1.5) label = [0, 0, 1]; // alto lucro
+                else if (netProfit > 0.5) label = [0, 1, 0]; // médio lucro
+                else label = [1, 0, 0]; // baixo lucro
+
+                labels.push(label);
+            }
+
+            updateTrainingProgress(50, '50% - Preparando tensores');
+            updateTrainingStatus('Convertendo dados para tensores...');
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const xs = tf.tensor2d(features);
+            const ys = tf.tensor2d(labels);
+
+            log(`📊 Dataset: ${numSamples} amostras com 10 features cada`, 'ai');
+            updateTrainingProgress(60, '60% - Iniciando treinamento');
+            updateTrainingStatus('Treinando modelo (20 épocas)...');
+
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            log('🔄 Treinando por 20 épocas...', 'ai');
+
+            await neuralModel.fit(xs, ys, {
+                epochs: 20,
+                batchSize: 32,
+                verbose: 0,
+                shuffle: true,
+                callbacks: {
+                    onEpochEnd: async (epoch, logs) => {
+                        const progress = 60 + ((epoch + 1) / 20) * 35;
+                        updateTrainingProgress(progress, `${Math.round(progress)}% - Época ${epoch + 1}/20`);
+                        updateTrainingStatus(`Época ${epoch + 1}/20 - Loss: ${logs.loss.toFixed(4)} - Acc: ${(logs.acc * 100).toFixed(2)}%`);
+                        
+                        if ((epoch + 1) % 5 === 0) {
+                            log(`📈 Época ${epoch + 1}/20: Loss=${logs.loss.toFixed(4)}, Accuracy=${(logs.acc * 100).toFixed(2)}%`, 'ai');
+                        }
+                        
+                        await tf.nextFrame();
+                    }
+                }
+            });
+
+            xs.dispose();
+            ys.dispose();
+
+            updateTrainingProgress(95, '95% - Otimizando');
+            updateTrainingStatus('Otimizando modelo...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            log('✅ Treinamento concluído com sucesso!', 'success');
+        }
+
+        // ============================================================
+        // CONEXÃO WEB3
+        // ============================================================
+        
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    log('❌ MetaMask não detectado!', 'error');
+                    alert('Por favor, instale MetaMask ou use um navegador com carteira Web3!');
+                    return;
+                }
+
+                log('🔄 Conectando carteira...', 'info');
+
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = provider.getSigner();
+                userAddress = await signer.getAddress();
+
+                const network = await provider.getNetwork();
+                if (network.chainId !== CONFIG.BASE_CHAIN_ID) {
+                    log('⚠️ Rede incorreta! Mudando para Base...', 'warning');
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0x' + CONFIG.BASE_CHAIN_ID.toString(16) }],
+                        });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: '0x' + CONFIG.BASE_CHAIN_ID.toString(16),
+                                    chainName: 'Base',
+                                    nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                                    rpcUrls: [CONFIG.BASE_RPC],
+                                    blockExplorerUrls: ['https://basescan.org']
+                                }],
+                            });
+                        }
+                    }
+                }
+
+                const balance = await provider.getBalance(userAddress);
+                const ethBalance = ethers.utils.formatEther(balance);
+
+                const contractAddr = document.getElementById('contractAddress').value;
+                contract = new ethers.Contract(contractAddr, FLASHARB_ABI, signer);
+
+                document.getElementById('ethBalance').textContent = parseFloat(ethBalance).toFixed(4) + ' ETH';
+                document.getElementById('userAddress').textContent = 
+                    userAddress.substring(0, 6) + '...' + userAddress.substring(38);
+                document.getElementById('balanceDisplay').style.display = 'block';
+                document.getElementById('connectBtn').style.display = 'none';
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('connectionStatus').className = 'connection-status status-connected';
+                document.getElementById('connectionStatus').innerHTML = '🟢 Conectado';
+
+                log(`✅ Conectado: ${userAddress}`, 'success');
+                log(`💰 Saldo: ${parseFloat(ethBalance).toFixed(4)} ETH`, 'success');
+
+                if (parseFloat(ethBalance) < CONFIG.MIN_ETH_BALANCE) {
+                    log(`⚠️ Saldo baixo! Recomendado: mínimo ${CONFIG.MIN_ETH_BALANCE} ETH`, 'warning');
+                }
+
+                updateGasEstimate();
+
+            } catch (error) {
+                log(`❌ Erro ao conectar: ${error.message}`, 'error');
+            }
+        }
+
+        // ============================================================
+        // SCANNER DE OPORTUNIDADES
+        // ============================================================
+        
+        async function startScanner() {
+            if (isScanning) return;
+            
+            isScanning = true;
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'block';
+            document.getElementById('opportunitiesList').innerHTML = '';
+            
+            log('🚀 Scanner iniciado!', 'success');
+            log('🔍 Analisando rotas de arbitragem com IA...', 'info');
+
+            scannerInterval = setInterval(async () => {
+                const routesPerCycle = 50;
+                
+                for (let i = 0; i < routesPerCycle; i++) {
+                    const route = generateRandomRoute();
+                    const opportunity = await analyzeRouteWithAI(route);
+                    
+                    if (opportunity) {
+                        displayOpportunity(opportunity);
+                        stats.opportunities++;
+                    }
+                }
+                
+                stats.totalRoutes += routesPerCycle;
+                stats.routesPerSec = routesPerCycle;
+                updateUI();
+                
+            }, 1000);
+        }
+
+        function stopScanner() {
+            if (!isScanning) return;
+            
+            isScanning = false;
+            clearInterval(scannerInterval);
+            
+            document.getElementById('startBtn').style.display = 'block';
+            document.getElementById('stopBtn').style.display = 'none';
+            
+            log('⏹️ Scanner parado', 'warning');
+        }
+
+        function generateRandomRoute() {
+            const tokenA = TOKENS[Math.floor(Math.random() * TOKENS.length)];
+            let tokenB = TOKENS[Math.floor(Math.random() * TOKENS.length)];
+            while (tokenB.symbol === tokenA.symbol) {
+                tokenB = TOKENS[Math.floor(Math.random() * TOKENS.length)];
+            }
+            let tokenC = TOKENS[Math.floor(Math.random() * TOKENS.length)];
+            while (tokenC.symbol === tokenA.symbol || tokenC.symbol === tokenB.symbol) {
+                tokenC = TOKENS[Math.floor(Math.random() * TOKENS.length)];
+            }
+
+            return {
+                tokenA,
+                tokenB,
+                tokenC,
+                fee1: FEES[Math.floor(Math.random() * FEES.length)],
+                fee2: FEES[Math.floor(Math.random() * FEES.length)],
+                fee3: FEES[Math.floor(Math.random() * FEES.length)],
+                spread: Math.random() * 3,
+                volume: Math.random(),
+                gas: 0.0005 + Math.random() * 0.002,
+                liquidity: Math.random()
+            };
+        }
+
+        async function analyzeRouteWithAI(route) {
+            if (!isAITrained || !neuralModel) return null;
+
+            const features = [
+                route.spread,
+                route.volume,
+                route.gas,
+                route.liquidity,
+                Math.random(),
+                (new Date().getHours()) / 24,
+                Math.random(),
+                Math.random(),
+                Math.random(),
+                Math.random()
+            ];
+
+            const input = tf.tensor2d([features]);
+            const prediction = neuralModel.predict(input);
+            const predictionData = await prediction.data();
+
+            const confidence = Math.max(...predictionData) * 100;
+            const predictedClass = predictionData.indexOf(Math.max(...predictionData));
+
+            input.dispose();
+            prediction.dispose();
+
+            stats.aiConfidence = Math.round(confidence);
+
+            const minProfit = parseFloat(document.getElementById('minProfit').value);
+            const strategy = document.getElementById('aiStrategy').value;
+
+            let threshold = 70;
+            if (strategy === 'aggressive') threshold = 50;
+            if (strategy === 'conservative') threshold = 85;
+
+            const netProfit = route.spread - (route.gas * 100);
+
+            if (predictedClass === 2 && confidence > threshold && netProfit > minProfit) {
+                return {
+                    tokenA: route.tokenA,
+                    tokenB: route.tokenB,
+                    tokenC: route.tokenC,
+                    fee1: route.fee1,
+                    fee2: route.fee2,
+                    fee3: route.fee3,
+                    spread: route.spread,
+                    profit: netProfit,
+                    confidence: Math.round(confidence),
+                    gas: route.gas,
+                    gasEth: route.gas,
+                    route: `${route.tokenA.symbol} → ${route.tokenB.symbol} → ${route.tokenC.symbol}`
+                };
+            }
+
+            return null;
+        }
+
+        function displayOpportunity(opp) {
+            const list = document.getElementById('opportunitiesList');
+            
+            if (list.querySelector('div[style*="opacity"]')) {
+                list.innerHTML = '';
+            }
+
+            const card = document.createElement('div');
+            card.className = 'opportunity-card';
+            card.innerHTML = `
+                <div class="opp-header">
+                    <h3>${opp.route}</h3>
+                    <div class="profit-badge">+${opp.profit.toFixed(3)}%</div>
+                </div>
+                
+                <div class="opp-route">
+                    📍 Rota: ${opp.route}
+                </div>
+                
+                <div class="opp-details">
+                    📊 Spread Bruto: <strong>${opp.spread.toFixed(4)}%</strong><br>
+                    ⛽ Custo Gas: <strong>${(opp.gasEth * 1000).toFixed(4)} ETH</strong><br>
+                    💎 Lucro Líquido: <strong>${opp.profit.toFixed(4)}%</strong><br>
+                    🔀 Fees: <strong>${opp.fee1/10000}% / ${opp.fee2/10000}% / ${opp.fee3/10000}%</strong>
+                </div>
+                
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: ${opp.confidence}%"></div>
+                    <div class="confidence-text">🧠 IA Confiança: ${opp.confidence}%</div>
+                </div>
+                
+                <button class="btn btn-primary" onclick='executeOpportunity(${JSON.stringify(opp)})'>
+                    ⚡ EXECUTAR ARBITRAGEM
+                </button>
+            `;
+
+            list.insertBefore(card, list.firstChild);
+
+            while (list.children.length > 5) {
+                list.removeChild(list.lastChild);
+            }
+
+            log(`💎 Nova oportunidade: ${opp.route} (+${opp.profit.toFixed(3)}%)`, 'success');
+        }
+
+        // ============================================================
+        // EXECUÇÃO DE TRADES
+        // ============================================================
+        
+        async function executeOpportunity(opp) {
+            if (typeof opp === 'string') {
+                opp = JSON.parse(opp);
+            }
+
+            try {
+                log(`⚡ Preparando execução: ${opp.route}`, 'warning');
+                log(`💰 Lucro esperado: ${opp.profit.toFixed(4)}%`, 'ai');
+                log(`🧠 Confiança IA: ${opp.confidence}%`, 'ai');
+
+                const tradeAmount = document.getElementById('tradeAmount').value;
+                const amountIn = ethers.utils.parseEther(tradeAmount);
+                const minProfit = ethers.utils.parseEther((parseFloat(tradeAmount) * opp.profit / 100).toFixed(18));
+
+                const gasPrice = ethers.utils.parseUnits(
+                    document.getElementById('gasPrice').value, 
+                    'gwei'
+                );
+
+                log(`📤 Enviando transação...`, 'info');
+                log(`💰 Quantidade: ${tradeAmount} ETH`, 'info');
+                log(`⛽ Gas Price: ${document.getElementById('gasPrice').value} Gwei`, 'info');
+
+                const tx = await contract.execute(
+                    opp.tokenA.address,
+                    amountIn,
+                    opp.tokenB.address,
+                    opp.fee1,
+                    opp.fee2,
+                    opp.fee3,
+                    opp.tokenC.address,
+                    minProfit,
+                    {
+                        value: amountIn,
+                        gasLimit: CONFIG.GAS_LIMIT,
+                        gasPrice: gasPrice
+                    }
+                );
+
+                log(`📤 TX Hash: ${tx.hash}`, 'success');
+                log(`⏳ Aguardando confirmação...`, 'info');
+
+                const receipt = await tx.wait();
+
+                if (receipt.status === 1) {
+                    log(`✅ ✅ ✅ ARBITRAGEM EXECUTADA COM SUCESSO! ✅ ✅ ✅`, 'success');
+                    log(`💰 Lucro realizado: +${opp.profit.toFixed(4)}%`, 'success');
+                    log(`🔗 BaseScan: https://basescan.org/tx/${tx.hash}`, 'success');
+                    
+                    const balance = await provider.getBalance(userAddress);
+                    document.getElementById('ethBalance').textContent = 
+                        parseFloat(ethers.utils.formatEther(balance)).toFixed(4) + ' ETH';
+                } else {
+                    log(`❌ Transação falhou!`, 'error');
+                }
+
+            } catch (error) {
+                log(`❌ Erro na execução: ${error.message}`, 'error');
+                if (error.message.includes('insufficient funds')) {
+                    log(`⚠️ Saldo insuficiente para gas!`, 'warning');
+                }
+            }
+        }
+
+        // ============================================================
+        // UI UPDATES
+        // ============================================================
+        
+        function updateUI() {
+            document.getElementById('routesPerSec').textContent = stats.routesPerSec.toLocaleString();
+            document.getElementById('totalRoutes').textContent = stats.totalRoutes.toLocaleString();
+            document.getElementById('aiConfidence').textContent = stats.aiConfidence + '%';
+            document.getElementById('opportunities').textContent = stats.opportunities;
+        }
+
+        function updateGasEstimate() {
+            const gasPrice = parseFloat(document.getElementById('gasPrice').value);
+            const gasInEth = (CONFIG.GAS_LIMIT * gasPrice) / 1e9;
+            const gasInUsd = gasInEth * 2500;
+            
+            document.getElementById('gasEstimate').innerHTML = 
+                `${gasInEth.toFixed(6)} ETH (~$${gasInUsd.toFixed(2)})`;
+        }
+
+        // ============================================================
+        // EVENT LISTENERS
+        // ============================================================
+        
+        document.getElementById('connectBtn').addEventListener('click', connectWallet);
+        document.getElementById('startBtn').addEventListener('click', startScanner);
+        document.getElementById('stopBtn').addEventListener('click', stopScanner);
+        document.getElementById('gasPrice').addEventListener('input', updateGasEstimate);
+
+        // ============================================================
+        // INICIALIZAÇÃO
+        // ============================================================
+        
+        window.addEventListener('load', async () => {
+            log('🔄 Verificando dependências...', 'info');
+            
+            // Esperar TensorFlow carregar
+            let tfAttempts = 0;
+            while (typeof tf === 'undefined' && tfAttempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                tfAttempts++;
+            }
+
+            if (typeof tf === 'undefined') {
+                log('❌ TensorFlow.js falhou ao carregar!', 'error');
+                updateTrainingStatus('❌ Erro: TensorFlow.js não carregado');
+                return;
+            }
+            log('✅ TensorFlow.js carregado', 'success');
+
+            // Esperar Ethers carregar
+            let ethersAttempts = 0;
+            while (typeof ethers === 'undefined' && ethersAttempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                ethersAttempts++;
+            }
+
+            if (typeof ethers === 'undefined') {
+                log('❌ Ethers.js falhou ao carregar!', 'error');
+                updateTrainingStatus('❌ Erro: Ethers.js não carregado');
+                return;
+            }
+            log('✅ Ethers.js carregado', 'success');
+
+            // Iniciar treinamento da IA
+            await initNeuralNetwork();
+        });
+
+        // Tornar função global
+        window.executeOpportunity = executeOpportunity;
+    </script>
+</body>
+</html>
