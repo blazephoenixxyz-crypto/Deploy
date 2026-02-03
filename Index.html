@@ -188,6 +188,14 @@
             font-weight: 700;
             color: var(--text);
         }
+        
+        .stat-change {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .positive { color: var(--success); }
+        .negative { color: var(--error); }
                 .main-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -219,6 +227,22 @@
             gap: 10px;
         }
         
+        .refresh-btn {
+            padding: 6px 12px;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: var(--border);
+            color: var(--text);
+        }
+        
         .form-group {
             margin-bottom: 18px;
         }
@@ -246,82 +270,50 @@
             outline: none;
             border-color: var(--primary);
         }
-                .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .input-suffix {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+                .token-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .token-btn {
+            padding: 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
             cursor: pointer;
             transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-        
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-        
-        .btn-success:hover:not(:disabled) {
-            background: #0ea472;
-        }
-        
-        .btn-danger {
-            background: var(--error);
-            color: white;
-        }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .alert {
-            padding: 14px 16px;
-            border-radius: 10px;
-            margin-bottom: 20px;
             font-size: 13px;
-            display: none;
-            align-items: center;
-            gap: 10px;
+            font-weight: 600;
         }
         
-        .alert.show {
-            display: flex;
+        .token-btn:hover {
+            background: var(--surface-light);
+            border-color: var(--primary);
         }
         
-        .alert-success {
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid var(--success);
-            color: var(--success);
-        }
-        
-        .alert-error {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid var(--error);
-            color: var(--error);
-        }
-        
-        .alert-info {
+        .token-btn.active {
             background: rgba(102, 126, 234, 0.15);
-            border: 1px solid var(--primary);
+            border-color: var(--primary);
             color: var(--primary);
         }
-                .route-selector {
+        
+        .route-selector {
             display: grid;
             gap: 10px;
         }
@@ -361,6 +353,105 @@
             font-size: 11px;
             color: var(--text-muted);
         }
+                .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover:not(:disabled) {
+            background: #0ea472;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-secondary {
+            background: var(--surface-light);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--border);
+        }
+        
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .alert {
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert.show {
+            display: flex;
+        }
+        
+        .alert-success {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        
+        .alert-error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+        
+        .alert-info {
+            background: rgba(102, 126, 234, 0.15);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+        }
+                .opportunity-list {
+            display: grid;
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
         
         .opportunity-card {
             background: var(--bg-dark);
@@ -372,6 +463,7 @@
         
         .opportunity-card:hover {
             border-color: var(--primary);
+            background: var(--surface-light);
         }
         
         .opp-header {
@@ -395,11 +487,24 @@
             color: var(--primary);
             font-weight: 600;
         }
-                .tabs {
+        
+        .opp-details {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        
+        .opp-pair {
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .tabs {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
             border-bottom: 1px solid var(--border);
+            overflow-x: auto;
         }
         
         .tab {
@@ -412,6 +517,11 @@
             font-weight: 500;
             border-bottom: 2px solid transparent;
             transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .tab:hover {
+            color: var(--text);
         }
         
         .tab.active {
@@ -426,50 +536,106 @@
         .tab-content.active {
             display: block;
         }
-        
-        .token-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
+                .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
         }
         
-        .token-btn {
-            padding: 12px;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .quick-action-btn {
+            padding: 16px;
             background: var(--bg-dark);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 13px;
-            font-weight: 600;
+            text-align: center;
         }
         
-        .token-btn.active {
-            background: rgba(102, 126, 234, 0.15);
+        .quick-action-btn:hover {
+            background: var(--surface-light);
             border-color: var(--primary);
-            color: var(--primary);
+        }
+        
+        .quick-action-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .quick-action-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
         }
         
         @media (max-width: 968px) {
             .main-grid {
                 grid-template-columns: 1fr;
             }
+            
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .token-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
             }
         }
         
         @media (max-width: 480px) {
+            .header {
+                padding: 15px;
+            }
+            
+            .logo-text h1 {
+                font-size: 20px;
+            }
+            
             .stats-grid {
                 grid-template-columns: 1fr;
             }
         }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
     </style>
 </head>
-    <body>
-    <div class="container">
+<body>
+        <div class="container">
         <div class="header">
             <div class="logo">
                 <div class="logo-icon">⚡</div>
@@ -524,8 +690,7 @@
                 <div class="stat-label">Min Profit (BPS)</div>
                 <div class="stat-value" id="minProfit">-</div>
             </div>
-        </div>
-                <div class="main-grid">
+        </div>        <div class="main-grid">
             <div class="section">
                 <div class="section-header">
                     <div class="section-title">🔍 Scanner de Oportunidades</div>
@@ -543,26 +708,28 @@
                 
                 <div class="form-group">
                     <label class="form-label">Token In</label>
-                    <input type="text" class="form-input" id="scanTokenIn" value="0x4200000000000000000000000000000000000006">
+                    <input type="text" class="form-input" id="scanTokenIn" placeholder="0x4200..." value="0x4200000000000000000000000000000000000006">
                 </div>
                 
                 <div class="form-group">
                     <label class="form-label">Token Out</label>
-                    <input type="text" class="form-input" id="scanTokenOut" value="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913">
+                    <input type="text" class="form-input" id="scanTokenOut" placeholder="0x833589..." value="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913">
                 </div>
                 
                 <div class="form-group">
                     <label class="form-label">Amount (ETH)</label>
-                    <input type="text" class="form-input" id="scanAmountEth" value="0.1">
+                    <div class="input-group">
+                        <input type="text" class="form-input" id="scanAmountEth" placeholder="0.1" value="0.1">
+                        <span class="input-suffix">ETH</span>
+                    </div>
                 </div>
                 
                 <button class="btn btn-primary" onclick="scanOpportunity()">
                     🔍 Procurar Oportunidades
                 </button>
                 
-                <div id="scanResult" style="margin-top: 20px;"></div>
-            </div>
-                                <div class="section">
+                <div id="scanResult" class="opportunity-list" style="margin-top: 20px;"></div>
+            </div>            <div class="section">
                 <div class="section-header">
                     <div class="section-title">⚡ Executar Arbitragem</div>
                 </div>
@@ -575,22 +742,24 @@
                 <div id="manualTab" class="tab-content active">
                     <div class="form-group">
                         <label class="form-label">Token In</label>
-                        <input type="text" class="form-input" id="execTokenIn" value="0x4200000000000000000000000000000000000006">
+                        <input type="text" class="form-input" id="execTokenIn" placeholder="0x4200..." value="0x4200000000000000000000000000000000000006">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Token Out</label>
-                        <input type="text" class="form-input" id="execTokenOut" value="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913">
+                        <input type="text" class="form-input" id="execTokenOut" placeholder="0x833589..." value="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Amount (ETH)</label>
-                        <input type="text" class="form-input" id="execAmountEth" value="0.1">
+                        <div class="input-group">
+                            <input type="text" class="form-input" id="execAmountEth" placeholder="0.1" value="0.1">
+                            <span class="input-suffix">ETH</span>
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
+                                        <div class="form-group">
                         <label class="form-label">Route</label>
-                        <div class="route-selector">
+                        <div class="route-selector" id="routeSelector">
                             <div class="route-card" onclick="selectRoute(0)">
                                 <div class="route-header">
                                     <span class="route-name">Route 0</span>
@@ -633,15 +802,28 @@
                         ⚡ Executar Trade
                     </button>
                 </div>
-                
-                <div id="autoTab" class="tab-content">
+                                <div id="autoTab" class="tab-content">
                     <div class="alert alert-warning show">
                         ⚠️ Modo automático em desenvolvimento
                     </div>
+                    <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6;">
+                        O bot automático irá scanear continuamente todas as rotas e executar trades quando encontrar oportunidades rentáveis acima do threshold definido.
+                    </p>
+                    <div class="quick-actions">
+                        <div class="quick-action-btn">
+                            <div class="quick-action-icon">🤖</div>
+                            <div class="quick-action-label">Iniciar Bot</div>
+                        </div>
+                        <div class="quick-action-btn">
+                            <div class="quick-action-icon">⏸️</div>
+                            <div class="quick-action-label">Pausar Bot</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-                </div>
-                <div class="main-grid">
+        </div>
+        
+        <div class="main-grid">
             <div class="section">
                 <div class="section-header">
                     <div class="section-title">💰 Gestão de Fundos</div>
@@ -658,7 +840,10 @@
                 
                 <div class="form-group">
                     <label class="form-label">Amount (ETH)</label>
-                    <input type="text" class="form-input" id="withdrawAmount" placeholder="1.0">
+                    <div class="input-group">
+                        <input type="text" class="form-input" id="withdrawAmount" placeholder="1.0">
+                        <span class="input-suffix">ETH</span>
+                    </div>
                 </div>
                 
                 <button class="btn btn-primary" onclick="withdrawToken()">
@@ -667,12 +852,12 @@
                 
                 <div style="margin-top: 15px;">
                     <button class="btn btn-danger" onclick="withdrawETH()">
-                        💰 Withdraw ETH
+                        💰 Withdraw ETH do Contrato
                     </button>
                 </div>
             </div>
             
-            <div class="section">
+                        <div class="section">
                 <div class="section-header">
                     <div class="section-title">⚙️ Configurações</div>
                 </div>
@@ -680,21 +865,41 @@
                 <div class="form-group">
                     <label class="form-label">Min Profit (Basis Points)</label>
                     <input type="number" class="form-input" id="newMinProfit" placeholder="30">
-                    <small style="color: var(--text-muted); font-size: 11px;">
-                        30 BPS = 0.3% | 100 BPS = 1%
+                    <small style="color: var(--text-muted); font-size: 11px; margin-top: 5px; display: block;">
+                        30 BPS = 0.3% | 50 BPS = 0.5% | 100 BPS = 1%
                     </small>
                 </div>
                 
                 <button class="btn btn-secondary" onclick="setMinProfit()">
                     💾 Atualizar Configuração
                 </button>
+                
+                <div class="quick-actions">
+                    <div class="quick-action-btn" onclick="loadStats()">
+                        <div class="quick-action-icon">🔄</div>
+                        <div class="quick-action-label">Refresh Stats</div>
+                    </div>
+                    <div class="quick-action-btn" onclick="window.open('https://basescan.org/address/0xc7cb7192953d3db51fe27cc577a7cf689ac3eed3', '_blank')">
+                        <div class="quick-action-icon">🔍</div>
+                        <div class="quick-action-label">Ver no BaseScan</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
     <script>
-                const CONTRACT_ADDRESS = '0xc7cb7192953d3db51fe27cc577a7cf689ac3eed3';
+                // Aguarda o ethers carregar completamente
+        window.addEventListener('load', function() {
+            if (typeof ethers === 'undefined') {
+                showAlert('❌ Erro ao carregar biblioteca Web3. Recarrega a página!', 'error');
+                return;
+            }
+            console.log('✅ Ethers.js carregado:', ethers.version);
+        });
+        
+        const CONTRACT_ADDRESS = '0xc7cb7192953d3db51fe27cc577a7cf689ac3eed3';
         const CONTRACT_ABI = [
             {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
             {"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"tokenIn","type":"address"},{"indexed":false,"internalType":"address","name":"tokenOut","type":"address"},{"indexed":false,"internalType":"uint256","name":"profit","type":"uint256"},{"indexed":false,"internalType":"uint8","name":"route","type":"uint8"}],"name":"ArbitrageExecuted","type":"event"},
@@ -722,10 +927,17 @@
             USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
             DAI: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb'
         };
-                async function connectWallet() {
+        
+        async function connectWallet() {
             try {
+                // Verifica se ethers está disponível
+                if (typeof ethers === 'undefined') {
+                    showAlert('❌ Biblioteca Web3 não carregada. Aguarda ou recarrega a página!', 'error');
+                    return;
+                }
+                
                 if (typeof window.ethereum === 'undefined' && typeof window.okxwallet === 'undefined') {
-                    showAlert('❌ Wallet não encontrada', 'error');
+                    showAlert('❌ Wallet não encontrada. Abre no browser da OKX Wallet!', 'error');
                     return;
                 }
                 
@@ -740,10 +952,27 @@
                 const chainId = await provider.request({ method: 'eth_chainId' });
                 if (chainId !== '0x2105') {
                     showAlert('🔄 A mudar para Base Network...', 'info');
-                    await provider.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: '0x2105' }]
-                    });
+                    try {
+                        await provider.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0x2105' }]
+                        });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            await provider.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: '0x2105',
+                                    chainName: 'Base',
+                                    nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                                    rpcUrls: ['https://mainnet.base.org'],
+                                    blockExplorerUrls: ['https://basescan.org']
+                                }]
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
                 }
                 
                 const ethersProvider = new ethers.providers.Web3Provider(provider);
@@ -753,17 +982,20 @@
                 document.getElementById('connectBtn').textContent = `✅ ${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
                 document.getElementById('connectBtn').disabled = true;
                 
-                showAlert('✅ Carteira conectada!', 'success');
+                showAlert('✅ Carteira conectada com sucesso!', 'success');
                 
                 await loadStats();
                 
             } catch (error) {
                 console.error(error);
-                showAlert(`❌ Erro: ${error.message}`, 'error');
+                showAlert(`❌ Erro ao conectar: ${error.message}`, 'error');
             }
-                }
+        }
                 async function loadStats() {
-            if (!contract) return;
+            if (!contract) {
+                showAlert('⚠️ Conecta a carteira primeiro', 'warning');
+                return;
+            }
             
             try {
                 const [totalTrades, successTrades, totalProfit, minProfit] = await Promise.all([
@@ -785,11 +1017,10 @@
                 document.getElementById('minProfit').textContent = minProfit.toString();
                 
             } catch (error) {
-                console.error(error);
+                console.error('Erro ao carregar stats:', error);
             }
-        }
-        
-        async function scanOpportunity() {
+                }
+                async function scanOpportunity() {
             if (!contract) {
                 showAlert('⚠️ Conecta a carteira primeiro', 'warning');
                 return;
@@ -801,7 +1032,7 @@
                 const amountEth = document.getElementById('scanAmountEth').value;
                 const amount = ethers.utils.parseEther(amountEth);
                 
-                showAlert('🔍 A procurar...', 'info');
+                showAlert('🔍 A procurar oportunidades...', 'info');
                 
                 const result = await contract.checkOpportunity(tokenIn, tokenOut, amount);
                 
@@ -826,9 +1057,10 @@
                                 <span class="opp-profit">+${profitPercent.toFixed(4)}%</span>
                                 <span class="opp-badge">Route ${result.bestRoute}</span>
                             </div>
-                            <div style="color: var(--text-muted); font-size: 12px;">
-                                <div>Profit: ${parseFloat(profitEth).toFixed(8)} ETH</div>
-                                <div>Rota: ${routeNames[result.bestRoute]}</div>
+                            <div class="opp-details">
+                                <div><span class="opp-pair">Profit:</span> ${parseFloat(profitEth).toFixed(8)} ETH</div>
+                                <div><span class="opp-pair">Rota:</span> ${routeNames[result.bestRoute]}</div>
+                                <div><span class="opp-pair">Amount:</span> ${amountEth} ETH</div>
                             </div>
                         </div>
                     `;
@@ -840,14 +1072,19 @@
                     document.getElementById('execAmountEth').value = amountEth;
                     
                 } else {
-                    resultDiv.innerHTML = `<div class="alert alert-error show">❌ Nenhuma oportunidade</div>`;
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-error show">
+                            ❌ Nenhuma oportunidade rentável encontrada neste par
+                        </div>
+                    `;
                 }
                 
             } catch (error) {
                 console.error(error);
-                showAlert(`❌ Erro: ${error.message}`, 'error');
+                showAlert(`❌ Erro no scan: ${error.message}`, 'error');
             }
-        }
+                }
+        
                 async function executeArbitrage() {
             if (!contract) {
                 showAlert('⚠️ Conecta a carteira primeiro', 'warning');
@@ -860,27 +1097,32 @@
                 const amountEth = document.getElementById('execAmountEth').value;
                 const amount = ethers.utils.parseEther(amountEth);
                 
-                showAlert('⚡ A executar...', 'info');
+                showAlert('⚡ A executar arbitragem...', 'info');
                 
                 const tx = await contract.executeAtomicArbitrage(tokenIn, tokenOut, amount, selectedRoute, {
                     gasLimit: 3000000
                 });
                 
-                showAlert('⏳ Aguardando confirmação...', 'info');
+                showAlert('⏳ Aguardando confirmação da transação...', 'info');
                 
-                await tx.wait();
+                const receipt = await tx.wait();
                 
-                showAlert('✅ Trade executado!', 'success');
+                showAlert('✅ Trade executado com sucesso!', 'success');
                 
                 await loadStats();
                 
             } catch (error) {
                 console.error(error);
-                showAlert(`❌ Erro: ${error.message}`, 'error');
+                if (error.code === 4001) {
+                    showAlert('❌ Transação rejeitada', 'error');
+                } else if (error.message.includes('No profit')) {
+                    showAlert('❌ Trade sem lucro suficiente', 'error');
+                } else {
+                    showAlert(`❌ Erro: ${error.message}`, 'error');
+                }
             }
-        }
-        
-        async function withdrawToken() {
+                }
+                async function withdrawToken() {
             if (!contract) {
                 showAlert('⚠️ Conecta a carteira primeiro', 'warning');
                 return;
@@ -891,12 +1133,41 @@
                 const amountEth = document.getElementById('withdrawAmount').value;
                 const amount = ethers.utils.parseEther(amountEth);
                 
-                showAlert('💸 A processar...', 'info');
+                showAlert('💸 A processar withdraw...', 'info');
                 
                 const tx = await contract.withdrawToken(token, amount);
                 await tx.wait();
                 
-                showAlert('✅ Withdraw realizado!', 'success');
+                showAlert('✅ Withdraw realizado com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error(error);
+                showAlert(`❌ Erro no withdraw: ${error.message}`, 'error');
+            }
+        }
+        
+        async function setMinProfit() {
+            if (!contract) {
+                showAlert('⚠️ Conecta a carteira primeiro', 'warning');
+                return;
+            }
+            
+            try {
+                const bps = document.getElementById('newMinProfit').value;
+                
+                if (!bps || bps < 0) {
+                    showAlert('⚠️ Insere um valor válido', 'warning');
+                    return;
+                }
+                
+                showAlert('💾 A atualizar configuração...', 'info');
+                
+                const tx = await contract.setMinProfit(bps);
+                await tx.wait();
+                
+                showAlert('✅ Min profit atualizado!', 'success');
+                
+                await loadStats();
                 
             } catch (error) {
                 console.error(error);
@@ -911,36 +1182,12 @@
             }
             
             try {
-                showAlert('💰 A processar...', 'info');
+                showAlert('💰 A processar withdraw de ETH...', 'info');
                 
                 const tx = await contract.withdrawETH();
                 await tx.wait();
                 
-                showAlert('✅ ETH retirado!', 'success');
-                
-            } catch (error) {
-                console.error(error);
-                showAlert(`❌ Erro: ${error.message}`, 'error');
-            }
-        }
-        
-        async function setMinProfit() {
-            if (!contract) {
-                showAlert('⚠️ Conecta a carteira primeiro', 'warning');
-                return;
-            }
-            
-            try {
-                const bps = document.getElementById('newMinProfit').value;
-                
-                showAlert('💾 A atualizar...', 'info');
-                
-                const tx = await contract.setMinProfit(bps);
-                await tx.wait();
-                
-                showAlert('✅ Atualizado!', 'success');
-                
-                await loadStats();
+                showAlert('✅ ETH retirado com sucesso!', 'success');
                 
             } catch (error) {
                 console.error(error);
@@ -983,4 +1230,3 @@
     </script>
 </body>
 </html>
-        
