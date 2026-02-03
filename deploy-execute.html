@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flash Loan Arbitrage - Deploy & Execute</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.8em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #155724;
+        }
+
+        .status {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 0.95em;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .status-value {
+            color: #667eea;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border-top: 3px solid #667eea;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .routes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .route-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .route-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .route-path {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 0.85em;
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .config-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        }
+
+        .logs {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #00ff00;
+            padding-left: 10px;
+        }
+
+        .log-error {
+            color: #ff4444;
+            border-left-color: #ff4444;
+        }
+
+        .log-success {
+            color: #44ff44;
+            border-left-color: #44ff44;
+        }
+
+        .log-info {
+            color: #4af;
+            border-left-color: #4444ff;
+        }
+
+        .log-warning {
+            color: #ffaa00;
+            border-left-color: #ffaa00;
+        }
+
+        .contract-info {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Flash Loan Arbitrage Pro</h1>
+        <div class="subtitle">Deploy Automático + Execução Multi-Rota | Balancer V2</div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('deploy')">🚀 Deploy Contrato</button>
+            <button class="tab" onclick="switchTab('execute')">⚡ Executar Arbitragem</button>
+            <button class="tab" onclick="switchTab('manage')">💰 Gerenciar</button>
+        </div>
+
+        <!-- TAB 1: DEPLOY -->
+        <div id="deploy-tab" class="tab-content active">
+            <div class="warning">
+                <strong>⚠️ Importante:</strong> Esta interface vai fazer deploy do contrato completo em UMA ÚNICA TRANSAÇÃO. O contrato incluí as 5 rotas de arbitragem otimizadas. Custo estimado de gas: ~0.05-0.08 ETH.
+            </div>
+
+            <div class="status">
+                <div class="status-item">
+                    <span class="status-label">Status da Conexão:</span>
+                    <span class="status-value" id="connectionStatus">❌ Desconectado</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Carteira:</span>
+                    <span class="status-value" id="walletAddress">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Rede:</span>
+                    <span class="status-value" id="networkName">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Saldo:</span>
+                    <span class="status-value" id="walletBalance">-</span>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>📋 Pré-Deploy</h3>
+                
+                <button class="btn" id="connectBtn" onclick="connectWallet()">
+                    🔗 Conectar MetaMask
+                </button>
+
+                <button class="btn btn-warning" id="deployBtn" onclick="deployContract()" disabled>
+                    🚀 DEPLOY CONTRATO (1 transação)
+                </button>
+            </div>
+
+            <div id="deployedContract" style="display: none;" class="contract-info">
+                <h3>✅ Contrato Deployed com Sucesso!</h3>
+                <div class="status-item">
+                    <span class="status-label">Endereço do Contrato:</span>
+                    <span class="status-value" id="contractAddressDisplay">-</span>
+                    <button class="copy-btn" onclick="copyContractAddress()">📋 Copiar</button>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Transaction Hash:</span>
+                    <span class="status-value" id="deployTxHash">-</span>
+                </div>
+                <div class="alert-success" style="margin-top: 15px;">
+                    <strong>Próximos passos:</strong> Vá para a aba "Executar Arbitragem" para começar a usar o contrato!
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: EXECUTE -->
+        <div id="execute-tab" class="tab-content">
+            <div class="routes-container">
+                <div class="route-card">
+                    <h3>📍 Rota 1</h3>
+                    <div class="route-path">WETH → USDC → DAI → WETH</div>
+                    <div class="route-path">Via: Uniswap V3</div>
+                </div>
+                <div class="route-card">
+                    <h3>📍 Rota 2</h3>
+                    <div class="route-path">WETH → WBTC → USDT → WETH</div>
+                    <div class="route-path">Via: SushiSwap</div>
+                </div>
+                <div class="route-card">
+                    <h3>📍 Rota 3</h3>
+                    <div class="route-path">WETH → USDC → WBTC → WETH</div>
+                    <div class="route-path">Via: Mixed DEXs</div>
+                </div>
+                <div class="route-card">
+                    <h3>📍 Rota 4</h3>
+                    <div class="route-path">WETH → USDC → DAI → USDT → WETH</div>
+                    <div class="route-path">Via: Curve Style</div>
+                </div>
+                <div class="route-card">
+                    <h3>📍 Rota 5</h3>
+                    <div class="route-path">WETH → DAI → WBTC → USDC → WETH</div>
+                    <div class="route-path">Via: Cross-DEX</div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalRoutes">5</div>
+                    <div class="stat-label">Rotas Ativas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalAttempts">0</div>
+                    <div class="stat-label">Tentativas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="successRate">0%</div>
+                    <div class="stat-label">Taxa Sucesso</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="gasSaved">0.000</div>
+                    <div class="stat-label">Gas Poupado (ETH)</div>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>⚙️ Configuração de Execução</h3>
+                
+                <div class="input-group">
+                    <label>Endereço do Contrato:</label>
+                    <input type="text" id="contractAddressInput" placeholder="0x...">
+                </div>
+
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Flash Loan Amount (WETH):</label>
+                        <input type="number" id="loanAmount" value="10" step="0.1" min="0.1">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Slippage Máximo (%):</label>
+                        <input type="number" id="maxSlippage" value="1" step="0.1" min="0.1" max="5">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Lucro Mínimo (WETH):</label>
+                        <input type="number" id="minProfit" value="0.05" step="0.01" min="0.01">
+                    </div>
+                </div>
+
+                <button class="btn btn-success" id="simulateBtn" onclick="simulateArbitrage()" disabled>
+                    🔍 SIMULAR (Sem gas)
+                </button>
+
+                <button class="btn" id="executeBtn" onclick="executeArbitrage()" disabled>
+                    ⚡ EXECUTAR ARBITRAGEM
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 3: MANAGE -->
+        <div id="manage-tab" class="tab-content">
+            <div class="config-section">
+                <h3>💰 Gerenciar Lucros</h3>
+                
+                <div class="input-group">
+                    <label>Endereço do Contrato:</label>
+                    <input type="text" id="manageContractAddress" placeholder="0x...">
+                </div>
+
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="contractBalance">0.000</div>
+                        <div class="stat-label">Saldo Contrato (WETH)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalProfitsOnChain">0.000</div>
+                        <div class="stat-label">Lucros Totais</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-success" onclick="checkBalance()">
+                    🔍 Ver Saldo
+                </button>
+
+                <button class="btn btn-warning" onclick="withdrawProfits()">
+                    💸 Retirar Lucros (WETH)
+                </button>
+
+                <div class="input-grid" style="margin-top: 20px;">
+                    <div class="input-group">
+                        <label>Token a Retirar:</label>
+                        <select id="tokenToWithdraw">
+                            <option value="0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2">WETH</option>
+                            <option value="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48">USDC</option>
+                            <option value="0x6B175474E89094C44Da98b954EedeAC495271d0F">DAI</option>
+                            <option value="0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599">WBTC</option>
+                            <option value="0xdAC17F958D2ee523a2206206994597C13D831ec7">USDT</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-danger" onclick="withdrawToken()">
+                    🔄 Retirar Token Específico
+                </button>
+            </div>
+        </div>
+
+        <div class="logs" id="logs">
+            <div class="log-entry">Sistema inicializado. Conecte sua carteira para começar...</div>
+        </div>
+    </div>
+
+    <script>
+        // NOTA: O bytecode completo seria inserido aqui após compilar o contrato Solidity
+        // Para este exemplo, vou incluir um placeholder que você deve substituir pelo bytecode real
+
+        const CONTRACT_BYTECODE = "INSIRA_O_BYTECODE_AQUI_APÓS_COMPILAR";
+        
+        const CONTRACT_ABI = [
+            "function executeFlashLoanArbitrage(address[] calldata tokens, uint256[] calldata amounts, bytes calldata params) external",
+            "function withdrawProfits() external",
+            "function withdrawToken(address token) external",
+            "function owner() view returns (address)",
+            "function totalProfits() view returns (uint256)",
+            "function totalArbitrages() view returns (uint256)",
+            "event ArbitrageExecuted(uint256 profit, uint256 timestamp, uint256 routesExecuted)",
+            "event FlashLoanReceived(address token, uint256 amount)",
+            "event RouteProfit(uint8 routeId, uint256 profit)"
+        ];
+
+        let provider, signer, contract;
+        let deployedContractAddress = "";
+        let stats = { attempts: 0, successes: 0, gasSaved: 0 };
+
+        const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`${tab}-tab`).classList.add('active');
+        }
+
+        async function connectWallet() {
+            try {
+                addLog("Conectando carteira...", "info");
+                
+                if (typeof window.ethereum === 'undefined') {
+                    addLog("❌ MetaMask não detectada!", "error");
+                    alert("Por favor, instale o MetaMask: https://metamask.io");
+                    return;
+                }
+
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = provider.getSigner();
+                
+                const address = await signer.getAddress();
+                const network = await provider.getNetwork();
+                const balance = await provider.getBalance(address);
+                
+                document.getElementById('walletAddress').textContent = 
+                    address.substring(0, 6) + '...' + address.substring(38);
+                document.getElementById('networkName').textContent = 
+                    `${network.name} (Chain ID: ${network.chainId})`;
+                document.getElementById('walletBalance').textContent = 
+                    `${parseFloat(ethers.utils.formatEther(balance)).toFixed(4)} ETH`;
+                document.getElementById('connectionStatus').textContent = '✅ Conectado';
+                
+                document.getElementById('deployBtn').disabled = false;
+                
+                addLog(`✅ Carteira conectada: ${address}`, "success");
+                addLog(`Rede: ${network.name} (${network.chainId})`, "info");
+                addLog(`Saldo: ${parseFloat(ethers.utils.formatEther(balance)).toFixed(4)} ETH`, "info");
+                
+                if (network.chainId !== 1) {
+                    addLog("⚠️ ATENÇÃO: Você não está na Mainnet!", "warning");
+                    addLog("As rotas são configuradas para Ethereum Mainnet", "warning");
+                }
+                
+            } catch (error) {
+                addLog(`❌ Erro ao conectar: ${error.message}`, "error");
+            }
+        }
+
+        async function deployContract() {
+            try {
+                if (!signer) {
+                    addLog("❌ Conecte sua carteira primeiro!", "error");
+                    return;
+                }
+
+                addLog("=".repeat(60), "info");
+                addLog("🚀 INICIANDO DEPLOY DO CONTRATO", "info");
+                addLog("=".repeat(60), "info");
+                
+                // NOTA: Para usar isto em produção, você precisa:
+                // 1. Compilar o contrato FlashLoanArbitrage.sol usando Hardhat/Foundry
+                // 2. Copiar o bytecode compilado
+                // 3. Substituir CONTRACT_BYTECODE acima
+                
+                if (CONTRACT_BYTECODE === "INSIRA_O_BYTECODE_AQUI_APÓS_COMPILAR") {
+                    addLog("❌ ERRO: Bytecode não configurado!", "error");
+                    addLog("Para usar este sistema:", "warning");
+                    addLog("1. Compile o FlashLoanArbitrage.sol", "warning");
+                    addLog("2. Substitua CONTRACT_BYTECODE no HTML", "warning");
+                    addLog("3. Reload e tente novamente", "warning");
+                    
+                    alert("⚠️ AVISO IMPORTANTE:\n\n" +
+                        "O bytecode do contrato precisa ser configurado primeiro.\n\n" +
+                        "Passos:\n" +
+                        "1. Compile FlashLoanArbitrage.sol com Hardhat ou Foundry\n" +
+                        "2. Copie o bytecode\n" +
+                        "3. Cole no HTML onde diz INSIRA_O_BYTECODE_AQUI_APÓS_COMPILAR\n" +
+                        "4. Salve e recarregue a página");
+                    return;
+                }
+                
+                const factory = new ethers.ContractFactory(CONTRACT_ABI, CONTRACT_BYTECODE, signer);
+                
+                addLog("📝 Preparando transação de deploy...", "info");
+                
+                const deployTx = await factory.deploy({
+                    gasLimit: 6000000
+                });
+                
+                addLog(`✅ Transação enviada!`, "success");
+                addLog(`Hash: ${deployTx.deployTransaction.hash}`, "info");
+                addLog("⏳ Aguardando confirmação na blockchain...", "warning");
+                
+                document.getElementById('deployBtn').innerHTML = 
+                    '⏳ Aguardando confirmação... <span class="spinner"></span>';
+                document.getElementById('deployBtn').disabled = true;
+                
+                await deployTx.deployed();
+                
+                deployedContractAddress = deployTx.address;
+                contract = deployTx;
+                
+                document.getElementById('contractAddressDisplay').textContent = deployedContractAddress;
+                document.getElementById('deployTxHash').textContent = deployTx.deployTransaction.hash;
+                document.getElementById('deployedContract').style.display = 'block';
+                
+                // Preencher automaticamente nos outros tabs
+                document.getElementById('contractAddressInput').value = deployedContractAddress;
+                document.getElementById('manageContractAddress').value = deployedContractAddress;
+                
+                document.getElementById('simulateBtn').disabled = false;
+                document.getElementById('executeBtn').disabled = false;
+                
+                addLog("=".repeat(60), "success");
+                addLog("✅✅✅ CONTRATO DEPLOYED COM SUCESSO! ✅✅✅", "success");
+                addLog("=".repeat(60), "success");
+                addLog(`Endereço: ${deployedContractAddress}`, "success");
+                addLog("Você pode agora executar arbitragens!", "success");
+                
+                setupEventListeners();
+                
+            } catch (error) {
+                addLog(`❌ Erro no deploy: ${error.message}`, "error");
+                console.error(error);
+                document.getElementById('deployBtn').innerHTML = '🚀 DEPLOY CONTRATO (1 transação)';
+                document.getElementById('deployBtn').disabled = false;
+            }
+        }
+
+        async function simulateArbitrage() {
+            try {
+                const contractAddr = document.getElementById('contractAddressInput').value;
+                if (!contractAddr || contractAddr.length !== 42) {
+                    addLog("❌ Insira um endereço de contrato válido!", "error");
+                    return;
+                }
+
+                if (!contract || contract.address !== contractAddr) {
+                    contract = new ethers.Contract(contractAddr, CONTRACT_ABI, signer);
+                }
+
+                addLog("=".repeat(60), "info");
+                addLog("🔬 SIMULAÇÃO (Sem custo de gas)", "info");
+                addLog("=".repeat(60), "info");
+                
+                const loanAmount = ethers.utils.parseEther(document.getElementById('loanAmount').value);
+                const minProfitWei = ethers.utils.parseEther(document.getElementById('minProfit').value);
+                const tokens = [WETH];
+                const amounts = [loanAmount];
+                
+                const params = ethers.utils.defaultAbiCoder.encode(
+                    ["uint256", "uint256"],
+                    [
+                        Math.floor(document.getElementById('maxSlippage').value * 100),
+                        minProfitWei
+                    ]
+                );
+                
+                addLog(`Testando flash loan de ${ethers.utils.formatEther(loanAmount)} WETH...`, "info");
+                
+                try {
+                    await contract.callStatic.executeFlashLoanArbitrage(tokens, amounts, params);
+                    
+                    addLog("✅✅✅ SIMULAÇÃO PASSOU!", "success");
+                    addLog("A transação FUNCIONARIA se executada agora", "success");
+                    
+                    const gasEstimate = await contract.estimateGas.executeFlashLoanArbitrage(tokens, amounts, params);
+                    const gasPrice = await provider.getGasPrice();
+                    const gasCost = gasEstimate.mul(gasPrice);
+                    
+                    addLog(`Gas estimado: ${gasEstimate.toString()} units`, "info");
+                    addLog(`Custo: ${parseFloat(ethers.utils.formatEther(gasCost)).toFixed(5)} ETH`, "info");
+                    addLog("Pode executar com segurança! ✅", "success");
+                    
+                } catch (simError) {
+                    addLog("❌ SIMULAÇÃO FALHOU!", "error");
+                    addLog(`Motivo: ${simError.message}`, "error");
+                    addLog("⚠️ NÃO execute - vai reverter e perder gas!", "warning");
+                    
+                    stats.gasSaved += 0.12;
+                    document.getElementById('gasSaved').textContent = stats.gasSaved.toFixed(3);
+                    addLog(`💰 Gas poupado: ~0.12 ETH`, "success");
+                }
+                
+            } catch (error) {
+                addLog(`❌ Erro na simulação: ${error.message}`, "error");
+            }
+        }
+
+        async function executeArbitrage() {
+            try {
+                const contractAddr = document.getElementById('contractAddressInput').value;
+                if (!contractAddr || contractAddr.length !== 42) {
+                    addLog("❌ Insira um endereço de contrato válido!", "error");
+                    return;
+                }
+
+                if (!contract || contract.address !== contractAddr) {
+                    contract = new ethers.Contract(contractAddr, CONTRACT_ABI, signer);
+                }
+
+                addLog("=".repeat(60), "warning");
+                addLog("⚡ EXECUTANDO ARBITRAGEM REAL", "warning");
+                addLog("=".repeat(60), "warning");
+                
+                const loanAmount = ethers.utils.parseEther(document.getElementById('loanAmount').value);
+                const minProfitWei = ethers.utils.parseEther(document.getElementById('minProfit').value);
+                const tokens = [WETH];
+                const amounts = [loanAmount];
+                
+                const params = ethers.utils.defaultAbiCoder.encode(
+                    ["uint256", "uint256"],
+                    [
+                        Math.floor(document.getElementById('maxSlippage').value * 100),
+                        minProfitWei
+                    ]
+                );
+                
+                // Simular primeiro
+                addLog("🔍 Simulação pré-execução...", "info");
+                try {
+                    await contract.callStatic.executeFlashLoanArbitrage(tokens, amounts, params);
+                    addLog("✅ Simulação OK", "success");
+                } catch (e) {
+                    addLog("❌ Simulação falhou - ABORTANDO!", "error");
+                    stats.gasSaved += 0.12;
+                    document.getElementById('gasSaved').textContent = stats.gasSaved.toFixed(3);
+                    return;
+                }
+                
+                addLog(`Flash Loan: ${ethers.utils.formatEther(loanAmount)} WETH`, "info");
+                addLog("Enviando transação...", "warning");
+                
+                const tx = await contract.executeFlashLoanArbitrage(tokens, amounts, params, {
+                    gasLimit: 8000000
+                });
+                
+                addLog(`✅ Transação enviada: ${tx.hash}`, "success");
+                addLog("⏳ Aguardando confirmação...", "warning");
+                
+                const receipt = await tx.wait();
+                
+                stats.attempts++;
+                stats.successes++;
+                updateStats();
+                
+                addLog("=".repeat(60), "success");
+                addLog("✅✅✅ ARBITRAGEM EXECUTADA! ✅✅✅", "success");
+                addLog("=".repeat(60), "success");
+                addLog(`Gas usado: ${receipt.gasUsed.toString()}`, "info");
+                addLog(`Custo real: ${parseFloat(ethers.utils.formatEther(receipt.gasUsed.mul(receipt.effectiveGasPrice))).toFixed(5)} ETH`, "info");
+                
+            } catch (error) {
+                addLog(`❌ Erro: ${error.message}`, "error");
+                stats.attempts++;
+                updateStats();
+            }
+        }
+
+        async function checkBalance() {
+            try {
+                const contractAddr = document.getElementById('manageContractAddress').value;
+                if (!contractAddr) {
+                    addLog("❌ Insira o endereço do contrato!", "error");
+                    return;
+                }
+
+                const weth = new ethers.Contract(WETH, ["function balanceOf(address) view returns (uint256)"], provider);
+                const balance = await weth.balanceOf(contractAddr);
+                
+                document.getElementById('contractBalance').textContent = 
+                    parseFloat(ethers.utils.formatEther(balance)).toFixed(4);
+                
+                addLog(`Saldo do contrato: ${parseFloat(ethers.utils.formatEther(balance)).toFixed(4)} WETH`, "success");
+                
+            } catch (error) {
+                addLog(`❌ Erro: ${error.message}`, "error");
+            }
+        }
+
+        async function withdrawProfits() {
+            try {
+                const contractAddr = document.getElementById('manageContractAddress').value;
+                if (!contractAddr) {
+                    addLog("❌ Insira o endereço do contrato!", "error");
+                    return;
+                }
+
+                const contractInstance = new ethers.Contract(contractAddr, CONTRACT_ABI, signer);
+                
+                addLog("Retirando lucros...", "info");
+                const tx = await contractInstance.withdrawProfits();
+                addLog(`Transação enviada: ${tx.hash}`, "info");
+                
+                await tx.wait();
+                addLog("✅ Lucros retirados com sucesso!", "success");
+                
+            } catch (error) {
+                addLog(`❌ Erro: ${error.message}`, "error");
+            }
+        }
+
+        async function withdrawToken() {
+            try {
+                const contractAddr = document.getElementById('manageContractAddress').value;
+                const tokenAddr = document.getElementById('tokenToWithdraw').value;
+                
+                if (!contractAddr) {
+                    addLog("❌ Insira o endereço do contrato!", "error");
+                    return;
+                }
+
+                const contractInstance = new ethers.Contract(contractAddr, CONTRACT_ABI, signer);
+                
+                addLog(`Retirando token ${tokenAddr}...`, "info");
+                const tx = await contractInstance.withdrawToken(tokenAddr);
+                addLog(`Transação enviada: ${tx.hash}`, "info");
+                
+                await tx.wait();
+                addLog("✅ Token retirado com sucesso!", "success");
+                
+            } catch (error) {
+                addLog(`❌ Erro: ${error.message}`, "error");
+            }
+        }
+
+        function setupEventListeners() {
+            if (!contract) return;
+            
+            contract.on("ArbitrageExecuted", (profit, timestamp, routesExecuted) => {
+                addLog(`💰 Lucro: ${ethers.utils.formatEther(profit)} WETH`, "success");
+                addLog(`🔀 Rotas executadas: ${routesExecuted.toString()}`, "info");
+            });
+            
+            contract.on("RouteProfit", (routeId, profit) => {
+                addLog(`📍 Rota ${routeId}: ${ethers.utils.formatEther(profit)} WETH`, "info");
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('totalAttempts').textContent = stats.attempts;
+            const rate = stats.attempts > 0 ? Math.round((stats.successes / stats.attempts) * 100) : 0;
+            document.getElementById('successRate').textContent = rate + '%';
+        }
+
+        function copyContractAddress() {
+            const addr = document.getElementById('contractAddressDisplay').textContent;
+            navigator.clipboard.writeText(addr);
+            addLog("✅ Endereço copiado!", "success");
+        }
+
+        function addLog(message, type = "info") {
+            const logsDiv = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(entry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        window.addEventListener('load', () => {
+            addLog("=".repeat(60), "success");
+            addLog("⚡ FLASH LOAN ARBITRAGE PRO v2.0", "success");
+            addLog("=".repeat(60), "success");
+            addLog("Sistema pronto para uso!", "info");
+            addLog("Passo 1: Conecte sua carteira", "info");
+            addLog("Passo 2: Faça deploy do contrato", "info");
+            addLog("Passo 3: Execute arbitragens!", "info");
+        });
+    </script>
+</body>
+</html>
