@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlashArb Auto - Base Chain</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        
+        h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+            font-size: 28px;
+            font-weight: 800;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 12px;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .scanner-status {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scanner-status.scanning::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: scan 2s infinite;
+        }
+        
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .scanner-status.stopped {
+            background: linear-gradient(135deg, #868f96 0%, #596164 100%);
+        }
+        
+        .scanner-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .scanner-text {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .scanner-subtext {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+        
+        .input-group {
+            margin-bottom: 12px;
+        }
+        
+        label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .preset-btn {
+            padding: 8px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .preset-btn:active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-start {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            font-size: 18px;
+            padding: 18px;
+        }
+        
+        .btn-stop {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+        
+        .log-container {
+            background: #1e1e1e;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #00ff00;
+            margin-top: 15px;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .log-time {
+            color: #888;
+            margin-right: 8px;
+        }
+        
+        .log-success {
+            color: #00ff00;
+        }
+        
+        .log-error {
+            color: #ff4444;
+        }
+        
+        .log-info {
+            color: #4facfe;
+        }
+        
+        .log-warning {
+            color: #ffc107;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 2px solid #bee5eb;
+        }
+        
+        .address {
+            word-break: break-all;
+            background: rgba(255,255,255,0.5);
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 8px;
+            font-family: monospace;
+            font-size: 11px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .info-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 FlashArb Auto Scanner</h1>
+        <p class="subtitle">Scanner Automático de Oportunidades - Base Chain</p>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Scans</div>
+                <div class="stat-value" id="scanCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Executado</div>
+                <div class="stat-value" id="totalExec">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Lucro</div>
+                <div class="stat-value" id="totalProfit">0</div>
+            </div>
+        </div>
+        
+        <div id="scannerStatus" class="scanner-status stopped">
+            <div class="scanner-icon">⏸️</div>
+            <div class="scanner-text">Scanner Parado</div>
+            <div class="scanner-subtext">Clique em Iniciar para começar</div>
+        </div>
+        
+        <div class="info-box">
+            🤖 <strong>Modo Automático:</strong> O scanner vai testar continuamente diferentes rotas de arbitragem e executar automaticamente quando encontrar oportunidades lucrativas!<br><br>
+            📊 <strong>Contrato:</strong> 0x36b4...f372
+        </div>
+        
+        <button id="connectBtn" onclick="connectWallet()">
+            🔗 Conectar OKX Wallet
+        </button>
+        
+        <div id="mainPanel" class="hidden">
+            <div class="section">
+                <div class="section-title">⚙️ Configurações do Scanner</div>
+                
+                <div class="input-group">
+                    <label>Valor por Trade (ETH)</label>
+                    <input type="text" id="amountIn" placeholder="0.1" value="0.05">
+                    <div class="preset-grid">
+                        <button class="preset-btn" onclick="setAmount('0.01')">0.01</button>
+                        <button class="preset-btn" onclick="setAmount('0.05')">0.05</button>
+                        <button class="preset-btn" onclick="setAmount('0.1')">0.1</button>
+                        <button class="preset-btn" onclick="setAmount('0.5')">0.5</button>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Lucro Mínimo (%)</label>
+                    <input type="text" id="minProfit" placeholder="0.3" value="0.3">
+                    <div class="preset-grid">
+                        <button class="preset-btn" onclick="setProfit('0.1')">0.1%</button>
+                        <button class="preset-btn" onclick="setProfit('0.3')">0.3%</button>
+                        <button class="preset-btn" onclick="setProfit('0.5')">0.5%</button>
+                        <button class="preset-btn" onclick="setProfit('1')">1%</button>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Intervalo de Scan (segundos)</label>
+                    <select id="scanInterval">
+                        <option value="5">5 segundos</option>
+                        <option value="10" selected>10 segundos</option>
+                        <option value="15">15 segundos</option>
+                        <option value="30">30 segundos</option>
+                        <option value="60">1 minuto</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button id="startBtn" onclick="startScanner()" class="btn-start">
+                ▶️ Iniciar Scanner Automático
+            </button>
+            
+            <button id="stopBtn" onclick="stopScanner()" class="btn-stop hidden">
+                ⏹️ Parar Scanner
+            </button>
+            
+            <div class="log-container" id="logContainer">
+                <div class="log-entry log-info">
+                    <span class="log-time">[Sistema]</span> Aguardando início do scanner...
+                </div>
+            </div>
+        </div>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const CONTRACT_ADDRESS = '0x36b4Fe14E1DE330728cdD56b16b7560d9326f372';
+        const BASE_CHAIN_ID = '0x2105';
+        
+        // Tokens populares na Base para scanner
+        const TOKENS = {
+            WETH: '0x4200000000000000000000000000000000000006',
+            USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            DAI: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
+            USDbC: '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA',
+            DEGEN: '0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed',
+            BRETT: '0x532f27101965dd16442E59d40670FaF5eBB142E4',
+            TOSHI: '0xAC1Bd2486aAf3B5C0fc3Fd868558b082a531B2B4'
+        };
+        
+        // Taxas de pool comuns
+        const FEES = [100, 500, 3000, 10000]; // 0.01%, 0.05%, 0.3%, 1%
+        
+        let provider;
+        let userAddress;
+        let scannerRunning = false;
+        let scannerInterval;
+        let scanCount = 0;
+        let execCount = 0;
+        let totalProfitEth = 0;
+        
+        function setAmount(value) {
+            document.getElementById('amountIn').value = value;
+        }
+        
+        function setProfit(value) {
+            document.getElementById('minProfit').value = value;
+        }
+        
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const time = new Date().toLocaleTimeString('pt-BR');
+            const logClass = `log-${type}`;
+            
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${logClass}`;
+            entry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
+            
+            logContainer.insertBefore(entry, logContainer.firstChild);
+            
+            // Limita a 100 entradas
+            while (logContainer.children.length > 100) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+        
+        async function connectWallet() {
+            const statusDiv = document.getElementById('status');
+            const connectBtn = document.getElementById('connectBtn');
+            const mainPanel = document.getElementById('mainPanel');
+            
+            try {
+                statusDiv.innerHTML = '<div class="status info">🔄 Conectando à OKX Wallet...</div>';
+                
+                if (typeof window.okxwallet === 'undefined') {
+                    throw new Error('OKX Wallet não encontrada!');
+                }
+                
+                const accounts = await window.okxwallet.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                userAddress = accounts[0];
+                provider = window.okxwallet;
+                
+                const chainId = await provider.request({ method: 'eth_chainId' });
+                
+                if (chainId !== BASE_CHAIN_ID) {
+                    statusDiv.innerHTML = '<div class="status info">🔄 Mudando para Base Chain...</div>';
+                    
+                    try {
+                        await provider.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: BASE_CHAIN_ID }],
+                        });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            await provider.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: BASE_CHAIN_ID,
+                                    chainName: 'Base',
+                                    nativeCurrency: {
+                                        name: 'Ethereum',
+                                        symbol: 'ETH',
+                                        decimals: 18
+                                    },
+                                    rpcUrls: ['https://mainnet.base.org'],
+                                    blockExplorerUrls: ['https://basescan.org']
+                                }],
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                }
+                
+                statusDiv.innerHTML = `<div class="status success">✅ Conectado!<div class="address">${userAddress}</div></div>`;
+                connectBtn.style.display = 'none';
+                mainPanel.classList.remove('hidden');
+                
+                addLog('✅ Wallet conectada: ' + userAddress.slice(0, 10) + '...', 'success');
+                await loadStats();
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Erro: ${error.message}</div>`;
+                addLog('❌ Erro ao conectar: ' + error.message, 'error');
+            }
+        }
+        
+        async function loadStats() {
+            try {
+                const data = '0x642f7d5e'; // getStats()
+                
+                const result = await provider.request({
+                    method: 'eth_call',
+                    params: [{
+                        to: CONTRACT_ADDRESS,
+                        data: data
+                    }, 'latest']
+                });
+                
+                const executions = parseInt(result.slice(2, 66), 16);
+                const profit = parseInt(result.slice(130, 194), 16);
+                
+                document.getElementById('totalExec').textContent = executions;
+                document.getElementById('totalProfit').textContent = 
+                    (profit / 1e18).toFixed(4);
+                
+                execCount = executions;
+                totalProfitEth = profit / 1e18;
+                
+            } catch (error) {
+                console.error('Erro ao carregar stats:', error);
+            }
+        }
+        
+        function startScanner() {
+            scannerRunning = true;
+            document.getElementById('startBtn').classList.add('hidden');
+            document.getElementById('stopBtn').classList.remove('hidden');
+            
+            const statusEl = document.getElementById('scannerStatus');
+            statusEl.className = 'scanner-status scanning';
+            statusEl.innerHTML = `
+                <div class="scanner-icon">🔍</div>
+                <div class="scanner-text">Scanner Ativo</div>
+                <div class="scanner-subtext">Procurando oportunidades...</div>
+            `;
+            
+            addLog('🚀 Scanner iniciado!', 'success');
+            
+            const interval = parseInt(document.getElementById('scanInterval').value) * 1000;
+            
+            // Primeira execução imediata
+            scanForOpportunities();
+            
+            // Depois executa no intervalo
+            scannerInterval = setInterval(scanForOpportunities, interval);
+        }
+        
+        function stopScanner() {
+            scannerRunning = false;
+            clearInterval(scannerInterval);
+            
+            document.getElementById('stopBtn').classList.add('hidden');
+            document.getElementById('startBtn').classList.remove('hidden');
+            
+            const statusEl = document.getElementById('scannerStatus');
+            statusEl.className = 'scanner-status stopped';
+            statusEl.innerHTML = `
+                <div class="scanner-icon">⏸️</div>
+                <div class="scanner-text">Scanner Parado</div>
+                <div class="scanner-subtext">Total de scans: ${scanCount}</div>
+            `;
+            
+            addLog('⏹️ Scanner parado', 'warning');
+        }
+        
+        async function scanForOpportunities() {
+            if (!scannerRunning) return;
+            
+            scanCount++;
+            document.getElementById('scanCount').textContent = scanCount;
+            
+            addLog(`🔍 Scan #${scanCount} - Testando rotas...`, 'info');
+            
+            const tokenList = Object.values(TOKENS);
+            const routes = generateRoutes(tokenList);
+            
+            addLog(`📊 Testando ${routes.length} rotas diferentes...`, 'info');
+            
+            for (const route of routes) {
+                if (!scannerRunning) break;
+                
+                try {
+                    const opportunity = await testRoute(route);
+                    
+                    if (opportunity.profitable) {
+                        addLog(`💰 OPORTUNIDADE ENCONTRADA! Rota: ${route.path}`, 'success');
+                        addLog(`💵 Lucro esperado: ~${opportunity.estimatedProfit}%`, 'success');
+                        
+                        await executeArbitrage(route);
+                        break; // Para após executar uma oportunidade
+                    }
+                } catch (error) {
+                    // Silenciosamente continua para próxima rota
+                }
+            }
+            
+            addLog(`✓ Scan #${scanCount} concluído`, 'info');
+        }
+        
+        function generateRoutes(tokens) {
+            const routes = [];
+            
+            // Gera rotas triangulares: A -> B -> C -> A
+            for (let i = 0; i < tokens.length; i++) {
+                for (let j = 0; j < tokens.length; j++) {
+                    if (i === j) continue;
+                    for (let k = 0; k < tokens.length; k++) {
+                        if (k === i || k === j) continue;
+                        
+                        // Para cada combinação de tokens, testa diferentes fees
+                        for (const fee1 of FEES) {
+                            for (const fee2 of FEES) {
+                                for (const fee3 of FEES) {
+                                    routes.push({
+                                        tokenA: tokens[i],
+                                        tokenB: tokens[j],
+                                        tokenC: tokens[k],
+                                        fee1,
+                                        fee2,
+                                        fee3,
+                                        path: `${getTokenName(tokens[i])} → ${getTokenName(tokens[j])} → ${getTokenName(tokens[k])}`
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Embaralha para não testar sempre na mesma ordem
+            return routes.sort(() => Math.random() - 0.5);
+        }
+        
+        function getTokenName(address) {
+            for (const [name, addr] of Object.entries(TOKENS)) {
+                if (addr.toLowerCase() === address.toLowerCase()) {
+                    return name;
+                }
+            }
+            return 'TOKEN';
+        }
+        
+        async function testRoute(route) {
+            const amountIn = document.getElementById('amountIn').value;
+            const minProfitPct = document.getElementById('minProfit').value;
+            
+            const amountInFloat = parseFloat(amountIn) * 1e18;
+            const amountInWei = BigInt(Math.floor(amountInFloat));
+            const minProfitFloat = amountInFloat * parseFloat(minProfitPct) / 100;
+            const minProfitWei = BigInt(Math.floor(minProfitFloat));
+            
+            const data = encodeExecute(
+                route.tokenA,
+                amountInWei,
+                route.tokenB,
+                route.fee1,
+                route.fee2,
+                route.fee3,
+                route.tokenC,
+                minProfitWei
+            );
+            
+            try {
+                // Tenta estimar gas - se funcionar, a rota é lucrativa
+                const gasEstimate = await provider.request({
+                    method: 'eth_estimateGas',
+                    params: [{
+                        from: userAddress,
+                        to: CONTRACT_ADDRESS,
+                        data: data,
+                        value: route.tokenA === TOKENS.WETH ? '0x' + amountInWei.toString(16) : '0x0'
+                    }]
+                });
+                
+                return {
+                    profitable: true,
+                    estimatedProfit: minProfitPct,
+                    gasEstimate
+                };
+            } catch (error) {
+                return { profitable: false };
+            }
+        }
+        
+        async function executeArbitrage(route) {
+            try {
+                addLog(`⚡ Executando arbitragem...`, 'info');
+                
+                const amountIn = document.getElementById('amountIn').value;
+                const minProfitPct = document.getElementById('minProfit').value;
+                
+                const amountInFloat = parseFloat(amountIn) * 1e18;
+                const amountInWei = BigInt(Math.floor(amountInFloat));
+                const minProfitFloat = amountInFloat * parseFloat(minProfitPct) / 100;
+                const minProfitWei = BigInt(Math.floor(minProfitFloat));
+                
+                const data = encodeExecute(
+                    route.tokenA,
+                    amountInWei,
+                    route.tokenB,
+                    route.fee1,
+                    route.fee2,
+                    route.fee3,
+                    route.tokenC,
+                    minProfitWei
+                );
+                
+                const gasEstimate = await provider.request({
+                    method: 'eth_estimateGas',
+                    params: [{
+                        from: userAddress,
+                        to: CONTRACT_ADDRESS,
+                        data: data,
+                        value: route.tokenA === TOKENS.WETH ? '0x' + amountInWei.toString(16) : '0x0'
+                    }]
+                });
+                
+                const gasEstimateNum = parseInt(gasEstimate, 16);
+                const gasWithBuffer = Math.floor(gasEstimateNum * 1.2);
+                const gasHex = '0x' + gasWithBuffer.toString(16);
+                
+                const txHash = await provider.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: userAddress,
+                        to: CONTRACT_ADDRESS,
+                        data: data,
+                        gas: gasHex,
+                        value: route.tokenA === TOKENS.WETH ? '0x' + amountInWei.toString(16) : '0x0'
+                    }]
+                });
+                
+                addLog(`📤 TX enviada: ${txHash.slice(0, 20)}...`, 'info');
+                
+                // Aguarda confirmação
+                let receipt = null;
+                let attempts = 0;
+                while (!receipt && attempts < 60) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    receipt = await provider.request({
+                        method: 'eth_getTransactionReceipt',
+                        params: [txHash]
+                    });
+                    attempts++;
+                }
+                
+                if (receipt && receipt.status === '0x1') {
+                    addLog(`🎉 SUCESSO! TX confirmada!`, 'success');
+                    addLog(`🔗 https://basescan.org/tx/${txHash}`, 'success');
+                    await loadStats();
+                } else {
+                    addLog(`❌ TX falhou`, 'error');
+                }
+                
+            } catch (error) {
+                addLog(`❌ Erro na execução: ${error.message}`, 'error');
+            }
+        }
+        
+        function encodeExecute(tokenA, amountIn, tokenB, fee1, fee2, fee3, tokenC, minProfit) {
+            let encoded = '0x28637f4a'; // execute signature
+            encoded += tokenA.slice(2).padStart(64, '0');
+            encoded += amountIn.toString(16).padStart(64, '0');
+            encoded += tokenB.slice(2).padStart(64, '0');
+            encoded += fee1.toString(16).padStart(64, '0');
+            encoded += fee2.toString(16).padStart(64, '0');
+            encoded += fee3.toString(16).padStart(64, '0');
+            encoded += tokenC.slice(2).padStart(64, '0');
+            encoded += minProfit.toString(16).padStart(64, '0');
+            return encoded;
+        }
+        
+        window.addEventListener('load', () => {
+            if (typeof window.okxwallet !== 'undefined') {
+                document.getElementById('status').innerHTML = 
+                    '<div class="status info">✅ OKX Wallet detectada! Conecte para começar.</div>';
+            } else {
+                document.getElementById('status').innerHTML = 
+                    '<div class="status error">⚠️ OKX Wallet não encontrada.</div>';
+            }
+        });
+    </script>
+</body>
+</html>
