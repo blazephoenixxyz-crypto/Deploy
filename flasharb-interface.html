@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlashArb - Base Chain</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 5px;
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 12px;
+        }
+        
+        .input-group {
+            margin-bottom: 12px;
+        }
+        
+        label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .token-preset {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .preset-btn {
+            padding: 8px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .preset-btn:active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 2px solid #bee5eb;
+        }
+        
+        .address {
+            word-break: break-all;
+            background: rgba(255,255,255,0.5);
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 8px;
+            font-family: monospace;
+            font-size: 11px;
+        }
+        
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 15px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .info-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .toggle-advanced {
+            text-align: center;
+            color: #667eea;
+            font-size: 13px;
+            cursor: pointer;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ FlashArb</h1>
+        <p class="subtitle">Arbitragem com Flash Loans na Base Chain</p>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Execuções</div>
+                <div class="stat-value" id="totalExec">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Lucro Total</div>
+                <div class="stat-value" id="totalProfit">-</div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            📊 <strong>Contrato:</strong> 0x36b4...f372<br>
+            💡 Use tokens com alta liquidez no Uniswap V3 Base
+        </div>
+        
+        <button id="connectBtn" onclick="connectWallet()">
+            🔗 Conectar OKX Wallet
+        </button>
+        
+        <div id="mainPanel" class="hidden">
+            <div class="section">
+                <div class="section-title">🎯 Rota de Arbitragem</div>
+                
+                <div class="input-group">
+                    <label>Token A (Inicial)</label>
+                    <select id="tokenA" onchange="updateTokenAAddress()">
+                        <option value="0x4200000000000000000000000000000000000006">WETH</option>
+                        <option value="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913">USDC</option>
+                        <option value="0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb">DAI</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Token B (Intermediário)</label>
+                    <select id="tokenB" onchange="updateTokenBAddress()">
+                        <option value="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913">USDC</option>
+                        <option value="0x4200000000000000000000000000000000000006">WETH</option>
+                        <option value="0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb">DAI</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Token C (Final)</label>
+                    <select id="tokenC" onchange="updateTokenCAddress()">
+                        <option value="0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb">DAI</option>
+                        <option value="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913">USDC</option>
+                        <option value="0x4200000000000000000000000000000000000006">WETH</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">💰 Parâmetros</div>
+                
+                <div class="input-group">
+                    <label>Valor do Flash Loan</label>
+                    <input type="text" id="amountIn" placeholder="0.1" value="0.1">
+                    <div class="token-preset">
+                        <button class="preset-btn" onclick="setAmount('0.05')">0.05</button>
+                        <button class="preset-btn" onclick="setAmount('0.1')">0.1</button>
+                        <button class="preset-btn" onclick="setAmount('0.5')">0.5</button>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Lucro Mínimo (%)</label>
+                    <input type="text" id="minProfit" placeholder="0.5" value="0.5">
+                </div>
+            </div>
+            
+            <div class="toggle-advanced" onclick="toggleAdvanced()">
+                ⚙️ Configurações Avançadas
+            </div>
+            
+            <div id="advancedPanel" class="section hidden">
+                <div class="section-title">⚙️ Taxas dos Pools</div>
+                
+                <div class="input-group">
+                    <label>Taxa Pool 1 (A→B)</label>
+                    <select id="fee1">
+                        <option value="500">0.05%</option>
+                        <option value="3000" selected>0.3%</option>
+                        <option value="10000">1%</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Taxa Pool 2 (B→C)</label>
+                    <select id="fee2">
+                        <option value="500">0.05%</option>
+                        <option value="3000" selected>0.3%</option>
+                        <option value="10000">1%</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Taxa Pool 3 (C→A)</label>
+                    <select id="fee3">
+                        <option value="500">0.05%</option>
+                        <option value="3000" selected>0.3%</option>
+                        <option value="10000">1%</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button id="executeBtn" onclick="executeArbitrage()">
+                ⚡ Executar Arbitragem
+            </button>
+            
+            <button onclick="loadStats()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                🔄 Atualizar Estatísticas
+            </button>
+        </div>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const CONTRACT_ADDRESS = '0x36b4Fe14E1DE330728cdD56b16b7560d9326f372';
+        const BASE_CHAIN_ID = '0x2105'; // 8453
+        
+        const CONTRACT_ABI = [
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "tokenA", "type": "address"},
+                    {"internalType": "uint256", "name": "amountIn", "type": "uint256"},
+                    {"internalType": "address", "name": "tokenB", "type": "address"},
+                    {"internalType": "uint24", "name": "fee1", "type": "uint24"},
+                    {"internalType": "uint24", "name": "fee2", "type": "uint24"},
+                    {"internalType": "uint24", "name": "fee3", "type": "uint24"},
+                    {"internalType": "address", "name": "tokenC", "type": "address"},
+                    {"internalType": "uint256", "name": "minProfit", "type": "uint256"}
+                ],
+                "name": "execute",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getStats",
+                "outputs": [
+                    {"internalType": "uint256", "name": "executions", "type": "uint256"},
+                    {"internalType": "uint256", "name": "successes", "type": "uint256"},
+                    {"internalType": "uint256", "name": "profit", "type": "uint256"}
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+        
+        let provider;
+        let userAddress;
+        
+        function toggleAdvanced() {
+            const panel = document.getElementById('advancedPanel');
+            panel.classList.toggle('hidden');
+        }
+        
+        function setAmount(value) {
+            document.getElementById('amountIn').value = value;
+        }
+        
+        function updateTokenAAddress() {}
+        function updateTokenBAddress() {}
+        function updateTokenCAddress() {}
+        
+        async function connectWallet() {
+            const statusDiv = document.getElementById('status');
+            const connectBtn = document.getElementById('connectBtn');
+            const mainPanel = document.getElementById('mainPanel');
+            
+            try {
+                statusDiv.innerHTML = '<div class="status info">🔄 Conectando à OKX Wallet...</div>';
+                
+                if (typeof window.okxwallet === 'undefined') {
+                    throw new Error('OKX Wallet não encontrada! Instale o app OKX.');
+                }
+                
+                const accounts = await window.okxwallet.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                userAddress = accounts[0];
+                provider = window.okxwallet;
+                
+                const chainId = await provider.request({ method: 'eth_chainId' });
+                
+                if (chainId !== BASE_CHAIN_ID) {
+                    statusDiv.innerHTML = '<div class="status info">🔄 Mudando para Base Chain...</div>';
+                    
+                    try {
+                        await provider.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: BASE_CHAIN_ID }],
+                        });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            await provider.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: BASE_CHAIN_ID,
+                                    chainName: 'Base',
+                                    nativeCurrency: {
+                                        name: 'Ethereum',
+                                        symbol: 'ETH',
+                                        decimals: 18
+                                    },
+                                    rpcUrls: ['https://mainnet.base.org'],
+                                    blockExplorerUrls: ['https://basescan.org']
+                                }],
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                }
+                
+                statusDiv.innerHTML = `<div class="status success">✅ Conectado!<div class="address">${userAddress}</div></div>`;
+                connectBtn.style.display = 'none';
+                mainPanel.classList.remove('hidden');
+                
+                await loadStats();
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Erro: ${error.message}</div>`;
+                console.error(error);
+            }
+        }
+        
+        async function loadStats() {
+            try {
+                const data = encodeCall('getStats', []);
+                
+                const result = await provider.request({
+                    method: 'eth_call',
+                    params: [{
+                        to: CONTRACT_ADDRESS,
+                        data: data
+                    }, 'latest']
+                });
+                
+                const executions = parseInt(result.slice(2, 66), 16);
+                const successes = parseInt(result.slice(66, 130), 16);
+                const profit = parseInt(result.slice(130, 194), 16);
+                
+                document.getElementById('totalExec').textContent = executions;
+                document.getElementById('totalProfit').textContent = 
+                    (profit / 1e18).toFixed(4) + ' ETH';
+                
+            } catch (error) {
+                console.error('Erro ao carregar stats:', error);
+            }
+        }
+        
+        async function executeArbitrage() {
+            const statusDiv = document.getElementById('status');
+            const executeBtn = document.getElementById('executeBtn');
+            
+            try {
+                executeBtn.disabled = true;
+                
+                const tokenA = document.getElementById('tokenA').value;
+                const tokenB = document.getElementById('tokenB').value;
+                const tokenC = document.getElementById('tokenC').value;
+                const amountIn = document.getElementById('amountIn').value;
+                const minProfitPct = document.getElementById('minProfit').value;
+                const fee1 = document.getElementById('fee1').value;
+                const fee2 = document.getElementById('fee2').value;
+                const fee3 = document.getElementById('fee3').value;
+                
+                if (!tokenA || !tokenB || !tokenC || !amountIn) {
+                    throw new Error('Preencha todos os campos!');
+                }
+                
+                // Valida tokens diferentes
+                if (tokenA === tokenB || tokenB === tokenC || tokenA === tokenC) {
+                    throw new Error('Tokens devem ser diferentes!');
+                }
+                
+                // Converte valores
+                const amountInWei = BigInt(Math.floor(parseFloat(amountIn) * 1e18));
+                const minProfitWei = BigInt(Math.floor(amountInWei * parseFloat(minProfitPct) / 100));
+                
+                statusDiv.innerHTML = '<div class="status info">📊 Preparando transação...<div class="loader"></div></div>';
+                
+                // Encode function call
+                const data = encodeCall('execute', [
+                    tokenA,
+                    '0x' + amountInWei.toString(16),
+                    tokenB,
+                    fee1,
+                    fee2,
+                    fee3,
+                    tokenC,
+                    '0x' + minProfitWei.toString(16)
+                ]);
+                
+                // Estima gas
+                let gasEstimate;
+                try {
+                    gasEstimate = await provider.request({
+                        method: 'eth_estimateGas',
+                        params: [{
+                            from: userAddress,
+                            to: CONTRACT_ADDRESS,
+                            data: data,
+                            value: tokenA === '0x4200000000000000000000000000000000000006' 
+                                ? '0x' + amountInWei.toString(16) 
+                                : '0x0'
+                        }]
+                    });
+                } catch (gasError) {
+                    throw new Error('⚠️ Arbitragem não seria lucrativa ou pools não encontrados');
+                }
+                
+                statusDiv.innerHTML = '<div class="status info">🔐 Confirme na OKX Wallet...<div class="loader"></div></div>';
+                
+                // Envia transação
+                const txHash = await provider.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: userAddress,
+                        to: CONTRACT_ADDRESS,
+                        data: data,
+                        gas: '0x' + (Math.floor(parseInt(gasEstimate, 16) * 1.2)).toString(16),
+                        value: tokenA === '0x4200000000000000000000000000000000000006' 
+                            ? '0x' + amountInWei.toString(16) 
+                            : '0x0'
+                    }]
+                });
+                
+                statusDiv.innerHTML = `<div class="status info">⏳ Executando arbitragem...<div class="address">TX: ${txHash}</div><div class="loader"></div></div>`;
+                
+                // Aguarda confirmação
+                let receipt = null;
+                let attempts = 0;
+                while (!receipt && attempts < 60) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    receipt = await provider.request({
+                        method: 'eth_getTransactionReceipt',
+                        params: [txHash]
+                    });
+                    attempts++;
+                }
+                
+                if (receipt && receipt.status === '0x1') {
+                    await loadStats();
+                    statusDiv.innerHTML = `
+                        <div class="status success">
+                            🎉 <strong>Arbitragem executada com sucesso!</strong><br><br>
+                            <a href="https://basescan.org/tx/${txHash}" target="_blank" class="link">
+                                Ver no BaseScan →
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Transação falhou - provavelmente não havia oportunidade de lucro');
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ ${error.message}</div>`;
+                console.error(error);
+            } finally {
+                executeBtn.disabled = false;
+            }
+        }
+        
+        function encodeCall(funcName, params) {
+            const signatures = {
+                'execute': '28637f4a',
+                'getStats': '642f7d5e'
+            };
+            
+            let encoded = '0x' + signatures[funcName];
+            
+            if (funcName === 'execute') {
+                encoded += params[0].slice(2).padStart(64, '0'); // tokenA
+                encoded += params[1].slice(2).padStart(64, '0'); // amountIn
+                encoded += params[2].slice(2).padStart(64, '0'); // tokenB
+                encoded += parseInt(params[3]).toString(16).padStart(64, '0'); // fee1
+                encoded += parseInt(params[4]).toString(16).padStart(64, '0'); // fee2
+                encoded += parseInt(params[5]).toString(16).padStart(64, '0'); // fee3
+                encoded += params[6].slice(2).padStart(64, '0'); // tokenC
+                encoded += params[7].slice(2).padStart(64, '0'); // minProfit
+            }
+            
+            return encoded;
+        }
+        
+        window.addEventListener('load', () => {
+            if (typeof window.okxwallet !== 'undefined') {
+                document.getElementById('status').innerHTML = 
+                    '<div class="status info">✅ OKX Wallet detectada! Conecte para começar.</div>';
+            } else {
+                document.getElementById('status').innerHTML = 
+                    '<div class="status error">⚠️ OKX Wallet não encontrada.</div>';
+            }
+        });
+    </script>
+</body>
+</html>
