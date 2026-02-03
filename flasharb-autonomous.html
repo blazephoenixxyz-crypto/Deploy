@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlashArb Turbo PRO - Modo Autônomo</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: #0a0e27;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 15px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(0, 255, 136, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(0, 163, 255, 0.08) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .container {
+            background: rgba(15, 20, 40, 0.95);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            max-width: 520px;
+            margin: 0 auto;
+            box-shadow: 
+                0 0 40px rgba(0, 255, 136, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(20px);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.15);
+            padding-bottom: 20px;
+        }
+        
+        .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00ff88 0%, #00a3ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+            letter-spacing: -1px;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 11px;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.7;
+        }
+        
+        .auto-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 163, 255, 0.2));
+            border: 1px solid #00ff88;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 9px;
+            margin-top: 8px;
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes badgePulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.6); }
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 163, 255, 0.1) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { left: -100%; }
+            50% { left: 100%; }
+        }
+        
+        .stat-label {
+            font-size: 9px;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        
+        .scanner-status {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 163, 255, 0.15) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scanner-status.active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(0, 255, 136, 0.3), 
+                transparent
+            );
+            animation: scan 2s infinite;
+        }
+        
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .scanner-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        .scanner-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #00ff88;
+            margin-bottom: 5px;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        
+        .scanner-subtext {
+            font-size: 10px;
+            color: #a0a0a0;
+        }
+        
+        .section {
+            background: rgba(20, 25, 45, 0.6);
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #00ff88;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-title::before {
+            content: '';
+            width: 3px;
+            height: 12px;
+            background: linear-gradient(180deg, #00ff88, #00a3ff);
+            border-radius: 3px;
+        }
+        
+        .param-display {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: rgba(10, 15, 30, 0.6);
+            border: 1px solid rgba(0, 255, 136, 0.15);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .param-label {
+            font-size: 10px;
+            color: #a0a0a0;
+            text-transform: uppercase;
+        }
+        
+        .param-value {
+            font-size: 12px;
+            color: #00ff88;
+            font-weight: 600;
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #00ff88 0%, #00a3ff 100%);
+            color: #0a0e27;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        button:active::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-stop {
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+        }
+        
+        .log-container {
+            background: rgba(10, 15, 30, 0.9);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 350px;
+            overflow-y: auto;
+            font-size: 10px;
+            color: #00ff88;
+            margin-top: 15px;
+        }
+        
+        .log-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .log-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+        
+        .log-container::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 136, 0.3);
+            border-radius: 3px;
+        }
+        
+        .log-entry {
+            margin-bottom: 6px;
+            line-height: 1.5;
+            padding-left: 12px;
+            border-left: 2px solid rgba(0, 255, 136, 0.2);
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .log-entry.success {
+            color: #00ff88;
+            border-left-color: #00ff88;
+            font-weight: 600;
+        }
+        
+        .log-entry.error {
+            color: #ff4444;
+            border-left-color: #ff4444;
+        }
+        
+        .log-entry.warning {
+            color: #ffaa00;
+            border-left-color: #ffaa00;
+        }
+        
+        .log-entry.info {
+            color: #00a3ff;
+            border-left-color: #00a3ff;
+        }
+
+        .ai-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            background: rgba(0, 163, 255, 0.1);
+            border: 1px solid rgba(0, 163, 255, 0.3);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 10px;
+            color: #00a3ff;
+        }
+
+        .ai-indicator::before {
+            content: '🤖';
+            font-size: 16px;
+            animation: rotate 4s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .performance-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .perf-card {
+            background: rgba(10, 15, 30, 0.6);
+            border: 1px solid rgba(0, 255, 136, 0.15);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .perf-label {
+            font-size: 9px;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .perf-value {
+            font-size: 14px;
+            color: #00ff88;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">⚡ FLASHARB PRO</div>
+            <div class="subtitle">Autonomous Trading Engine</div>
+            <div class="auto-badge">🤖 MODO AUTÔNOMO ATIVADO</div>
+        </div>
+
+        <div class="ai-indicator">
+            <span>Sistema IA gerenciando parâmetros e otimizações automaticamente</span>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Scans</div>
+                <div class="stat-value" id="scanCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Trades</div>
+                <div class="stat-value" id="tradeCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Profit</div>
+                <div class="stat-value" id="profitValue">0.00</div>
+            </div>
+        </div>
+
+        <div class="performance-panel">
+            <div class="perf-card">
+                <div class="perf-label">Taxa de Sucesso</div>
+                <div class="perf-value" id="successRate">0%</div>
+            </div>
+            <div class="perf-card">
+                <div class="perf-label">Oportunidades</div>
+                <div class="perf-value" id="opportunityCount">0</div>
+            </div>
+        </div>
+        
+        <div class="scanner-status active" id="scannerStatus">
+            <div class="scanner-icon">🤖</div>
+            <div class="scanner-text">Inicializando Sistema Autônomo...</div>
+            <div class="scanner-subtext">Conectando e configurando automaticamente</div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">📊 Parâmetros Atuais (Auto-Ajustados)</div>
+            
+            <div class="param-display">
+                <span class="param-label">💰 Valor por Trade</span>
+                <span class="param-value" id="displayAmount">0.05 ETH</span>
+            </div>
+            
+            <div class="param-display">
+                <span class="param-label">📈 Lucro Mínimo</span>
+                <span class="param-value" id="displayProfit">0.5%</span>
+            </div>
+
+            <div class="param-display">
+                <span class="param-label">⚡ Modo Operação</span>
+                <span class="param-value" id="displayMode">TURBO</span>
+            </div>
+
+            <div class="param-display">
+                <span class="param-label">🎯 Rotas por Scan</span>
+                <span class="param-value" id="displayRoutes">50</span>
+            </div>
+        </div>
+
+        <button id="stopBtn" class="btn-stop" onclick="emergencyStop()">
+            🛑 PARADA DE EMERGÊNCIA
+        </button>
+        
+        <div class="log-container" id="logContainer">
+            <div class="log-entry info">🤖 Sistema autônomo inicializando...</div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        // CONFIGURAÇÃO AUTÔNOMA
+        // ═══════════════════════════════════════════════════════════════
+        
+        const CONTRACT_ADDRESS = '0xe569e1019db12ed084be9655667f3beb15a9b1cc';
+        const RPC_URL = 'https://mainnet.base.org';
+        
+        // Tokens principais Base Chain
+        const TOKENS = {
+            WETH: '0x4200000000000000000000000000000000000006',
+            USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            DAI: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
+            USDbC: '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA',
+            cbETH: '0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22'
+        };
+        
+        const FEES = [100, 500, 3000, 10000];
+        
+        // Estado global
+        let provider = null;
+        let userAddress = null;
+        let scannerRunning = false;
+        let scanCount = 0;
+        let tradeCount = 0;
+        let totalProfit = 0;
+        let opportunityCount = 0;
+        
+        // Parâmetros auto-ajustáveis
+        let currentAmount = 0.05;
+        let currentMinProfit = 0.5;
+        let currentMode = 'turbo';
+        let batchSize = 50;
+        let scanInterval = 2000;
+        
+        // Métricas de performance
+        let recentScans = [];
+        let recentOpportunities = [];
+        
+        // ═══════════════════════════════════════════════════════════════
+        // FUNÇÕES AUXILIARES
+        // ═══════════════════════════════════════════════════════════════
+        
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            entry.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            while (logContainer.children.length > 150) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+        }
+        
+        function updateStats() {
+            document.getElementById('scanCount').textContent = scanCount;
+            document.getElementById('tradeCount').textContent = tradeCount;
+            document.getElementById('profitValue').textContent = totalProfit.toFixed(4);
+            document.getElementById('opportunityCount').textContent = opportunityCount;
+            
+            // Calcula taxa de sucesso
+            const successRate = opportunityCount > 0 
+                ? ((tradeCount / opportunityCount) * 100).toFixed(1)
+                : '0';
+            document.getElementById('successRate').textContent = `${successRate}%`;
+        }
+        
+        function updateDisplay() {
+            document.getElementById('displayAmount').textContent = `${currentAmount} ETH`;
+            document.getElementById('displayProfit').textContent = `${currentMinProfit}%`;
+            document.getElementById('displayMode').textContent = currentMode.toUpperCase();
+            document.getElementById('displayRoutes').textContent = batchSize;
+        }
+        
+        function updateScannerStatus(text, subtext) {
+            const status = document.getElementById('scannerStatus');
+            status.innerHTML = `
+                <div class="scanner-icon">🤖</div>
+                <div class="scanner-text">${text}</div>
+                <div class="scanner-subtext">${subtext}</div>
+            `;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // OTIMIZAÇÃO INTELIGENTE
+        // ═══════════════════════════════════════════════════════════════
+        
+        function autoOptimize() {
+            // Analisa últimos 20 scans
+            const recentWindow = recentScans.slice(-20);
+            
+            if (recentWindow.length < 10) return;
+            
+            const avgOpportunities = recentWindow.reduce((a, b) => a + b, 0) / recentWindow.length;
+            
+            // Se nenhuma oportunidade em 20 scans, relaxa critérios
+            if (avgOpportunities === 0 && scanCount > 20) {
+                if (currentMinProfit > 0.3) {
+                    currentMinProfit = Math.max(0.3, currentMinProfit - 0.1);
+                    addLog(`🧠 IA: Reduzindo lucro mínimo para ${currentMinProfit}%`, 'warning');
+                    updateDisplay();
+                }
+            }
+            
+            // Se muitas oportunidades mas poucas execuções, aumenta valor
+            if (opportunityCount > 10 && tradeCount < 3) {
+                if (currentAmount < 0.2) {
+                    currentAmount += 0.02;
+                    addLog(`🧠 IA: Aumentando valor para ${currentAmount.toFixed(2)} ETH`, 'info');
+                    updateDisplay();
+                }
+            }
+            
+            // Ajusta velocidade baseado em performance
+            if (scanCount % 50 === 0) {
+                const successRate = opportunityCount > 0 ? (tradeCount / opportunityCount) : 0;
+                
+                if (successRate < 0.2 && currentMode === 'turbo') {
+                    currentMode = 'safe';
+                    batchSize = 30;
+                    scanInterval = 3000;
+                    addLog(`🧠 IA: Mudando para modo SEGURO (baixa taxa de sucesso)`, 'warning');
+                    updateDisplay();
+                } else if (successRate > 0.5 && currentMode === 'safe') {
+                    currentMode = 'turbo';
+                    batchSize = 50;
+                    scanInterval = 2000;
+                    addLog(`🧠 IA: Mudando para modo TURBO (alta taxa de sucesso)`, 'success');
+                    updateDisplay();
+                }
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // CONEXÃO AUTOMÁTICA
+        // ═══════════════════════════════════════════════════════════════
+        
+        async function autoConnect() {
+            try {
+                addLog('🔌 Conectando carteira automaticamente...', 'info');
+                
+                if (typeof window.ethereum === 'undefined') {
+                    addLog('❌ Carteira não encontrada! Instale MetaMask ou OKX Wallet.', 'error');
+                    updateScannerStatus('❌ Erro', 'Carteira não encontrada');
+                    return false;
+                }
+                
+                provider = window.ethereum;
+                
+                // Solicita contas
+                const accounts = await provider.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                userAddress = accounts[0];
+                
+                addLog(`✅ Conectado: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, 'success');
+                
+                // Verifica e muda rede automaticamente
+                const chainId = await provider.request({ method: 'eth_chainId' });
+                if (chainId !== '0x2105') {
+                    addLog('🔄 Mudando para Base Chain...', 'warning');
+                    try {
+                        await provider.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0x2105' }],
+                        });
+                        addLog('✅ Base Chain ativada!', 'success');
+                    } catch (error) {
+                        if (error.code === 4902) {
+                            // Adiciona a rede Base
+                            await provider.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: '0x2105',
+                                    chainName: 'Base',
+                                    nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                                    rpcUrls: ['https://mainnet.base.org'],
+                                    blockExplorerUrls: ['https://basescan.org']
+                                }]
+                            });
+                            addLog('✅ Base Chain adicionada e ativada!', 'success');
+                        } else {
+                            throw error;
+                        }
+                    }
+                }
+                
+                // Verifica saldo
+                const balance = await provider.request({
+                    method: 'eth_getBalance',
+                    params: [userAddress, 'latest']
+                });
+                const balanceEth = parseInt(balance, 16) / 1e18;
+                addLog(`💰 Saldo: ${balanceEth.toFixed(4)} ETH`, 'info');
+                
+                if (balanceEth < 0.01) {
+                    addLog('⚠️ Saldo baixo! Você precisa de mais ETH.', 'warning');
+                }
+                
+                return true;
+                
+            } catch (error) {
+                addLog(`❌ Erro ao conectar: ${error.message}`, 'error');
+                updateScannerStatus('❌ Erro de Conexão', 'Verifique sua carteira');
+                return false;
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // GERAÇÃO DE ROTAS
+        // ═══════════════════════════════════════════════════════════════
+        
+        function generateRoutes() {
+            const routes = [];
+            const tokenList = Object.values(TOKENS);
+            const baseToken = TOKENS.WETH;
+            
+            for (let i = 0; i < tokenList.length; i++) {
+                for (let j = 0; j < tokenList.length; j++) {
+                    if (i === j) continue;
+                    
+                    const token1 = tokenList[i];
+                    const token2 = tokenList[j];
+                    
+                    if (token1 === baseToken || token2 === baseToken) continue;
+                    
+                    for (const fee1 of FEES) {
+                        for (const fee2 of FEES) {
+                            for (const fee3 of FEES) {
+                                routes.push({
+                                    tokenA: baseToken,
+                                    tokenB: token1,
+                                    tokenC: token2,
+                                    fee1, fee2, fee3,
+                                    path: `${getTokenSymbol(baseToken)}→${getTokenSymbol(token1)}→${getTokenSymbol(token2)}`
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return routes.sort(() => Math.random() - 0.5);
+        }
+        
+        function getTokenSymbol(address) {
+            for (const [symbol, addr] of Object.entries(TOKENS)) {
+                if (addr.toLowerCase() === address.toLowerCase()) return symbol;
+            }
+            return 'TKN';
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // SCANNER PRINCIPAL
+        // ═══════════════════════════════════════════════════════════════
+        
+        async function startAutoScanner() {
+            scannerRunning = true;
+            
+            addLog('🚀 Scanner autônomo ATIVADO!', 'success');
+            updateScannerStatus('🤖 Scanner Ativo', 'Procurando oportunidades automaticamente...');
+            
+            while (scannerRunning) {
+                await runScanCycle();
+                autoOptimize(); // Otimiza a cada ciclo
+                await new Promise(r => setTimeout(r, scanInterval));
+            }
+        }
+        
+        async function runScanCycle() {
+            scanCount++;
+            updateStats();
+            
+            const cycleStart = Date.now();
+            addLog(`🔍 Scan #${scanCount} - Testando ${batchSize} rotas...`, 'info');
+            
+            const routes = generateRoutes();
+            let foundOpportunity = false;
+            
+            for (let i = 0; i < routes.length && scannerRunning; i += batchSize) {
+                const batch = routes.slice(i, i + batchSize);
+                
+                const results = await Promise.allSettled(
+                    batch.map(route => testRoute(route))
+                );
+                
+                for (let j = 0; j < results.length; j++) {
+                    const result = results[j];
+                    if (result.status === 'fulfilled' && result.value.profitable) {
+                        foundOpportunity = true;
+                        opportunityCount++;
+                        const route = batch[j];
+                        addLog(`💰 OPORTUNIDADE #${opportunityCount}! ${route.path}`, 'success');
+                        updateStats();
+                        
+                        // Tenta executar
+                        const success = await executeArbitrage(route);
+                        if (success) {
+                            recentOpportunities.push(1);
+                        } else {
+                            recentOpportunities.push(0);
+                        }
+                        
+                        // Limita histórico
+                        if (recentOpportunities.length > 20) {
+                            recentOpportunities.shift();
+                        }
+                        
+                        break;
+                    }
+                }
+                
+                if (foundOpportunity) break;
+            }
+            
+            recentScans.push(foundOpportunity ? 1 : 0);
+            if (recentScans.length > 20) recentScans.shift();
+            
+            const cycleTime = ((Date.now() - cycleStart) / 1000).toFixed(1);
+            addLog(`✓ Scan #${scanCount} completo em ${cycleTime}s`, 'info');
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // TESTE DE ROTA
+        // ═══════════════════════════════════════════════════════════════
+        
+        async function testRoute(route) {
+            try {
+                const amountInWei = BigInt(Math.floor(currentAmount * 1e18));
+                const minProfitWei = BigInt(Math.floor(amountInWei * BigInt(Math.floor(currentMinProfit * 100)) / BigInt(10000)));
+                
+                const data = encodeExecute(
+                    route.tokenA, amountInWei, route.tokenB,
+                    route.fee1, route.fee2, route.fee3,
+                    route.tokenC, minProfitWei
+                );
+                
+                const gasEstimate = await Promise.race([
+                    provider.request({
+                        method: 'eth_estimateGas',
+                        params: [{
+                            from: userAddress,
+                            to: CONTRACT_ADDRESS,
+                            data: data,
+                            value: '0x' + amountInWei.toString(16)
+                        }]
+                    }),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('timeout')), 2500)
+                    )
+                ]);
+                
+                return { profitable: true, gasEstimate };
+                
+            } catch (error) {
+                return { profitable: false };
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // EXECUÇÃO
+        // ═══════════════════════════════════════════════════════════════
+        
+        async function executeArbitrage(route) {
+            try {
+                addLog(`⚡ Executando: ${route.path}`, 'info');
+                
+                const amountInWei = BigInt(Math.floor(currentAmount * 1e18));
+                const minProfitWei = BigInt(Math.floor(amountInWei * BigInt(Math.floor(currentMinProfit * 100)) / BigInt(10000)));
+                
+                const data = encodeExecute(
+                    route.tokenA, amountInWei, route.tokenB,
+                    route.fee1, route.fee2, route.fee3,
+                    route.tokenC, minProfitWei
+                );
+                
+                const gasEstimate = await provider.request({
+                    method: 'eth_estimateGas',
+                    params: [{
+                        from: userAddress,
+                        to: CONTRACT_ADDRESS,
+                        data: data,
+                        value: '0x' + amountInWei.toString(16)
+                    }]
+                });
+                
+                const gasLimit = Math.floor(parseInt(gasEstimate, 16) * 1.3);
+                
+                const txHash = await provider.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: userAddress,
+                        to: CONTRACT_ADDRESS,
+                        data: data,
+                        gas: '0x' + gasLimit.toString(16),
+                        value: '0x' + amountInWei.toString(16)
+                    }]
+                });
+                
+                addLog(`📤 TX: ${txHash.slice(0, 10)}...${txHash.slice(-8)}`, 'success');
+                addLog(`🔗 basescan.org/tx/${txHash}`, 'info');
+                
+                // Aguarda confirmação (async, não bloqueia scanner)
+                waitForConfirmation(txHash);
+                
+                return true;
+                
+            } catch (error) {
+                addLog(`❌ Falha na execução: ${error.message.slice(0, 50)}`, 'error');
+                return false;
+            }
+        }
+        
+        async function waitForConfirmation(txHash) {
+            try {
+                let receipt = null;
+                let attempts = 0;
+                
+                while (!receipt && attempts < 30) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    receipt = await provider.request({
+                        method: 'eth_getTransactionReceipt',
+                        params: [txHash]
+                    });
+                    attempts++;
+                }
+                
+                if (receipt && receipt.status === '0x1') {
+                    tradeCount++;
+                    const profit = parseFloat((currentAmount * currentMinProfit / 100).toFixed(6));
+                    totalProfit += profit;
+                    updateStats();
+                    
+                    addLog(`🎉 SUCESSO! +${profit.toFixed(6)} ETH | Total: ${totalProfit.toFixed(6)} ETH`, 'success');
+                } else {
+                    addLog(`❌ TX revertida ou timeout`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Erro ao verificar TX: ${error.message}`, 'error');
+            }
+        }
+        
+        function encodeExecute(tokenA, amountIn, tokenB, fee1, fee2, fee3, tokenC, minProfit) {
+            let encoded = '0x28637f4a';
+            encoded += tokenA.slice(2).padStart(64, '0');
+            encoded += amountIn.toString(16).padStart(64, '0');
+            encoded += tokenB.slice(2).padStart(64, '0');
+            encoded += fee1.toString(16).padStart(64, '0');
+            encoded += fee2.toString(16).padStart(64, '0');
+            encoded += fee3.toString(16).padStart(64, '0');
+            encoded += tokenC.slice(2).padStart(64, '0');
+            encoded += minProfit.toString(16).padStart(64, '0');
+            return encoded;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // CONTROLES
+        // ═══════════════════════════════════════════════════════════════
+        
+        function emergencyStop() {
+            scannerRunning = false;
+            addLog('🛑 PARADA DE EMERGÊNCIA ATIVADA!', 'error');
+            updateScannerStatus('⏹️ Scanner Parado', 'Recarregue a página para reiniciar');
+            document.getElementById('stopBtn').disabled = true;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // INICIALIZAÇÃO AUTOMÁTICA
+        // ═══════════════════════════════════════════════════════════════
+        
+        window.addEventListener('load', async () => {
+            addLog('🤖 Iniciando sistema autônomo...', 'info');
+            updateDisplay();
+            
+            // Aguarda 2 segundos para UI estabilizar
+            await new Promise(r => setTimeout(r, 2000));
+            
+            // Tenta conectar automaticamente
+            const connected = await autoConnect();
+            
+            if (connected) {
+                addLog('✅ Sistema pronto! Iniciando scanner em 3s...', 'success');
+                await new Promise(r => setTimeout(r, 3000));
+                
+                addLog('🚀 SCANNER AUTÔNOMO INICIADO!', 'success');
+                addLog('💡 A IA vai ajustar parâmetros automaticamente', 'info');
+                addLog('⚠️ Use PARADA DE EMERGÊNCIA se necessário', 'warning');
+                
+                startAutoScanner();
+            } else {
+                addLog('❌ Não foi possível iniciar. Recarregue e conecte manualmente.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
