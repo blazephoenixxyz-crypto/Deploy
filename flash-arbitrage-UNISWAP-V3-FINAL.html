@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚡ FLASH ARB - UNISWAP V3</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a0a1e 100%);
+            color: #00f3ff;
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.15), rgba(255, 0, 255, 0.15));
+            border: 2px solid #00f3ff;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+        
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3em;
+            font-weight: 900;
+            background: linear-gradient(90deg, #00f3ff, #ff00ff, #ffff00);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient 3s linear infinite;
+            margin-bottom: 5px;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% center; }
+            100% { background-position: 300% center; }
+        }
+        
+        .subtitle {
+            font-size: 0.85em;
+            color: #ff00ff;
+            font-weight: 700;
+        }
+        
+        .warning-box {
+            background: rgba(255, 0, 136, 0.1);
+            border: 2px solid #ff0088;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+        
+        .warning-title {
+            font-weight: 700;
+            color: #ff0088;
+            margin-bottom: 5px;
+            font-size: 1em;
+        }
+        
+        .guide-box {
+            background: rgba(0, 255, 136, 0.05);
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-size: 0.8em;
+            line-height: 1.5;
+        }
+        
+        .guide-title {
+            font-weight: 700;
+            color: #00ff88;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .guide-step {
+            margin: 8px 0;
+            padding-left: 10px;
+            border-left: 2px solid #00ff88;
+        }
+        
+        .code-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 6px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75em;
+            overflow-x: auto;
+            margin: 10px 0;
+            color: #00ff88;
+        }
+        
+        .panel {
+            background: rgba(10, 14, 26, 0.9);
+            border: 2px solid #00f3ff;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #ffff00;
+            text-align: center;
+        }
+        
+        .info-grid {
+            display: grid;
+            gap: 8px;
+        }
+        
+        .info-item {
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 0.85em;
+        }
+        
+        .info-label {
+            color: #ffff00;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+        
+        .info-value {
+            color: #00f3ff;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚡ FLASH ARBITRAGE</h1>
+        <div class="subtitle">🦄 UNISWAP V3 - BASE NETWORK</div>
+    </div>
+    
+    <div class="warning-box">
+        <div class="warning-title">🚨 IMPORTANTE - LEIA ISSO!</div>
+        <div>
+            <strong>Flash swaps/loans NÃO funcionam direto da carteira!</strong><br>
+            Você PRECISA de um SMART CONTRACT para usar flash swaps.<br>
+            Esta página mostra o código completo e como fazer deploy.
+        </div>
+    </div>
+    
+    <div class="panel">
+        <div class="panel-title">📋 UNISWAP V3 NA BASE</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">🦄 SwapRouter</div>
+                <div class="info-value">0x2626664c2603336E57B271c5C0b26F421741e481</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">🏭 Factory</div>
+                <div class="info-value">0x33128a8fC17869897dcE68Ed026d694621f6FDfD</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">💎 WETH</div>
+                <div class="info-value">0x4200000000000000000000000000000000000006</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">💵 USDC</div>
+                <div class="info-value">0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="guide-box">
+        <div class="guide-title">✅ COMO FAZER FUNCIONAR:</div>
+        
+        <div class="guide-step">
+            <strong>1️⃣ Copie o código Solidity abaixo</strong>
+        </div>
+        
+        <div class="guide-step">
+            <strong>2️⃣ Abra Remix IDE</strong> (remix.ethereum.org)
+        </div>
+        
+        <div class="guide-step">
+            <strong>3️⃣ Crie novo arquivo:</strong> FlashArbitrage.sol
+        </div>
+        
+        <div class="guide-step">
+            <strong>4️⃣ Cole o código e compile</strong> (Solidity 0.8.20+)
+        </div>
+        
+        <div class="guide-step">
+            <strong>5️⃣ Deploy na Base Network</strong> via MetaMask/OKX
+        </div>
+        
+        <div class="guide-step">
+            <strong>6️⃣ Chame executeFlashSwap()</strong> do contrato
+        </div>
+    </div>
+    
+    <div class="panel">
+        <div class="panel-title">💻 CÓDIGO COMPLETO - COPIE E COLE</div>
+        
+        <div class="code-box" style="max-height: 400px; overflow-y: auto;">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+// Uniswap V3 Interfaces
+interface IUniswapV3Pool {
+    function token0() external view returns (address);
+    function token1() external view returns (address);
+    function fee() external view returns (uint24);
+    function swap(
+        address recipient,
+        bool zeroForOne,
+        int256 amountSpecified,
+        uint160 sqrtPriceLimitX96,
+        bytes calldata data
+    ) external returns (int256 amount0, int256 amount1);
+}
+
+interface IUniswapV3SwapCallback {
+    function uniswapV3SwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external;
+}
+
+interface IERC20 {
+    function transfer(address to, uint256 amount) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+    function approve(address spender, uint256 amount) external returns (bool);
+}
+
+contract FlashArbitrage is IUniswapV3SwapCallback {
+    
+    // BASE NETWORK ADDRESSES
+    address constant WETH = 0x4200000000000000000000000000000000000006;
+    address constant USDC = 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
+    
+    // Uniswap V3 Pool WETH/USDC 0.3% fee
+    address constant POOL = 0xd0b53D9277642d899DF5C87A3966A349A798F224;
+    
+    address public owner;
+    
+    event FlashSwapExecuted(uint256 amountBorrowed, uint256 profit);
+    
+    constructor() {
+        owner = msg.sender;
+    }
+    
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+    
+    // Função principal para executar flash swap
+    function executeFlashSwap(uint256 wethAmount) external onlyOwner {
+        
+        // Encode dados para callback
+        bytes memory data = abi.encode(msg.sender, wethAmount);
+        
+        IUniswapV3Pool pool = IUniswapV3Pool(POOL);
+        
+        // true = swap token0 (USDC) for token1 (WETH)
+        // false = swap token1 (WETH) for token0 (USDC)
+        bool zeroForOne = false; // Queremos WETH
+        
+        // sqrtPriceLimitX96: preço limite (usar min/max para sem limite)
+        uint160 sqrtPriceLimitX96 = zeroForOne ? 
+            4295128740 : // MIN
+            1461446703485210103287273052203988822378723970341; // MAX
+        
+        // Executar flash swap
+        pool.swap(
+            address(this),
+            zeroForOne,
+            int256(wethAmount),
+            sqrtPriceLimitX96,
+            data
+        );
+    }
+    
+    // Callback chamado pelo pool Uniswap
+    function uniswapV3SwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external override {
+        
+        // Verificar que foi chamado pelo pool
+        require(msg.sender == POOL, "Unauthorized");
+        
+        // Decode dados
+        (address caller, uint256 requestedAmount) = abi.decode(data, (address, uint256));
+        
+        // amount0Delta = USDC que devemos pagar
+        // amount1Delta = WETH que recebemos (negativo pois recebemos)
+        
+        uint256 wethReceived = uint256(-amount1Delta);
+        uint256 usdcToPay = uint256(amount0Delta);
+        
+        // AQUI VOCÊ FAZ SUA LÓGICA DE ARBITRAGEM
+        // Exemplo: trocar WETH por USDC em outra DEX
+        // e garantir que tenha USDC suficiente para pagar
+        
+        // Por enquanto, apenas simulando que temos USDC
+        // Em produção, você faria:
+        // 1. Trocar WETH recebido em outra DEX/pool
+        // 2. Garantir lucro
+        // 3. Pagar de volta o pool
+        
+        // Pagar de volta o pool (approve + transfer automático)
+        IERC20(USDC).transfer(msg.sender, usdcToPay);
+        
+        // Lucro fica no contrato
+        uint256 profit = IERC20(WETH).balanceOf(address(this));
+        
+        emit FlashSwapExecuted(wethReceived, profit);
+    }
+    
+    // Função para sacar lucros
+    function withdraw(address token) external onlyOwner {
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        require(balance > 0, "No balance");
+        IERC20(token).transfer(owner, balance);
+    }
+    
+    // Função para receber ETH
+    receive() external payable {}
+}
+        </div>
+    </div>
+    
+    <div class="panel">
+        <div class="panel-title">📚 EXPLICAÇÃO DO CÓDIGO</div>
+        <div style="font-size: 0.85em; line-height: 1.6;">
+            <p style="margin-bottom: 10px;">
+                <strong style="color: #ffff00;">1. Flash Swap:</strong><br>
+                O pool Uniswap V3 envia WETH para o contrato ANTES de receber pagamento.
+            </p>
+            
+            <p style="margin-bottom: 10px;">
+                <strong style="color: #ffff00;">2. Callback:</strong><br>
+                uniswapV3SwapCallback() é chamado automaticamente. Aqui você faz a arbitragem.
+            </p>
+            
+            <p style="margin-bottom: 10px;">
+                <strong style="color: #ffff00;">3. Arbitragem:</strong><br>
+                Troque o WETH recebido em outra DEX por USDC com preço melhor.
+            </p>
+            
+            <p style="margin-bottom: 10px;">
+                <strong style="color: #ffff00;">4. Pagamento:</strong><br>
+                Pague de volta o pool com USDC. O lucro fica no contrato.
+            </p>
+            
+            <p style="margin-bottom: 0;">
+                <strong style="color: #ffff00;">5. Retirada:</strong><br>
+                Use withdraw() para retirar os lucros.
+            </p>
+        </div>
+    </div>
+    
+    <div class="panel">
+        <div class="panel-title">🎯 EXEMPLO DE ARBITRAGEM REAL</div>
+        <div style="font-size: 0.85em; line-height: 1.6;">
+            <p style="margin-bottom: 10px;">
+                <strong>Cenário:</strong><br>
+                • Uniswap V3: 1 WETH = 2000 USDC<br>
+                • Aerodrome (DEX da Base): 1 WETH = 2010 USDC
+            </p>
+            
+            <p style="margin-bottom: 10px;">
+                <strong>Passo a passo:</strong><br>
+                1. Flash swap: pega 1 WETH emprestado do Uniswap<br>
+                2. Vende 1 WETH no Aerodrome → recebe 2010 USDC<br>
+                3. Paga Uniswap: 2000 USDC + 0.3% fee (6 USDC) = 2006 USDC<br>
+                4. Lucro: 2010 - 2006 = 4 USDC!
+            </p>
+        </div>
+    </div>
+    
+    <div class="warning-box">
+        <div class="warning-title">⚠️ ATENÇÃO - RISCOS</div>
+        <div>
+            <strong>1.</strong> Flash swaps são avançados - entenda o código antes de usar<br>
+            <strong>2.</strong> Precisa ter tokens suficientes para pagar fees<br>
+            <strong>3.</strong> Preços podem mudar durante a transação<br>
+            <strong>4.</strong> MEV bots podem frontrun sua transação<br>
+            <strong>5.</strong> Teste MUITO em testnet antes de mainnet
+        </div>
+    </div>
+    
+    <div class="panel">
+        <div class="panel-title">🔗 RECURSOS ÚTEIS</div>
+        <div style="font-size: 0.85em; line-height: 1.8;">
+            <div>📖 Remix IDE: <span style="color: #00f3ff;">remix.ethereum.org</span></div>
+            <div>📖 Uniswap V3 Docs: <span style="color: #00f3ff;">docs.uniswap.org</span></div>
+            <div>📖 Base Scan: <span style="color: #00f3ff;">basescan.org</span></div>
+            <div>📖 Uniswap Base Pools: <span style="color: #00f3ff;">info.uniswap.org/#/base</span></div>
+        </div>
+    </div>
+
+</body>
+</html>
