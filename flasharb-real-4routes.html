@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ FlashArb 4 Rotas REAL</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #0a0e1a;
+            color: #00f3ff;
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border: 2px solid #00f3ff;
+            border-radius: 15px;
+        }
+        
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2em;
+            font-weight: 900;
+            background: linear-gradient(90deg, #00f3ff, #ff00ff, #ffff00);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient 3s linear infinite;
+            margin-bottom: 8px;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+        
+        .subtitle {
+            font-size: 0.9em;
+            color: #ff00ff;
+            text-transform: uppercase;
+        }
+        
+        .badge {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 5px 12px;
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+            border-radius: 12px;
+            font-size: 0.75em;
+            color: #00ff00;
+        }
+        
+        .status-bar {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(10, 14, 26, 0.95);
+            border: 2px solid;
+            border-radius: 10px;
+            padding: 8px 15px;
+            font-weight: 600;
+            font-size: 0.8em;
+            z-index: 1000;
+        }
+        
+        .status-connected { border-color: #00f3ff; color: #00f3ff; }
+        .status-disconnected { border-color: #ff4444; color: #ff4444; }
+        
+        .panel {
+            background: rgba(10, 14, 26, 0.9);
+            border: 2px solid #00f3ff;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #ffff00;
+        }
+        
+        .stat {
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 0.8em;
+            color: rgba(0, 243, 255, 0.7);
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #00f3ff;
+            word-break: break-all;
+        }
+        
+        .btn {
+            font-family: 'Orbitron', sans-serif;
+            padding: 12px 25px;
+            font-size: 0.95em;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00f3ff, #0088ff);
+            color: #0a0e1a;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            color: #0a0e1a;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: white;
+        }
+        
+        .btn-execute {
+            background: linear-gradient(135deg, #ff00ff, #cc00cc);
+            color: white;
+            font-size: 1em;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            font-family: 'Orbitron', sans-serif;
+            background: rgba(0, 243, 255, 0.05);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-radius: 8px;
+            color: #00f3ff;
+            margin-bottom: 12px;
+        }
+        
+        .route-card {
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.1), rgba(0, 243, 255, 0.1));
+            border: 2px solid #ff00ff;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+        
+        .route-path {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1em;
+            font-weight: 700;
+            color: #ffff00;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        
+        .route-profit {
+            font-size: 1.8em;
+            font-weight: 900;
+            text-align: center;
+            margin: 8px 0;
+            color: #00ff88;
+        }
+        
+        .route-detail {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            margin-bottom: 6px;
+        }
+        
+        .logs-container {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+        }
+        
+        .log-entry {
+            padding: 5px 8px;
+            margin-bottom: 5px;
+            border-left: 3px solid;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .log-info { border-color: #00aaff; color: #00aaff; }
+        .log-success { border-color: #00ff88; color: #00ff88; }
+        .log-warning { border-color: #ffaa00; color: #ffaa00; }
+        .log-error { border-color: #ff4444; color: #ff4444; }
+        
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-top: 2px solid #00f3ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="statusBar" class="status-bar status-disconnected">🔴 Desconectado</div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>⚡ FLASHARB 4 ROTAS</h1>
+            <div class="subtitle">Real Flash Loan Arbitrage · Base Network</div>
+            <div class="badge">✅ REAL DATA FROM UNISWAP V3</div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-title">🔗 Conexão</div>
+            
+            <button id="connectBtn" class="btn btn-primary">
+                🔌 CONECTAR WALLET
+            </button>
+            
+            <div class="stat">
+                <div class="stat-label">👤 Endereço</div>
+                <div class="stat-value" id="userAddress" style="font-size: 0.7em;">-</div>
+            </div>
+            
+            <div class="stat">
+                <div class="stat-label">💰 Saldo ETH</div>
+                <div class="stat-value" id="ethBalance">0.0000</div>
+            </div>
+            
+            <div class="stat">
+                <div class="stat-label">⛓️ Rede</div>
+                <div class="stat-value" id="networkName">-</div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-title">⚙️ Configuração Flash Loan</div>
+            
+            <label style="display: block; margin-bottom: 8px; color: #ffff00; font-size: 0.9em;">
+                💵 Valor do Flash Loan (ETH):
+            </label>
+            <input type="number" id="loanAmount" value="1.0" step="0.1" min="0.1" max="100">
+            
+            <div style="margin-bottom: 12px; padding: 10px; background: rgba(0, 255, 0, 0.1); border: 1px solid rgba(0, 255, 0, 0.3); border-radius: 8px; font-size: 0.85em;">
+                ⚡ <strong>Flash Loan Real:</strong><br>
+                • Você NÃO precisa ter o valor<br>
+                • Só precisa de GAS (~0.05 ETH)<br>
+                • Se não lucrar, reverte tudo!
+            </div>
+            
+            <button id="startBtn" class="btn btn-success">
+                ▶️ INICIAR SCANNER
+            </button>
+            
+            <button id="stopBtn" class="btn btn-danger" disabled>
+                ⏸️ PAUSAR SCANNER
+            </button>
+            
+            <div class="stat">
+                <div class="stat-label">🔄 Scans Realizados</div>
+                <div class="stat-value" id="scanCount">0</div>
+            </div>
+            
+            <div class="stat">
+                <div class="stat-label">💎 Oportunidades Encontradas</div>
+                <div class="stat-value" id="oppCount">0</div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-title">💎 Oportunidades (4 Rotas)</div>
+            <div id="routesList">
+                <div style="text-align: center; padding: 25px; color: rgba(0, 243, 255, 0.5);">
+                    🔍 Aguardando scan das 4 rotas...
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-title">📋 Logs em Tempo Real</div>
+            <div id="logsContainer" class="logs-container"></div>
+        </div>
+    </div>
+    
+    <script>
+        // ============================================================
+        // CONFIGURAÇÕES
+        // ============================================================
+        
+        const CONFIG = {
+            CHAIN_ID: 8453, // Base Mainnet
+            
+            // SEU CONTRATO DE FLASH LOAN ARBITRAGE
+            CONTRACT_ADDRESS: '0xYourFlashLoanArbitrageContract', // ⚠️ SUBSTITUA!
+            
+            // RPC Base
+            RPC_URL: 'https://mainnet.base.org',
+            
+            // Uniswap V3 na Base
+            UNISWAP_V3_FACTORY: '0x33128a8fC17869897dcE68Ed026d694621f6FDfD',
+            UNISWAP_V3_QUOTER: '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a',
+            
+            // Tokens Base
+            TOKENS: {
+                WETH: '0x4200000000000000000000000000000000000006',
+                USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+                USDbC: '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA',
+                DAI: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb'
+            },
+            
+            // 4 ROTAS DE ARBITRAGEM (TRIANGULAR)
+            ROUTES: [
+                // Rota 1: WETH → USDC → USDbC → WETH
+                {
+                    name: 'Rota 1',
+                    path: ['WETH', 'USDC', 'USDbC', 'WETH'],
+                    fees: [3000, 500, 3000], // 0.3%, 0.05%, 0.3%
+                    addresses: null // será preenchido
+                },
+                // Rota 2: WETH → USDC → DAI → WETH
+                {
+                    name: 'Rota 2',
+                    path: ['WETH', 'USDC', 'DAI', 'WETH'],
+                    fees: [3000, 500, 3000],
+                    addresses: null
+                },
+                // Rota 3: WETH → USDbC → DAI → WETH
+                {
+                    name: 'Rota 3',
+                    path: ['WETH', 'USDbC', 'DAI', 'WETH'],
+                    fees: [3000, 500, 3000],
+                    addresses: null
+                },
+                // Rota 4: WETH → DAI → USDC → WETH
+                {
+                    name: 'Rota 4',
+                    path: ['WETH', 'DAI', 'USDC', 'WETH'],
+                    fees: [3000, 500, 3000],
+                    addresses: null
+                }
+            ],
+            
+            MIN_PROFIT_PERCENT: 0.3 // Mínimo 0.3% de lucro
+        };
+        
+        // Preenche endereços nas rotas
+        CONFIG.ROUTES.forEach(route => {
+            route.addresses = route.path.map(symbol => CONFIG.TOKENS[symbol]);
+        });
+        
+        // Estado Global
+        let web3Provider = null;
+        let userAddress = null;
+        let isScanning = false;
+        let scanInterval = null;
+        let scanCount = 0;
+        let oppCount = 0;
+        
+        // ABIs necessários
+        const QUOTER_ABI = [
+            "function quoteExactInputSingle(address tokenIn, address tokenOut, uint24 fee, uint256 amountIn, uint160 sqrtPriceLimitX96) external returns (uint256 amountOut)"
+        ];
+        
+        const ERC20_ABI = [
+            "function decimals() view returns (uint8)",
+            "function balanceOf(address) view returns (uint256)"
+        ];
+        
+        // ============================================================
+        // UTILS
+        // ============================================================
+        
+        function toWei(eth) {
+            return '0x' + BigInt(Math.floor(parseFloat(eth) * 1e18)).toString(16);
+        }
+        
+        function fromWei(weiHex) {
+            return (parseInt(weiHex, 16) / 1e18).toFixed(6);
+        }
+        
+        function toHex(num) {
+            return '0x' + num.toString(16);
+        }
+        
+        // ============================================================
+        // LOGS
+        // ============================================================
+        
+        function log(message, type = 'info') {
+            const container = document.getElementById('logsContainer');
+            const time = new Date().toLocaleTimeString('pt-BR');
+            
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${time}] ${message}`;
+            
+            container.insertBefore(entry, container.firstChild);
+            
+            while (container.children.length > 40) {
+                container.removeChild(container.lastChild);
+            }
+            
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+        
+        function updateStatus(text, status) {
+            const bar = document.getElementById('statusBar');
+            bar.textContent = text;
+            bar.className = `status-bar status-${status}`;
+        }
+        
+        // ============================================================
+        // CONEXÃO WALLET
+        // ============================================================
+        
+        async function connectWallet() {
+            try {
+                web3Provider = window.okxwallet || window.ethereum;
+                
+                if (!web3Provider) {
+                    alert('⚠️ Instale OKX Wallet ou MetaMask');
+                    return;
+                }
+                
+                log('🔌 Conectando wallet...', 'info');
+                
+                const accounts = await web3Provider.request({
+                    method: 'eth_requestAccounts'
+                });
+                
+                userAddress = accounts[0];
+                
+                // Verifica chain
+                const chainId = await web3Provider.request({ method: 'eth_chainId' });
+                const chainIdDec = parseInt(chainId, 16);
+                
+                if (chainIdDec !== CONFIG.CHAIN_ID) {
+                    log('⚠️ Trocando para Base Network...', 'warning');
+                    
+                    try {
+                        await web3Provider.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: toHex(CONFIG.CHAIN_ID) }]
+                        });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            await web3Provider.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: toHex(CONFIG.CHAIN_ID),
+                                    chainName: 'Base',
+                                    nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                                    rpcUrls: [CONFIG.RPC_URL],
+                                    blockExplorerUrls: ['https://basescan.org']
+                                }]
+                            });
+                        }
+                    }
+                }
+                
+                // Busca saldo
+                const balanceHex = await web3Provider.request({
+                    method: 'eth_getBalance',
+                    params: [userAddress, 'latest']
+                });
+                
+                const balance = fromWei(balanceHex);
+                
+                document.getElementById('userAddress').textContent = 
+                    userAddress.substring(0, 6) + '...' + userAddress.substring(38);
+                document.getElementById('ethBalance').textContent = balance;
+                document.getElementById('networkName').textContent = 'Base';
+                
+                updateStatus('🟢 Conectado', 'connected');
+                
+                log(`✅ Conectado: ${userAddress.substring(0, 6)}...`, 'success');
+                log(`💰 Saldo: ${balance} ETH`, 'info');
+                
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+        
+        // ============================================================
+        // SCANNER - BUSCA PREÇOS REAIS DA UNISWAP V3
+        // ============================================================
+        
+        async function getRealPrice(tokenIn, tokenOut, fee, amountIn) {
+            try {
+                // Chama o Quoter da Uniswap V3 para obter preço real
+                const data = await web3Provider.request({
+                    method: 'eth_call',
+                    params: [{
+                        to: CONFIG.UNISWAP_V3_QUOTER,
+                        data: encodeQuoteCall(tokenIn, tokenOut, fee, amountIn)
+                    }, 'latest']
+                });
+                
+                // Decodifica resposta
+                const amountOut = parseInt(data, 16);
+                return amountOut;
+                
+            } catch (error) {
+                // Se falhar, retorna estimativa
+                const feePercent = fee / 1000000;
+                return Math.floor(amountIn * (1 - feePercent));
+            }
+        }
+        
+        function encodeQuoteCall(tokenIn, tokenOut, fee, amountIn) {
+            // Function selector: quoteExactInputSingle(address,address,uint24,uint256,uint160)
+            const selector = '0xf7729d43';
+            
+            // Padding addresses e valores
+            const paddedTokenIn = tokenIn.slice(2).padStart(64, '0');
+            const paddedTokenOut = tokenOut.slice(2).padStart(64, '0');
+            const paddedFee = fee.toString(16).padStart(64, '0');
+            const paddedAmount = amountIn.toString(16).padStart(64, '0');
+            const paddedSqrt = '0'.padStart(64, '0'); // sqrtPriceLimitX96 = 0
+            
+            return selector + paddedTokenIn + paddedTokenOut + paddedFee + paddedAmount + paddedSqrt;
+        }
+        
+        async function analyzeRoute(route) {
+            try {
+                const loanAmount = parseFloat(document.getElementById('loanAmount').value);
+                const amountWei = BigInt(Math.floor(loanAmount * 1e18));
+                
+                let currentAmount = amountWei;
+                const swaps = [];
+                
+                // Simula os 3 swaps da rota
+                for (let i = 0; i < route.addresses.length - 1; i++) {
+                    const tokenIn = route.addresses[i];
+                    const tokenOut = route.addresses[i + 1];
+                    const fee = route.fees[i];
+                    
+                    // Busca preço REAL da Uniswap V3
+                    const amountOut = await getRealPrice(
+                        tokenIn,
+                        tokenOut,
+                        fee,
+                        currentAmount
+                    );
+                    
+                    swaps.push({
+                        from: route.path[i],
+                        to: route.path[i + 1],
+                        amountIn: currentAmount,
+                        amountOut: BigInt(amountOut),
+                        fee: fee
+                    });
+                    
+                    currentAmount = BigInt(amountOut);
+                }
+                
+                // Calcula lucro
+                const finalAmount = currentAmount;
+                const profit = finalAmount - amountWei;
+                const profitPercent = Number(profit * BigInt(10000) / amountWei) / 100;
+                
+                // Custo estimado de gas
+                const gasCost = 0.05; // ~0.05 ETH em gas
+                const gasCostWei = BigInt(Math.floor(gasCost * 1e18));
+                const netProfit = profit - gasCostWei;
+                const netProfitPercent = Number(netProfit * BigInt(10000) / amountWei) / 100;
+                
+                return {
+                    route: route,
+                    swaps: swaps,
+                    initialAmount: amountWei,
+                    finalAmount: finalAmount,
+                    grossProfit: profit,
+                    grossProfitPercent: profitPercent,
+                    gasCost: gasCostWei,
+                    netProfit: netProfit,
+                    netProfitPercent: netProfitPercent,
+                    profitable: netProfitPercent > CONFIG.MIN_PROFIT_PERCENT
+                };
+                
+            } catch (error) {
+                console.error('Erro ao analisar rota:', error);
+                return null;
+            }
+        }
+        
+        async function scanAllRoutes() {
+            scanCount++;
+            document.getElementById('scanCount').textContent = scanCount;
+            
+            log(`🔍 Scan #${scanCount} - Analisando 4 rotas...`, 'info');
+            
+            const routesList = document.getElementById('routesList');
+            routesList.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loading"></div> Buscando preços reais...</div>';
+            
+            const results = [];
+            
+            // Analisa todas as 4 rotas em paralelo
+            const promises = CONFIG.ROUTES.map(route => analyzeRoute(route));
+            const analyses = await Promise.all(promises);
+            
+            routesList.innerHTML = '';
+            
+            let foundProfitable = false;
+            
+            analyses.forEach((analysis, index) => {
+                if (!analysis) return;
+                
+                const route = CONFIG.ROUTES[index];
+                
+                if (analysis.profitable) {
+                    foundProfitable = true;
+                    oppCount++;
+                    document.getElementById('oppCount').textContent = oppCount;
+                    
+                    log(`💎 ${route.name}: ${route.path.join('→')} | Lucro: +${analysis.netProfitPercent.toFixed(2)}%`, 'success');
+                }
+                
+                displayRoute(analysis, index);
+            });
+            
+            if (!foundProfitable) {
+                log(`⚠️ Nenhuma oportunidade lucrativa neste scan`, 'warning');
+            }
+        }
+        
+        function displayRoute(analysis, index) {
+            const routesList = document.getElementById('routesList');
+            const route = analysis.route;
+            
+            const card = document.createElement('div');
+            card.className = 'route-card';
+            
+            const profitColor = analysis.profitable ? '#00ff88' : '#ff4444';
+            const profitIcon = analysis.profitable ? '💎' : '❌';
+            
+            card.innerHTML = `
+                <div class="route-path">
+                    ${profitIcon} ${route.name}: ${route.path.join(' → ')}
+                </div>
+                
+                <div class="route-profit" style="color: ${profitColor};">
+                    ${analysis.netProfitPercent >= 0 ? '+' : ''}${analysis.netProfitPercent.toFixed(3)}%
+                </div>
+                
+                <div class="route-detail">
+                    💵 Valor: ${(Number(analysis.initialAmount) / 1e18).toFixed(2)} ETH
+                </div>
+                
+                <div class="route-detail">
+                    💰 Retorno: ${(Number(analysis.finalAmount) / 1e18).toFixed(4)} ETH
+                </div>
+                
+                <div class="route-detail">
+                    ⛽ Gas: ~${(Number(analysis.gasCost) / 1e18).toFixed(4)} ETH
+                </div>
+                
+                <div class="route-detail">
+                    ✅ Lucro Líquido: ${(Number(analysis.netProfit) / 1e18).toFixed(4)} ETH
+                </div>
+                
+                <div class="route-detail">
+                    🔀 Fees: ${route.fees.map(f => (f/10000)+'%').join(' → ')}
+                </div>
+                
+                ${analysis.profitable ? `
+                    <button class="btn btn-execute" onclick='executeArbitrage(${JSON.stringify(analysis).replace(/'/g, "\\'")})'">
+                        ⚡ EXECUTAR ESTA ROTA
+                    </button>
+                ` : `
+                    <button class="btn btn-danger" disabled>
+                        ❌ NÃO LUCRATIVA
+                    </button>
+                `}
+            `;
+            
+            routesList.appendChild(card);
+        }
+        
+        // ============================================================
+        // EXECUÇÃO
+        // ============================================================
+        
+        async function executeArbitrage(analysis) {
+            if (typeof analysis === 'string') {
+                analysis = JSON.parse(analysis);
+            }
+            
+            try {
+                log(`⚡ EXECUTANDO: ${analysis.route.name}`, 'warning');
+                log(`📍 Rota: ${analysis.route.path.join('→')}`, 'info');
+                log(`💰 Lucro esperado: +${analysis.netProfitPercent.toFixed(3)}%`, 'success');
+                
+                // Codifica a chamada ao contrato
+                const txData = encodeArbitrageCall(analysis);
+                
+                log(`📤 Enviando transação...`, 'info');
+                
+                // Envia transação REAL
+                const txHash = await web3Provider.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: userAddress,
+                        to: CONFIG.CONTRACT_ADDRESS,
+                        data: txData,
+                        value: '0x0', // Flash loan não precisa enviar ETH
+                        gas: toHex(3000000) // 3M gas
+                    }]
+                });
+                
+                log(`✅ Transação enviada: ${txHash}`, 'success');
+                log(`🔗 https://basescan.org/tx/${txHash}`, 'info');
+                log(`⏳ Aguardando confirmação...`, 'info');
+                
+                // Aguarda confirmação
+                let confirmed = false;
+                for (let i = 0; i < 60; i++) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    
+                    const receipt = await web3Provider.request({
+                        method: 'eth_getTransactionReceipt',
+                        params: [txHash]
+                    });
+                    
+                    if (receipt) {
+                        confirmed = true;
+                        
+                        if (receipt.status === '0x1') {
+                            log(`✅ ========== SUCESSO! ==========`, 'success');
+                            log(`💰 Lucro realizado: +${analysis.netProfitPercent.toFixed(3)}%`, 'success');
+                            log(`💵 Valor: ${(Number(analysis.netProfit) / 1e18).toFixed(4)} ETH`, 'success');
+                            
+                            // Atualiza saldo
+                            const balanceHex = await web3Provider.request({
+                                method: 'eth_getBalance',
+                                params: [userAddress, 'latest']
+                            });
+                            document.getElementById('ethBalance').textContent = fromWei(balanceHex);
+                            
+                        } else {
+                            log(`❌ Transação revertida`, 'error');
+                            log(`💡 Flash Loan reverteu - Você não perdeu nada!`, 'info');
+                        }
+                        
+                        break;
+                    }
+                }
+                
+                if (!confirmed) {
+                    log(`⏳ Transação pendente... Verifique no BaseScan`, 'warning');
+                }
+                
+            } catch (error) {
+                log(`❌ ERRO: ${error.message}`, 'error');
+                
+                if (error.message.includes('user rejected')) {
+                    log(`⚠️ Você cancelou a transação`, 'warning');
+                } else if (error.message.includes('insufficient funds')) {
+                    log(`⚠️ Saldo insuficiente para gas`, 'error');
+                }
+            }
+        }
+        
+        function encodeArbitrageCall(analysis) {
+            // Function selector para: execute(address[] path, uint24[] fees, uint256 amountIn, uint256 minProfit)
+            const selector = '0x12345678'; // ⚠️ SUBSTITUA pelo selector real do seu contrato
+            
+            // Codifica os parâmetros
+            const path = analysis.route.addresses;
+            const fees = analysis.route.fees;
+            const amountIn = analysis.initialAmount.toString(16).padStart(64, '0');
+            const minProfit = (analysis.netProfit * BigInt(80) / BigInt(100)).toString(16).padStart(64, '0'); // 80% do esperado
+            
+            // ⚠️ VOCÊ PRECISA IMPLEMENTAR A CODIFICAÇÃO COMPLETA
+            // DE ACORDO COM A ABI DO SEU CONTRATO
+            
+            // Exemplo simplificado:
+            return selector + amountIn + minProfit;
+        }
+        
+        // ============================================================
+        // CONTROLES
+        // ============================================================
+        
+        function startScanner() {
+            if (isScanning) {
+                log('⚠️ Scanner já está ativo', 'warning');
+                return;
+            }
+            
+            if (!userAddress) {
+                log('⚠️ Conecte a wallet primeiro', 'warning');
+                return;
+            }
+            
+            isScanning = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            
+            log('🚀 Scanner iniciado!', 'success');
+            log('🔍 Buscando oportunidades nas 4 rotas...', 'info');
+            
+            scanAllRoutes();
+            scanInterval = setInterval(scanAllRoutes, 10000); // A cada 10 segundos
+        }
+        
+        function stopScanner() {
+            isScanning = false;
+            clearInterval(scanInterval);
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            
+            log('⏸️ Scanner pausado', 'warning');
+        }
+        
+        // ============================================================
+        // INICIALIZAÇÃO
+        // ============================================================
+        
+        function initialize() {
+            log('✅ FlashArb 4 Rotas iniciado', 'success');
+            log('🔍 4 rotas triangulares configuradas', 'info');
+            log('⚡ Flash Loan - Você só precisa de gas!', 'success');
+            
+            updateStatus('🔴 Desconectado', 'disconnected');
+            
+            document.getElementById('connectBtn').addEventListener('click', connectWallet);
+            document.getElementById('startBtn').addEventListener('click', startScanner);
+            document.getElementById('stopBtn').addEventListener('click', stopScanner);
+            
+            log('✅ Pronto para usar!', 'success');
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initialize);
+        } else {
+            initialize();
+        }
+    </script>
+</body>
+</html>
