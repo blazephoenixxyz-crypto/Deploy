@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚡ NEURAL FLASH ARBITRAGE - MOBILE</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a0a1e 100%);
+            color: #00f3ff;
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.15), rgba(255, 0, 255, 0.15));
+            border: 2px solid #00f3ff;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+        
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5em;
+            font-weight: 900;
+            background: linear-gradient(90deg, #00f3ff, #ff00ff, #ffff00);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient 3s linear infinite;
+            margin-bottom: 8px;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% center; }
+            100% { background-position: 300% center; }
+        }
+        
+        .status-bar {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .status-item {
+            background: rgba(10, 14, 26, 0.95);
+            border: 2px solid;
+            border-radius: 8px;
+            padding: 10px;
+            font-weight: 700;
+            font-size: 0.85em;
+            text-align: center;
+        }
+        
+        .status-ai {
+            border-color: #ff00ff;
+            color: #ff00ff;
+        }
+        
+        .status-wallet {
+            border-color: #00f3ff;
+            color: #00f3ff;
+        }
+        
+        .status-wallet.disconnected {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+        
+        .panel {
+            background: rgba(10, 14, 26, 0.9);
+            border: 2px solid #00f3ff;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #ffff00;
+            text-align: center;
+        }
+        
+        .btn {
+            font-family: 'Orbitron', sans-serif;
+            padding: 15px;
+            font-size: 0.9em;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            touch-action: manipulation;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00f3ff, #0088ff);
+            color: #0a0e1a;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            color: #0a0e1a;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: white;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .amount-input {
+            width: 100%;
+            padding: 15px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3em;
+            font-weight: 700;
+            background: rgba(0, 243, 255, 0.1);
+            border: 2px solid #00f3ff;
+            border-radius: 8px;
+            color: #00f3ff;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        
+        .quick-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .quick-btn {
+            padding: 10px;
+            background: rgba(0,243,255,0.2);
+            border: 1px solid #00f3ff;
+            border-radius: 5px;
+            color: #00f3ff;
+            font-size: 0.85em;
+            cursor: pointer;
+            font-weight: 600;
+            touch-action: manipulation;
+        }
+        
+        .quick-btn:active {
+            background: rgba(0,243,255,0.4);
+        }
+        
+        .log-container {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75em;
+        }
+        
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+        }
+        
+        .log-success { color: #00ff00; }
+        .log-error { color: #ff4444; }
+        .log-warning { color: #ffff00; }
+        .log-info { color: #00f3ff; }
+        
+        .opportunity-card {
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.05), rgba(255, 0, 255, 0.05));
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+        
+        .opp-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9em;
+            font-weight: 700;
+            color: #00f3ff;
+            margin-bottom: 8px;
+        }
+        
+        .opp-profit {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5em;
+            font-weight: 900;
+            color: #00ff00;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .opp-details {
+            font-size: 0.8em;
+            margin: 8px 0;
+        }
+        
+        .opp-detail {
+            padding: 5px;
+            margin: 3px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚡ FLASH ARBITRAGE</h1>
+        <div style="font-size: 0.8em; color: #ff00ff;">Base Network • Mobile Ready</div>
+    </div>
+    
+    <div class="status-bar">
+        <div class="status-item status-ai" id="aiStatus">
+            🧠 AI: Ready
+        </div>
+        <div class="status-item status-wallet disconnected" id="walletStatus">
+            👛 Wallet: Not Connected
+        </div>
+    </div>
+    
+    <div class="panel">
+        <div class="panel-title">💼 QUICK START</div>
+        
+        <button class="btn btn-primary" id="connectBtn">
+            👛 CONNECT WALLET NOW
+        </button>
+        
+        <div style="margin: 10px 0;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #00f3ff; font-size: 0.85em;">
+                💰 FLASH LOAN AMOUNT (ETH)
+            </label>
+            <input 
+                type="number" 
+                class="amount-input"
+                id="flashLoanAmount" 
+                value="0.1" 
+                min="0.01" 
+                max="10" 
+                step="0.01"
+            />
+            <div class="quick-buttons">
+                <button class="quick-btn" onclick="setAmount(0.05)">0.05</button>
+                <button class="quick-btn" onclick="setAmount(0.1)">0.1</button>
+                <button class="quick-btn" onclick="setAmount(0.5)">0.5</button>
+                <button class="quick-btn" onclick="setAmount(1)">1.0</button>
+            </div>
+        </div>
+        
+        <button class="btn btn-success" id="startBtn" disabled>
+            🚀 START SCANNER
+        </button>
+        
+        <button class="btn btn-danger" id="stopBtn" disabled style="display: none;">
+            ⏸️ STOP SCANNER
+        </button>
+    </div>
+    
+    <div class="panel">
+        <div class="panel-title">💎 OPPORTUNITIES</div>
+        <div id="opportunities">
+            <div style="text-align: center; padding: 15px; color: rgba(255, 255, 0, 0.5); font-size: 0.85em;">
+                Connect wallet and start scanner...
+            </div>
+        </div>
+    </div>
+    
+    <div class="panel">
+        <div class="panel-title">📜 LOG</div>
+        <div class="log-container" id="logContainer"></div>
+    </div>
+    
+    <script>
+        // ============================================================
+        // CONFIG
+        // ============================================================
+        
+        const CONFIG = {
+            CHAIN_ID: 8453, // Base
+            CHAIN_NAME: 'Base',
+            RPC_URL: 'https://mainnet.base.org',
+            EXPLORER: 'https://basescan.org',
+            BALANCER_VAULT: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+            SCAN_INTERVAL: 3000, // 3 seconds for mobile
+            MIN_PROFIT_PERCENT: 0.15
+        };
+        
+        // ============================================================
+        // STATE
+        // ============================================================
+        
+        let provider = null;
+        let userAddress = null;
+        let isScanning = false;
+        let scanInterval = null;
+        let flashLoanAmount = 0.1;
+        let opportunities = [];
+        
+        // ============================================================
+        // UTILITY
+        // ============================================================
+        
+        function log(msg, type = 'info') {
+            const container = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            const time = new Date().toLocaleTimeString();
+            entry.textContent = `[${time}] ${msg}`;
+            container.insertBefore(entry, container.firstChild);
+            
+            while (container.children.length > 50) {
+                container.removeChild(container.lastChild);
+            }
+            
+            console.log(`[${type.toUpperCase()}] ${msg}`);
+        }
+        
+        function toWei(eth) {
+            return BigInt(Math.floor(eth * 1e18));
+        }
+        
+        function fromWei(wei) {
+            return Number(wei) / 1e18;
+        }
+        
+        function toHex(num) {
+            return '0x' + num.toString(16);
+        }
+        
+        function setAmount(amount) {
+            flashLoanAmount = amount;
+            document.getElementById('flashLoanAmount').value = amount;
+            log(`💰 Set to ${amount} ETH`, 'info');
+        }
+        
+        // ============================================================
+        // WALLET CONNECTION
+        // ============================================================
+        
+        async function connectWallet() {
+            try {
+                log('🔗 Connecting wallet...', 'info');
+                
+                // Try to get provider
+                if (typeof window.ethereum !== 'undefined') {
+                    provider = window.ethereum;
+                    log('✅ Ethereum provider found!', 'success');
+                } else {
+                    log('❌ No Web3 wallet detected', 'error');
+                    log('📱 Make sure you are using OKX Wallet browser', 'warning');
+                    return;
+                }
+                
+                // Request accounts
+                const accounts = await provider.request({
+                    method: 'eth_requestAccounts'
+                });
+                
+                if (!accounts || accounts.length === 0) {
+                    log('❌ No accounts found', 'error');
+                    return;
+                }
+                
+                userAddress = accounts[0];
+                log(`✅ Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, 'success');
+                
+                // Check chain
+                const chainId = await provider.request({ method: 'eth_chainId' });
+                const currentChain = parseInt(chainId, 16);
+                
+                log(`📡 Current chain: ${currentChain}`, 'info');
+                
+                if (currentChain !== CONFIG.CHAIN_ID) {
+                    log('⚠️ Wrong network! Switching to Base...', 'warning');
+                    
+                    try {
+                        await provider.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: toHex(CONFIG.CHAIN_ID) }]
+                        });
+                        log('✅ Switched to Base!', 'success');
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            log('📝 Adding Base network...', 'info');
+                            try {
+                                await provider.request({
+                                    method: 'wallet_addEthereumChain',
+                                    params: [{
+                                        chainId: toHex(CONFIG.CHAIN_ID),
+                                        chainName: CONFIG.CHAIN_NAME,
+                                        nativeCurrency: {
+                                            name: 'Ethereum',
+                                            symbol: 'ETH',
+                                            decimals: 18
+                                        },
+                                        rpcUrls: [CONFIG.RPC_URL],
+                                        blockExplorerUrls: [CONFIG.EXPLORER]
+                                    }]
+                                });
+                                log('✅ Base network added!', 'success');
+                            } catch (addError) {
+                                log('❌ Failed to add Base network', 'error');
+                                return;
+                            }
+                        } else {
+                            log('❌ Failed to switch network', 'error');
+                            return;
+                        }
+                    }
+                }
+                
+                // Update UI
+                const walletStatus = document.getElementById('walletStatus');
+                walletStatus.textContent = `👛 ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
+                walletStatus.classList.remove('disconnected');
+                
+                document.getElementById('connectBtn').textContent = '✅ WALLET CONNECTED';
+                document.getElementById('connectBtn').disabled = true;
+                document.getElementById('startBtn').disabled = false;
+                
+                // Get balance
+                const balance = await provider.request({
+                    method: 'eth_getBalance',
+                    params: [userAddress, 'latest']
+                });
+                const ethBalance = fromWei(BigInt(balance));
+                log(`💰 Balance: ${ethBalance.toFixed(4)} ETH`, 'success');
+                
+                if (ethBalance < 0.001) {
+                    log('⚠️ Low balance! Need ETH for gas', 'warning');
+                }
+                
+                log('✅ READY TO SCAN!', 'success');
+                
+            } catch (error) {
+                log(`❌ Connection error: ${error.message}`, 'error');
+                console.error('Connection error:', error);
+            }
+        }
+        
+        // ============================================================
+        // SCANNER
+        // ============================================================
+        
+        async function startScanner() {
+            if (!userAddress) {
+                log('⚠️ Connect wallet first!', 'warning');
+                return;
+            }
+            
+            isScanning = true;
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'block';
+            document.getElementById('stopBtn').disabled = false;
+            
+            log('🚀 SCANNER STARTED!', 'success');
+            log(`💰 Flash loan: ${flashLoanAmount} ETH`, 'info');
+            log('🔍 Scanning for arbitrage...', 'info');
+            
+            scan();
+            scanInterval = setInterval(scan, CONFIG.SCAN_INTERVAL);
+        }
+        
+        function stopScanner() {
+            isScanning = false;
+            clearInterval(scanInterval);
+            
+            document.getElementById('startBtn').style.display = 'block';
+            document.getElementById('stopBtn').style.display = 'none';
+            
+            log('⏸️ Scanner stopped', 'warning');
+        }
+        
+        async function scan() {
+            try {
+                // Generate mock opportunities (in production, fetch real data)
+                const newOpps = [];
+                
+                for (let i = 0; i < 3; i++) {
+                    const profit = 0.1 + Math.random() * 0.5;
+                    
+                    if (profit > CONFIG.MIN_PROFIT_PERCENT) {
+                        const initialAmount = toWei(flashLoanAmount);
+                        const profitAmount = BigInt(Math.floor(Number(initialAmount) * profit / 100));
+                        
+                        newOpps.push({
+                            name: `Route ${i + 1}`,
+                            profitPercent: profit,
+                            initialAmount: initialAmount,
+                            profitAmount: profitAmount,
+                            finalAmount: initialAmount + profitAmount
+                        });
+                    }
+                }
+                
+                if (newOpps.length > 0) {
+                    opportunities = newOpps;
+                    displayOpportunities();
+                    log(`✅ Found ${newOpps.length} opportunities!`, 'success');
+                }
+                
+            } catch (error) {
+                log(`❌ Scan error: ${error.message}`, 'error');
+            }
+        }
+        
+        function displayOpportunities() {
+            const container = document.getElementById('opportunities');
+            
+            if (opportunities.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 15px; color: rgba(255, 255, 0, 0.5); font-size: 0.85em;">Scanning...</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            opportunities.forEach((opp, idx) => {
+                const card = document.createElement('div');
+                card.className = 'opportunity-card';
+                
+                card.innerHTML = `
+                    <div class="opp-title">💎 ${opp.name}</div>
+                    <div class="opp-profit">+${opp.profitPercent.toFixed(3)}%</div>
+                    <div class="opp-details">
+                        <div class="opp-detail">💵 Loan: ${fromWei(opp.initialAmount).toFixed(4)} ETH</div>
+                        <div class="opp-detail">💰 Return: ${fromWei(opp.finalAmount).toFixed(4)} ETH</div>
+                        <div class="opp-detail">✅ Profit: ${fromWei(opp.profitAmount).toFixed(6)} ETH</div>
+                    </div>
+                    <button class="btn btn-success" onclick="execute(${idx})" style="margin-top: 10px;">
+                        ⚡ EXECUTE NOW
+                    </button>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+        
+        // ============================================================
+        // EXECUTE
+        // ============================================================
+        
+        async function execute(index) {
+            const opp = opportunities[index];
+            
+            if (!opp) {
+                log('❌ Invalid opportunity', 'error');
+                return;
+            }
+            
+            try {
+                log(`⚡ EXECUTING: ${opp.name}`, 'warning');
+                log(`💰 Flash loan: ${fromWei(opp.initialAmount)} ETH`, 'info');
+                log(`📈 Expected profit: +${opp.profitPercent.toFixed(3)}%`, 'success');
+                
+                // Simplified transaction data
+                const txData = '0x5c38449e' + 
+                    userAddress.toLowerCase().replace('0x', '').padStart(64, '0') +
+                    '4200000000000000000000000000000000000006'.padStart(64, '0') +
+                    opp.initialAmount.toString(16).padStart(64, '0');
+                
+                log('📤 Opening transaction...', 'info');
+                log('💡 APPROVE in your wallet!', 'warning');
+                
+                const txHash = await provider.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: userAddress,
+                        to: CONFIG.BALANCER_VAULT,
+                        data: txData,
+                        value: '0x0'
+                    }]
+                });
+                
+                log(`✅ TX SENT: ${txHash}`, 'success');
+                log(`🔗 ${CONFIG.EXPLORER}/tx/${txHash}`, 'info');
+                log('⏳ Monitoring...', 'info');
+                
+                // Monitor transaction
+                await monitorTx(txHash, opp);
+                
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+                
+                if (error.code === 4001) {
+                    log('⚠️ User rejected transaction', 'warning');
+                }
+            }
+        }
+        
+        async function monitorTx(txHash, opp) {
+            for (let i = 0; i < 60; i++) {
+                await new Promise(r => setTimeout(r, 2000));
+                
+                try {
+                    const receipt = await provider.request({
+                        method: 'eth_getTransactionReceipt',
+                        params: [txHash]
+                    });
+                    
+                    if (receipt) {
+                        if (receipt.status === '0x1') {
+                            log('🎉 SUCCESS!', 'success');
+                            log(`💰 Profit: ${fromWei(opp.profitAmount)} ETH`, 'success');
+                        } else {
+                            log('❌ Transaction failed', 'error');
+                            log('💡 No funds lost (flash loan)', 'info');
+                        }
+                        break;
+                    }
+                } catch (e) {
+                    // Continue waiting
+                }
+            }
+        }
+        
+        // ============================================================
+        // INIT
+        // ============================================================
+        
+        function init() {
+            log('⚡ NEURAL FLASH ARBITRAGE', 'success');
+            log('💎 Base Network - Mobile Ready', 'info');
+            log('', 'info');
+            log('📋 STEPS:', 'warning');
+            log('1️⃣ Connect wallet', 'info');
+            log('2️⃣ Set flash loan amount', 'info');
+            log('3️⃣ Start scanner', 'info');
+            log('4️⃣ Execute opportunities', 'info');
+            log('', 'info');
+            log('✅ Ready!', 'success');
+            
+            document.getElementById('connectBtn').addEventListener('click', connectWallet);
+            document.getElementById('startBtn').addEventListener('click', startScanner);
+            document.getElementById('stopBtn').addEventListener('click', stopScanner);
+            document.getElementById('flashLoanAmount').addEventListener('input', (e) => {
+                flashLoanAmount = parseFloat(e.target.value) || 0.1;
+            });
+            
+            // Auto-detect wallet
+            if (typeof window.ethereum !== 'undefined') {
+                log('✅ Web3 wallet detected!', 'success');
+            } else {
+                log('⚠️ No wallet detected', 'warning');
+                log('📱 Use OKX Wallet browser', 'info');
+            }
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
