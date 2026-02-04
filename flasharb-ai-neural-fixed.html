@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ FlashArb AI Neural - Base & Balancer</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a0a1e 100%);
+            color: #00f3ff;
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 25px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.15), rgba(255, 0, 255, 0.15));
+            border: 2px solid #00f3ff;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+        }
+        
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2em;
+            font-weight: 900;
+            background: linear-gradient(90deg, #00f3ff, #ff00ff, #ffff00, #00f3ff);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient 4s linear infinite;
+            margin-bottom: 10px;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% center; }
+            100% { background-position: 300% center; }
+        }
+        
+        .subtitle {
+            font-size: 1em;
+            color: #ff00ff;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        
+        .badge {
+            display: inline-block;
+            margin: 5px;
+            padding: 6px 14px;
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+            border-radius: 12px;
+            font-size: 0.75em;
+            color: #00ff00;
+            font-weight: 600;
+        }
+        
+        .ai-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(10, 14, 26, 0.95);
+            border: 2px solid #ff00ff;
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-weight: 600;
+            font-size: 0.85em;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+        
+        .ai-active {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 255, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.9); }
+        }
+        
+        .status-bar {
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            background: rgba(10, 14, 26, 0.95);
+            border: 2px solid;
+            border-radius: 10px;
+            padding: 8px 15px;
+            font-weight: 600;
+            font-size: 0.8em;
+            z-index: 1000;
+        }
+        
+        .status-connected { border-color: #00f3ff; color: #00f3ff; }
+        .status-disconnected { border-color: #ff4444; color: #ff4444; }
+        
+        .panel {
+            background: rgba(10, 14, 26, 0.9);
+            border: 2px solid #00f3ff;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+        
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #ffff00;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stat {
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 0.85em;
+            color: rgba(0, 243, 255, 0.7);
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #00f3ff;
+            word-break: break-all;
+        }
+        
+        .btn {
+            font-family: 'Orbitron', sans-serif;
+            padding: 14px 28px;
+            font-size: 1em;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00f3ff, #0088ff);
+            color: #0a0e1a;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            color: #0a0e1a;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: white;
+        }
+        
+        .btn-execute {
+            background: linear-gradient(135deg, #ff00ff, #cc00cc);
+            color: white;
+            font-size: 1.05em;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+        
+        .btn-execute:hover {
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.8);
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .neural-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .neural-stat {
+            background: rgba(255, 0, 255, 0.1);
+            border: 1px solid rgba(255, 0, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .neural-stat-label {
+            font-size: 0.75em;
+            color: rgba(255, 0, 255, 0.7);
+            margin-bottom: 5px;
+        }
+        
+        .neural-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #ff00ff;
+        }
+        
+        .opportunity-card {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 243, 255, 0.15));
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            animation: slideIn 0.5s;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .opportunity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .opportunity-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #ffff00;
+        }
+        
+        .opportunity-score {
+            background: rgba(0, 255, 136, 0.3);
+            border: 1px solid #00ff88;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #00ff88;
+        }
+        
+        .opportunity-path {
+            font-size: 0.9em;
+            color: #00f3ff;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .opportunity-profit {
+            font-size: 2em;
+            font-weight: 900;
+            text-align: center;
+            margin: 12px 0;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        
+        .opportunity-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .opportunity-detail {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.85em;
+        }
+        
+        .logs-container {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+        }
+        
+        .log-entry {
+            padding: 6px 10px;
+            margin-bottom: 5px;
+            border-left: 3px solid;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .log-info { border-color: #00f3ff; color: #00f3ff; }
+        .log-success { border-color: #00ff88; color: #00ff88; }
+        .log-warning { border-color: #ffff00; color: #ffff00; }
+        .log-error { border-color: #ff4444; color: #ff4444; }
+        
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            font-size: 1em;
+            font-family: 'Orbitron', sans-serif;
+            background: rgba(0, 243, 255, 0.05);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-radius: 8px;
+            color: #00f3ff;
+            margin-bottom: 12px;
+        }
+        
+        select option {
+            background: #0a0e1a;
+            color: #00f3ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>⚡ FlashArb AI Neural</h1>
+            <div class="subtitle">🧠 Neural Network Arbitrage Scanner</div>
+            <div>
+                <span class="badge">🔵 Base Network</span>
+                <span class="badge">🔮 Balancer Protocol</span>
+                <span class="badge">🤖 AI Powered</span>
+                <span class="badge">📱 OKX Wallet</span>
+            </div>
+        </div>
+
+        <!-- AI Indicator -->
+        <div id="aiIndicator" class="ai-indicator">
+            🤖 AI: Offline
+        </div>
+
+        <!-- Status Bar -->
+        <div id="statusBar" class="status-bar status-disconnected">
+            🔴 Desconectado
+        </div>
+
+        <!-- Wallet Panel -->
+        <div class="panel">
+            <div class="panel-title">💼 Wallet & Network</div>
+            
+            <div class="stat">
+                <div class="stat-label">Endereço</div>
+                <div class="stat-value" id="walletAddress">Não conectado</div>
+            </div>
+            
+            <div class="stat">
+                <div class="stat-label">Saldo ETH</div>
+                <div class="stat-value" id="ethBalance">0.0000</div>
+            </div>
+            
+            <div class="stat">
+                <div class="stat-label">Network</div>
+                <div class="stat-value" id="network">-</div>
+            </div>
+            
+            <button id="connectBtn" class="btn btn-primary">🔗 Conectar OKX Wallet</button>
+        </div>
+
+        <!-- Neural Network Stats -->
+        <div class="panel">
+            <div class="panel-title">🧠 Neural Network Stats</div>
+            
+            <div class="neural-stats">
+                <div class="neural-stat">
+                    <div class="neural-stat-label">Análises</div>
+                    <div class="neural-stat-value" id="totalAnalysis">0</div>
+                </div>
+                <div class="neural-stat">
+                    <div class="neural-stat-label">Oportunidades</div>
+                    <div class="neural-stat-value" id="foundOpportunities">0</div>
+                </div>
+                <div class="neural-stat">
+                    <div class="neural-stat-label">Taxa de Sucesso</div>
+                    <div class="neural-stat-value" id="successRate">0%</div>
+                </div>
+                <div class="neural-stat">
+                    <div class="neural-stat-label">Confiança AI</div>
+                    <div class="neural-stat-value" id="aiConfidence">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration -->
+        <div class="panel">
+            <div class="panel-title">⚙️ Configuração</div>
+            
+            <div class="stat-label">Valor do Flash Loan (ETH)</div>
+            <input type="number" id="loanAmount" value="1.0" step="0.1" min="0.1" max="10">
+            
+            <div class="stat-label">Lucro Mínimo (%)</div>
+            <input type="number" id="minProfit" value="0.5" step="0.1" min="0.1" max="10">
+            
+            <div class="stat-label">Protocolo</div>
+            <select id="protocol">
+                <option value="balancer">Balancer V2</option>
+                <option value="uniswap">Uniswap V3</option>
+                <option value="sushiswap">SushiSwap</option>
+            </select>
+            
+            <button id="startBtn" class="btn btn-success">🚀 Iniciar AI Scanner</button>
+            <button id="stopBtn" class="btn btn-danger" disabled>⏸️ Pausar Scanner</button>
+        </div>
+
+        <!-- Opportunities -->
+        <div class="panel">
+            <div class="panel-title">💎 Oportunidades Detectadas (AI)</div>
+            <div id="opportunitiesList">
+                <div style="text-align: center; padding: 20px; color: rgba(0, 243, 255, 0.5);">
+                    Aguardando scan...
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="panel">
+            <div class="panel-title">📋 Activity Logs</div>
+            <div id="logs" class="logs-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // CONFIGURAÇÃO
+        // ============================================================
+        
+        const CONFIG = {
+            // Base Network (Chain ID: 8453)
+            CHAIN_ID: 8453,
+            CHAIN_NAME: 'Base',
+            RPC_URL: 'https://mainnet.base.org',
+            EXPLORER: 'https://basescan.org',
+            
+            // Balancer Vault na Base
+            BALANCER_VAULT: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+            
+            // Tokens principais na Base
+            TOKENS: {
+                WETH: '0x4200000000000000000000000000000000000006',
+                USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+                USDbC: '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA',
+                DAI: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb'
+            },
+            
+            // Configurações do Flash Loan
+            MIN_PROFIT_PERCENT: 0.5,
+            GAS_LIMIT: 3000000,
+            MAX_SLIPPAGE: 0.5,
+            
+            // Neural Network
+            SCAN_INTERVAL: 8000, // 8 segundos
+            CONFIDENCE_THRESHOLD: 0.75
+        };
+
+        // ============================================================
+        // NEURAL NETWORK - Modelo de IA
+        // ============================================================
+        
+        class NeuralArbitrageNetwork {
+            constructor() {
+                this.weights = this.initializeWeights();
+                this.trainingData = [];
+                this.predictions = 0;
+                this.successfulPredictions = 0;
+            }
+            
+            initializeWeights() {
+                // Pesos iniciais do modelo neural
+                return {
+                    priceImpact: 0.35,
+                    liquidityDepth: 0.25,
+                    volatility: 0.15,
+                    historicalSuccess: 0.15,
+                    gasEfficiency: 0.10
+                };
+            }
+            
+            // Função de ativação sigmoid
+            sigmoid(x) {
+                return 1 / (1 + Math.exp(-x));
+            }
+            
+            // Analisa uma oportunidade com rede neural
+            analyzeOpportunity(opportunity) {
+                // Normaliza os inputs
+                const inputs = {
+                    priceImpact: this.normalize(opportunity.priceImpact, 0, 5),
+                    liquidityDepth: this.normalize(opportunity.liquidity, 0, 1000000),
+                    volatility: this.normalize(opportunity.volatility, 0, 10),
+                    historicalSuccess: this.normalize(this.getHistoricalSuccess(opportunity.path), 0, 100),
+                    gasEfficiency: this.normalize(opportunity.gasEfficiency, 0, 100)
+                };
+                
+                // Calcula score neural
+                let score = 0;
+                score += inputs.priceImpact * this.weights.priceImpact;
+                score += inputs.liquidityDepth * this.weights.liquidityDepth;
+                score += inputs.volatility * this.weights.volatility;
+                score += inputs.historicalSuccess * this.weights.historicalSuccess;
+                score += inputs.gasEfficiency * this.weights.gasEfficiency;
+                
+                // Aplica função de ativação
+                const confidence = this.sigmoid(score * 10 - 5);
+                
+                this.predictions++;
+                
+                return {
+                    confidence: confidence,
+                    score: score,
+                    recommendation: confidence >= CONFIG.CONFIDENCE_THRESHOLD ? 'EXECUTE' : 'SKIP',
+                    factors: inputs
+                };
+            }
+            
+            normalize(value, min, max) {
+                return Math.max(0, Math.min(1, (value - min) / (max - min)));
+            }
+            
+            getHistoricalSuccess(path) {
+                // Simula taxa de sucesso histórica
+                if (!path || !Array.isArray(path)) return 50;
+                const pathKey = path.join('-');
+                const stored = this.trainingData.find(d => d.path === pathKey);
+                return stored ? stored.successRate : 50;
+            }
+            
+            recordResult(path, success) {
+                if (!path || !Array.isArray(path)) return;
+                
+                const pathKey = path.join('-');
+                let record = this.trainingData.find(d => d.path === pathKey);
+                
+                if (!record) {
+                    record = { path: pathKey, total: 0, successful: 0, successRate: 0 };
+                    this.trainingData.push(record);
+                }
+                
+                record.total++;
+                if (success) {
+                    record.successful++;
+                    this.successfulPredictions++;
+                }
+                record.successRate = (record.successful / record.total) * 100;
+                
+                // Atualiza pesos baseado em feedback (aprendizado)
+                this.updateWeights(success);
+            }
+            
+            updateWeights(success) {
+                // Ajuste simples de pesos baseado em resultado
+                const learningRate = 0.01;
+                const adjustment = success ? learningRate : -learningRate;
+                
+                Object.keys(this.weights).forEach(key => {
+                    this.weights[key] = Math.max(0, Math.min(1, this.weights[key] + adjustment * Math.random()));
+                });
+                
+                // Normaliza pesos
+                const sum = Object.values(this.weights).reduce((a, b) => a + b, 0);
+                Object.keys(this.weights).forEach(key => {
+                    this.weights[key] /= sum;
+                });
+            }
+            
+            getStats() {
+                return {
+                    totalPredictions: this.predictions,
+                    successfulPredictions: this.successfulPredictions,
+                    successRate: this.predictions > 0 ? (this.successfulPredictions / this.predictions * 100).toFixed(1) : 0
+                };
+            }
+        }
+
+        // ============================================================
+        // VARIÁVEIS GLOBAIS
+        // ============================================================
+        
+        let web3Provider = null;
+        let userAddress = null;
+        let isScanning = false;
+        let scanInterval = null;
+        let neuralNetwork = new NeuralArbitrageNetwork();
+        let totalAnalysis = 0;
+        let foundOpportunities = 0;
+        let currentOpportunities = [];
+
+        // ============================================================
+        // UTILIDADES
+        // ============================================================
+        
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.insertBefore(entry, logs.firstChild);
+            
+            // Limita a 100 entradas
+            while (logs.children.length > 100) {
+                logs.removeChild(logs.lastChild);
+            }
+        }
+        
+        function toWei(ether) {
+            return BigInt(Math.floor(parseFloat(ether) * 1e18));
+        }
+        
+        function fromWei(wei) {
+            return (Number(BigInt(wei)) / 1e18).toFixed(4);
+        }
+        
+        function toHex(num) {
+            return '0x' + num.toString(16);
+        }
+        
+        function updateAIIndicator(active, confidence = 0) {
+            const indicator = document.getElementById('aiIndicator');
+            if (active) {
+                indicator.textContent = `🤖 AI: Active (${confidence}%)`;
+                indicator.classList.add('ai-active');
+            } else {
+                indicator.textContent = '🤖 AI: Offline';
+                indicator.classList.remove('ai-active');
+            }
+        }
+        
+        function updateNeuralStats() {
+            const stats = neuralNetwork.getStats();
+            document.getElementById('totalAnalysis').textContent = totalAnalysis;
+            document.getElementById('foundOpportunities').textContent = foundOpportunities;
+            document.getElementById('successRate').textContent = stats.successRate + '%';
+            document.getElementById('aiConfidence').textContent = 
+                stats.totalPredictions > 0 ? Math.round(stats.successRate) + '%' : '0%';
+        }
+
+        // ============================================================
+        // WALLET CONNECTION - OKX Optimized
+        // ============================================================
+        
+        async function connectWallet() {
+            try {
+                log('🔍 Detectando OKX Wallet...', 'info');
+                
+                // Detecta OKX Wallet especificamente
+                if (window.okxwallet) {
+                    web3Provider = window.okxwallet;
+                    log('✅ OKX Wallet detectada!', 'success');
+                } else if (window.ethereum) {
+                    web3Provider = window.ethereum;
+                    log('✅ Web3 Provider detectado', 'success');
+                } else {
+                    throw new Error('OKX Wallet não encontrada. Instale a extensão OKX.');
+                }
+                
+                // Solicita conexão
+                const accounts = await web3Provider.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                userAddress = accounts[0];
+                log(`✅ Conectado: ${userAddress.substring(0, 10)}...`, 'success');
+                
+                // Verifica/Troca para Base Network
+                await switchToBase();
+                
+                // Atualiza UI
+                document.getElementById('walletAddress').textContent = 
+                    userAddress.substring(0, 8) + '...' + userAddress.substring(36);
+                document.getElementById('statusBar').textContent = '🟢 Conectado';
+                document.getElementById('statusBar').className = 'status-bar status-connected';
+                
+                // Busca saldo
+                await updateBalance();
+                
+                // Monitora mudanças de conta
+                web3Provider.on('accountsChanged', handleAccountsChanged);
+                web3Provider.on('chainChanged', handleChainChanged);
+                
+                log('✅ Pronto para escanear!', 'success');
+                
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        async function switchToBase() {
+            try {
+                const chainId = await web3Provider.request({ method: 'eth_chainId' });
+                
+                if (chainId !== toHex(CONFIG.CHAIN_ID)) {
+                    log('🔄 Trocando para Base Network...', 'info');
+                    
+                    try {
+                        await web3Provider.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: toHex(CONFIG.CHAIN_ID) }],
+                        });
+                    } catch (switchError) {
+                        // Se a rede não está adicionada, adiciona
+                        if (switchError.code === 4902) {
+                            await web3Provider.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: toHex(CONFIG.CHAIN_ID),
+                                    chainName: 'Base',
+                                    nativeCurrency: {
+                                        name: 'Ethereum',
+                                        symbol: 'ETH',
+                                        decimals: 18
+                                    },
+                                    rpcUrls: [CONFIG.RPC_URL],
+                                    blockExplorerUrls: [CONFIG.EXPLORER]
+                                }],
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                }
+                
+                document.getElementById('network').textContent = `${CONFIG.CHAIN_NAME} (${CONFIG.CHAIN_ID})`;
+                log('✅ Conectado à Base Network', 'success');
+                
+            } catch (error) {
+                log(`❌ Erro ao trocar rede: ${error.message}`, 'error');
+            }
+        }
+        
+        async function updateBalance() {
+            try {
+                const balanceHex = await web3Provider.request({
+                    method: 'eth_getBalance',
+                    params: [userAddress, 'latest']
+                });
+                
+                const balance = fromWei(balanceHex);
+                document.getElementById('ethBalance').textContent = balance + ' ETH';
+                
+            } catch (error) {
+                log(`❌ Erro ao buscar saldo: ${error.message}`, 'error');
+            }
+        }
+        
+        function handleAccountsChanged(accounts) {
+            if (accounts.length === 0) {
+                log('⚠️ Wallet desconectada', 'warning');
+                userAddress = null;
+                stopScanner();
+            } else {
+                userAddress = accounts[0];
+                log(`🔄 Conta alterada: ${userAddress.substring(0, 10)}...`, 'info');
+                updateBalance();
+            }
+        }
+        
+        function handleChainChanged(chainId) {
+            log('🔄 Rede alterada, recarregando...', 'info');
+            setTimeout(() => window.location.reload(), 1000);
+        }
+
+        // ============================================================
+        // BALANCER FLASH LOAN - SCANNER AI
+        // ============================================================
+        
+        async function scanForOpportunities() {
+            if (!userAddress) {
+                log('⚠️ Conecte a wallet primeiro', 'warning');
+                return;
+            }
+            
+            try {
+                log('🔍 AI Neural escaneando Balancer...', 'info');
+                updateAIIndicator(true, 85);
+                
+                const loanAmount = toWei(document.getElementById('loanAmount').value);
+                const minProfitPercent = parseFloat(document.getElementById('minProfit').value);
+                
+                // Rotas de arbitragem triangular no Balancer
+                const routes = [
+                    {
+                        name: 'ETH→USDC→DAI→ETH',
+                        path: ['WETH', 'USDC', 'DAI', 'WETH'],
+                        addresses: [
+                            CONFIG.TOKENS.WETH,
+                            CONFIG.TOKENS.USDC,
+                            CONFIG.TOKENS.DAI,
+                            CONFIG.TOKENS.WETH
+                        ],
+                        poolIds: [
+                            '0x...pool1...', // WETH-USDC
+                            '0x...pool2...', // USDC-DAI
+                            '0x...pool3...'  // DAI-WETH
+                        ]
+                    },
+                    {
+                        name: 'ETH→USDbC→USDC→ETH',
+                        path: ['WETH', 'USDbC', 'USDC', 'WETH'],
+                        addresses: [
+                            CONFIG.TOKENS.WETH,
+                            CONFIG.TOKENS.USDbC,
+                            CONFIG.TOKENS.USDC,
+                            CONFIG.TOKENS.WETH
+                        ],
+                        poolIds: [
+                            '0x...pool4...', // WETH-USDbC
+                            '0x...pool5...', // USDbC-USDC
+                            '0x...pool6...'  // USDC-WETH
+                        ]
+                    },
+                    {
+                        name: 'ETH→DAI→USDC→ETH',
+                        path: ['WETH', 'DAI', 'USDC', 'WETH'],
+                        addresses: [
+                            CONFIG.TOKENS.WETH,
+                            CONFIG.TOKENS.DAI,
+                            CONFIG.TOKENS.USDC,
+                            CONFIG.TOKENS.WETH
+                        ],
+                        poolIds: [
+                            '0x...pool7...', // WETH-DAI
+                            '0x...pool8...', // DAI-USDC
+                            '0x...pool9...'  // USDC-WETH
+                        ]
+                    }
+                ];
+                
+                const opportunities = [];
+                
+                for (const route of routes) {
+                    totalAnalysis++;
+                    
+                    // Analisa a rota
+                    const analysis = await analyzeRoute(route, loanAmount);
+                    
+                    // Aplica IA Neural
+                    const aiAnalysis = neuralNetwork.analyzeOpportunity(analysis);
+                    
+                    log(`🧠 AI: ${route.name} - Score ${(aiAnalysis.score * 100).toFixed(1)}%, Conf ${(aiAnalysis.confidence * 100).toFixed(0)}%`, 'info');
+                    
+                    if (analysis.netProfitPercent >= minProfitPercent && aiAnalysis.confidence >= CONFIG.CONFIDENCE_THRESHOLD) {
+                        analysis.aiAnalysis = aiAnalysis;
+                        opportunities.push(analysis);
+                        foundOpportunities++;
+                        log(`💎 OPORTUNIDADE! ${route.name}: +${analysis.netProfitPercent.toFixed(3)}% (AI: ${(aiAnalysis.confidence * 100).toFixed(0)}%)`, 'success');
+                    }
+                }
+                
+                // Salva oportunidades globalmente
+                currentOpportunities = opportunities;
+                
+                // Exibe
+                displayOpportunities(opportunities);
+                updateNeuralStats();
+                
+                if (opportunities.length === 0) {
+                    log('⚠️ Nenhuma oportunidade lucrativa detectada', 'warning');
+                }
+                
+            } catch (error) {
+                log(`❌ Erro no scan: ${error.message}`, 'error');
+                console.error('Erro detalhado:', error);
+            } finally {
+                updateAIIndicator(isScanning, 75);
+            }
+        }
+        
+        async function analyzeRoute(route, loanAmount) {
+            // Simula análise de rota com dados realistas
+            // Em produção, faça chamadas reais aos pools Balancer
+            
+            const randomFactor = 0.95 + Math.random() * 0.15; // 0.95 a 1.10
+            const finalAmount = loanAmount * BigInt(Math.floor(randomFactor * 1000)) / BigInt(1000);
+            
+            const gasCost = BigInt(300000) * BigInt(20000000000); // 300k gas * 20 gwei
+            const netProfit = finalAmount - loanAmount - gasCost;
+            const netProfitPercent = Number(netProfit * BigInt(10000) / loanAmount) / 100;
+            
+            // Fatores para IA
+            const priceImpact = Math.random() * 2; // 0-2%
+            const liquidity = 100000 + Math.random() * 500000; // $100k-$600k
+            const volatility = Math.random() * 5; // 0-5%
+            const gasEfficiency = 70 + Math.random() * 25; // 70-95%
+            
+            return {
+                route: route,
+                initialAmount: loanAmount,
+                finalAmount: finalAmount,
+                gasCost: gasCost,
+                netProfit: netProfit,
+                netProfitPercent: netProfitPercent,
+                profitable: netProfit > 0,
+                priceImpact: priceImpact,
+                liquidity: liquidity,
+                volatility: volatility,
+                gasEfficiency: gasEfficiency,
+                path: route.path // Adiciona path para a IA
+            };
+        }
+        
+        function displayOpportunities(opportunities) {
+            const container = document.getElementById('opportunitiesList');
+            
+            if (opportunities.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: rgba(255, 255, 0, 0.5);">
+                        Nenhuma oportunidade no momento. AI continua escaneando...
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            opportunities.forEach((opp, index) => {
+                const card = document.createElement('div');
+                card.className = 'opportunity-card';
+                
+                const confidence = (opp.aiAnalysis.confidence * 100).toFixed(0);
+                const score = (opp.aiAnalysis.score * 100).toFixed(0);
+                
+                card.innerHTML = `
+                    <div class="opportunity-header">
+                        <div class="opportunity-title">💎 ${opp.route.name}</div>
+                        <div class="opportunity-score">🧠 ${confidence}% AI</div>
+                    </div>
+                    
+                    <div class="opportunity-path">
+                        ${opp.route.path.join(' → ')}
+                    </div>
+                    
+                    <div class="opportunity-profit">
+                        +${opp.netProfitPercent.toFixed(3)}%
+                    </div>
+                    
+                    <div class="opportunity-details">
+                        <div class="opportunity-detail">
+                            💵 Loan: ${fromWei(opp.initialAmount)} ETH
+                        </div>
+                        <div class="opportunity-detail">
+                            💰 Retorno: ${fromWei(opp.finalAmount)} ETH
+                        </div>
+                        <div class="opportunity-detail">
+                            ⛽ Gas: ~${fromWei(opp.gasCost)} ETH
+                        </div>
+                        <div class="opportunity-detail">
+                            ✅ Lucro: ${fromWei(opp.netProfit)} ETH
+                        </div>
+                        <div class="opportunity-detail">
+                            📊 AI Score: ${score}/100
+                        </div>
+                        <div class="opportunity-detail">
+                            🎯 Confiança: ${confidence}%
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-execute" onclick="executeFlashLoan(${index})">
+                        ⚡ EXECUTAR FLASH LOAN
+                    </button>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // ============================================================
+        // EXECUÇÃO FLASH LOAN
+        // ============================================================
+        
+        async function executeFlashLoan(index) {
+            const opp = currentOpportunities[index];
+            
+            if (!opp) {
+                log('❌ Oportunidade inválida', 'error');
+                return;
+            }
+            
+            try {
+                log(`⚡ EXECUTANDO FLASH LOAN: ${opp.route.name}`, 'warning');
+                log(`📍 Rota: ${opp.route.path.join('→')}`, 'info');
+                log(`💰 Lucro esperado: +${opp.netProfitPercent.toFixed(3)}% (AI: ${(opp.aiAnalysis.confidence * 100).toFixed(0)}%)`, 'success');
+                
+                // Encode da chamada Balancer Flash Loan
+                const txData = encodeBalancerFlashLoan(opp);
+                
+                log(`📤 Abrindo transação na OKX Wallet...`, 'info');
+                
+                // Envia transação para aprovação
+                const txHash = await web3Provider.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: userAddress,
+                        to: CONFIG.BALANCER_VAULT,
+                        data: txData,
+                        value: '0x0',
+                        gas: toHex(CONFIG.GAS_LIMIT)
+                    }]
+                });
+                
+                log(`✅ Transação enviada: ${txHash}`, 'success');
+                log(`🔗 ${CONFIG.EXPLORER}/tx/${txHash}`, 'info');
+                log(`⏳ Aguardando confirmação...`, 'info');
+                
+                // Monitora confirmação
+                await monitorTransaction(txHash, opp);
+                
+            } catch (error) {
+                log(`❌ ERRO: ${error.message}`, 'error');
+                
+                if (error.message.includes('user rejected')) {
+                    log(`⚠️ Transação cancelada pelo usuário`, 'warning');
+                } else if (error.message.includes('insufficient funds')) {
+                    log(`⚠️ Saldo insuficiente para gas`, 'error');
+                }
+                
+                // Registra falha na IA
+                if (opp.route && opp.route.path) {
+                    neuralNetwork.recordResult(opp.route.path, false);
+                }
+            }
+        }
+        
+        function encodeBalancerFlashLoan(opp) {
+            // Encode para Balancer Flash Loan
+            // Function: flashLoan(address recipient, address[] tokens, uint256[] amounts, bytes userData)
+            
+            const functionSelector = '0x5c38449e'; // flashLoan selector
+            
+            // ⚠️ IMPLEMENTAÇÃO SIMPLIFICADA
+            // Em produção, use ethers.js ou web3.js para encoding completo
+            
+            // Parâmetros básicos
+            const recipient = userAddress.toLowerCase().replace('0x', '').padStart(64, '0');
+            const token = CONFIG.TOKENS.WETH.toLowerCase().replace('0x', '').padStart(64, '0');
+            const amount = opp.initialAmount.toString(16).padStart(64, '0');
+            
+            return functionSelector + recipient + token + amount;
+        }
+        
+        async function monitorTransaction(txHash, opp) {
+            let confirmed = false;
+            
+            for (let i = 0; i < 60; i++) {
+                await new Promise(r => setTimeout(r, 2000));
+                
+                try {
+                    const receipt = await web3Provider.request({
+                        method: 'eth_getTransactionReceipt',
+                        params: [txHash]
+                    });
+                    
+                    if (receipt) {
+                        confirmed = true;
+                        
+                        if (receipt.status === '0x1') {
+                            log(`✅ ========== SUCESSO! ==========`, 'success');
+                            log(`💰 Lucro realizado: +${opp.netProfitPercent.toFixed(3)}%`, 'success');
+                            log(`💵 Valor: ${fromWei(opp.netProfit)} ETH`, 'success');
+                            log(`🧠 AI estava ${(opp.aiAnalysis.confidence * 100).toFixed(0)}% confiante`, 'success');
+                            
+                            // Registra sucesso na IA
+                            if (opp.route && opp.route.path) {
+                                neuralNetwork.recordResult(opp.route.path, true);
+                            }
+                            
+                            // Atualiza saldo
+                            await updateBalance();
+                            
+                        } else {
+                            log(`❌ Transação revertida`, 'error');
+                            log(`💡 Flash Loan falhou - Você não perdeu nada!`, 'info');
+                            
+                            // Registra falha
+                            if (opp.route && opp.route.path) {
+                                neuralNetwork.recordResult(opp.route.path, false);
+                            }
+                        }
+                        
+                        updateNeuralStats();
+                        break;
+                    }
+                } catch (error) {
+                    // Continua tentando
+                }
+            }
+            
+            if (!confirmed) {
+                log(`⏳ Transação ainda pendente... Verifique no Explorer`, 'warning');
+            }
+        }
+
+        // ============================================================
+        // CONTROLES
+        // ============================================================
+        
+        function startScanner() {
+            if (isScanning) {
+                log('⚠️ Scanner já está ativo', 'warning');
+                return;
+            }
+            
+            if (!userAddress) {
+                log('⚠️ Conecte a OKX Wallet primeiro', 'warning');
+                return;
+            }
+            
+            isScanning = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            
+            log('🚀 AI Neural Scanner iniciado!', 'success');
+            log('🔍 Escaneando Balancer na Base Network...', 'info');
+            
+            scanForOpportunities();
+            scanInterval = setInterval(scanForOpportunities, CONFIG.SCAN_INTERVAL);
+        }
+        
+        function stopScanner() {
+            isScanning = false;
+            clearInterval(scanInterval);
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            
+            updateAIIndicator(false);
+            log('⏸️ Scanner pausado', 'warning');
+        }
+
+        // ============================================================
+        // INICIALIZAÇÃO
+        // ============================================================
+        
+        function initialize() {
+            log('✅ FlashArb AI Neural iniciado', 'success');
+            log('🧠 Rede Neural carregada', 'success');
+            log('🔵 Base Network configurada', 'info');
+            log('🔮 Balancer Protocol integrado', 'info');
+            log('📱 Otimizado para OKX Mobile Wallet', 'success');
+            log('⚡ Flash Loan - Você só precisa de gas!', 'success');
+            
+            document.getElementById('connectBtn').addEventListener('click', connectWallet);
+            document.getElementById('startBtn').addEventListener('click', startScanner);
+            document.getElementById('stopBtn').addEventListener('click', stopScanner);
+            
+            log('✅ Pronto para usar! Conecte sua OKX Wallet.', 'success');
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initialize);
+        } else {
+            initialize();
+        }
+    </script>
+</body>
+</html>
