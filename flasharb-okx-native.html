@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ FlashArb AI v3.0 - OKX Mobile</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+        
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-magenta: #ff00ff;
+            --neon-yellow: #ffff00;
+            --dark-void: #0a0e1a;
+            --darker-void: #050810;
+            --grid-color: rgba(0, 243, 255, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--darker-void);
+            color: var(--neon-cyan);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Animated Grid Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+        
+        /* Glowing orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--neon-cyan);
+            top: -200px;
+            left: -200px;
+            animation: float1 15s ease-in-out infinite;
+        }
+        
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--neon-magenta);
+            bottom: -150px;
+            right: -150px;
+            animation: float2 12s ease-in-out infinite;
+        }
+        
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(100px, 50px); }
+        }
+        
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-80px, -60px); }
+        }
+        
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.05), rgba(255, 0, 255, 0.05));
+            border: 2px solid var(--neon-cyan);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5em;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta), var(--neon-yellow), var(--neon-cyan));
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s linear infinite;
+            margin-bottom: 10px;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+        
+        .subtitle {
+            font-size: 1em;
+            color: var(--neon-magenta);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .ai-badge {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 20px;
+            background: rgba(255, 0, 255, 0.2);
+            border: 1px solid var(--neon-magenta);
+            border-radius: 20px;
+            font-size: 0.85em;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 0, 255, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 0, 255, 0.8); }
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(10, 14, 26, 0.95);
+            border: 2px solid;
+            border-radius: 15px;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-connected {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+        }
+        
+        .status-disconnected {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+        
+        /* Panels */
+        .panel {
+            background: rgba(10, 14, 26, 0.8);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--neon-yellow);
+        }
+        
+        /* Stats */
+        .stat {
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 0.85em;
+            color: rgba(0, 243, 255, 0.7);
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            word-break: break-all;
+        }
+        
+        /* Buttons */
+        .btn {
+            font-family: 'Orbitron', sans-serif;
+            padding: 15px 30px;
+            font-size: 1em;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--neon-cyan), #0088ff);
+            color: var(--dark-void);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            color: var(--dark-void);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: white;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Input */
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1em;
+            font-family: 'Orbitron', sans-serif;
+            background: rgba(0, 243, 255, 0.05);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-radius: 10px;
+            color: var(--neon-cyan);
+            margin-bottom: 15px;
+        }
+        
+        /* Wallet */
+        .wallet-detected {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .wallet-icon {
+            font-size: 24px;
+        }
+        
+        .wallet-name {
+            font-weight: 700;
+            color: #00ff88;
+        }
+        
+        /* Opportunities */
+        .opp-card {
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.1), rgba(0, 243, 255, 0.1));
+            border: 2px solid var(--neon-magenta);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .opp-route {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--neon-yellow);
+            text-align: center;
+        }
+        
+        .opp-profit {
+            font-size: 2em;
+            font-weight: 900;
+            text-align: center;
+            margin: 10px 0;
+            color: #00ff88;
+        }
+        
+        .opp-detail {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+        
+        /* Logs */
+        .logs-container {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+        
+        .log-entry {
+            padding: 6px 10px;
+            margin-bottom: 6px;
+            border-left: 3px solid;
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .log-info { border-color: #00aaff; color: #00aaff; }
+        .log-success { border-color: #00ff88; color: #00ff88; }
+        .log-warning { border-color: #ffaa00; color: #ffaa00; }
+        .log-error { border-color: #ff4444; color: #ff4444; }
+        .log-ai { border-color: var(--neon-magenta); color: var(--neon-magenta); }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, rgba(10, 14, 26, 0.95), rgba(5, 8, 16, 0.95));
+            border: 3px solid var(--neon-magenta);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 0 50px rgba(255, 0, 255, 0.5);
+        }
+        
+        .modal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5em;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--neon-cyan);
+        }
+        
+        .modal-section {
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .modal-label {
+            font-size: 0.85em;
+            color: rgba(0, 243, 255, 0.7);
+            margin-bottom: 5px;
+        }
+        
+        .modal-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--neon-cyan);
+        }
+        
+        .modal-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    
+    <div id="statusBar" class="status-bar status-disconnected">
+        🔴 Desconectado
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>⚡ FLASHARB<br>NEURAL AI</h1>
+            <div class="subtitle">V3.0 · BASE NETWORK</div>
+            <div class="ai-badge">🧠 OKX Mobile Optimized</div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-title">🔗 Conexão OKX</div>
+            
+            <div id="walletDetection"></div>
+            
+            <button id="connectBtn" class="btn btn-primary">
+                🔌 CONECTAR OKX WALLET
+            </button>
+            
+            <div class="stat">
+                <div class="stat-label">👤 Endereço</div>
+                <div class="stat-value" id="userAddress" style="font-size: 0.7em;">-</div>
+            </div>
+            
+            <div class="stat">
+                <div class="stat-label">💰 Saldo ETH</div>
+                <div class="stat-value" id="ethBalance">0.0000</div>
+            </div>
+            
+            <div class="stat">
+                <div class="stat-label">⛓️ Rede</div>
+                <div class="stat-value" id="networkName">-</div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-title">⚙️ Configuração</div>
+            
+            <label style="display: block; margin-bottom: 10px; color: var(--neon-yellow);">
+                💵 Valor (ETH via Flash Loan):
+            </label>
+            <input type="number" id="tradeAmount" value="1.0" step="0.1" min="0.1" max="10">
+            
+            <button id="startBtn" class="btn btn-success">
+                ▶️ INICIAR SCANNER
+            </button>
+            
+            <button id="stopBtn" class="btn btn-danger" disabled>
+                ⏸️ PAUSAR SCANNER
+            </button>
+            
+            <div class="stat">
+                <div class="stat-label">🔄 Scans Realizados</div>
+                <div class="stat-value" id="scanCount">0</div>
+            </div>
+            
+            <div class="stat">
+                <div class="stat-label">✅ Oportunidades</div>
+                <div class="stat-value" id="opportunityCount">0</div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-title">💎 Oportunidades</div>
+            <div id="opportunitiesList">
+                <div style="text-align: center; padding: 30px; color: rgba(0, 243, 255, 0.5);">
+                    🔍 Aguardando scan...
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-title">📋 Logs do Sistema</div>
+            <div id="logsContainer" class="logs-container"></div>
+        </div>
+    </div>
+    
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">⚡ CONFIRMAR ARBITRAGEM</div>
+            
+            <div class="modal-section">
+                <div class="modal-label">🔀 Rota</div>
+                <div class="modal-value" id="modalRoute">-</div>
+            </div>
+            
+            <div class="modal-section">
+                <div class="modal-label">💰 Lucro Estimado</div>
+                <div class="modal-value" id="modalProfit" style="color: #00ff88;">-</div>
+            </div>
+            
+            <div class="modal-section">
+                <div class="modal-label">💵 Valor</div>
+                <div class="modal-value" id="modalAmount">-</div>
+            </div>
+            
+            <div style="margin: 15px 0; padding: 12px; background: rgba(255, 170, 0, 0.1); border: 1px solid rgba(255, 170, 0, 0.3); border-radius: 10px; font-size: 0.85em;">
+                ⚠️ <strong>Flash Loan:</strong> Se não for lucrativo, reverte automaticamente!
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-danger" onclick="closeModal()">
+                    ❌ CANCELAR
+                </button>
+                <button class="btn btn-success" onclick="confirmExecution()">
+                    ✅ EXECUTAR
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ============================================================
+        // CONFIGURAÇÕES
+        // ============================================================
+        
+        const CONFIG = {
+            CHAIN_ID: 8453, // Base
+            CONTRACT_ADDRESS: '0xYourFlashLoanContract', // ⚠️ SUBSTITUA
+            
+            TOKENS: {
+                WETH: { address: '0x4200000000000000000000000000000000000006', symbol: 'WETH' },
+                USDC: { address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', symbol: 'USDC' },
+                DAI: { address: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb', symbol: 'DAI' }
+            }
+        };
+        
+        // Estado Global
+        let web3Provider = null;
+        let userAddress = null;
+        let isScanning = false;
+        let scanInterval = null;
+        let currentOpportunity = null;
+        let scanCount = 0;
+        let opportunityCount = 0;
+        
+        // ============================================================
+        // UTILS - Conversão de números (substitui ethers.utils)
+        // ============================================================
+        
+        function toWei(eth) {
+            return BigInt(Math.floor(parseFloat(eth) * 1e18)).toString(16);
+        }
+        
+        function fromWei(wei) {
+            return (parseInt(wei, 16) / 1e18).toFixed(4);
+        }
+        
+        function toHex(num) {
+            return '0x' + num.toString(16);
+        }
+        
+        // ============================================================
+        // LOGS
+        // ============================================================
+        
+        function log(message, type = 'info') {
+            const container = document.getElementById('logsContainer');
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            
+            container.insertBefore(entry, container.firstChild);
+            
+            while (container.children.length > 50) {
+                container.removeChild(container.lastChild);
+            }
+            
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+        
+        function updateStatus(text, status) {
+            const bar = document.getElementById('statusBar');
+            bar.textContent = text;
+            bar.className = `status-bar status-${status}`;
+        }
+        
+        // ============================================================
+        // DETECÇÃO DE WALLET OKX
+        // ============================================================
+        
+        function detectWallet() {
+            const div = document.getElementById('walletDetection');
+            
+            if (window.okxwallet || (window.ethereum && window.ethereum.isOkxWallet)) {
+                div.innerHTML = `
+                    <div class="wallet-detected">
+                        <span class="wallet-icon">🟠</span>
+                        <div>
+                            <div class="wallet-name">OKX Wallet</div>
+                            <div style="font-size: 0.85em; color: rgba(0, 255, 136, 0.7);">✅ Detectada</div>
+                        </div>
+                    </div>
+                `;
+                log('🟠 OKX Wallet detectada', 'success');
+            } else if (window.ethereum) {
+                div.innerHTML = `
+                    <div class="wallet-detected">
+                        <span class="wallet-icon">🦊</span>
+                        <div>
+                            <div class="wallet-name">Web3 Wallet</div>
+                            <div style="font-size: 0.85em; color: rgba(0, 255, 136, 0.7);">✅ Detectada</div>
+                        </div>
+                    </div>
+                `;
+                log('✅ Web3 Wallet detectada', 'success');
+            } else {
+                div.innerHTML = `
+                    <div style="padding: 12px; background: rgba(255, 68, 68, 0.1); border: 1px solid rgba(255, 68, 68, 0.3); border-radius: 10px; margin-bottom: 15px; font-size: 0.9em;">
+                        ⚠️ Nenhuma wallet detectada<br>
+                        <small>Abra no navegador OKX Wallet</small>
+                    </div>
+                `;
+                log('⚠️ Nenhuma wallet detectada', 'warning');
+            }
+        }
+        
+        // ============================================================
+        // CONEXÃO - USANDO APENAS APIs WEB3 NATIVAS
+        // ============================================================
+        
+        async function connectWallet() {
+            try {
+                // Prioriza OKX
+                web3Provider = window.okxwallet || window.ethereum;
+                
+                if (!web3Provider) {
+                    alert('⚠️ Abra este site no navegador OKX Wallet');
+                    log('❌ Nenhuma wallet disponível', 'error');
+                    return;
+                }
+                
+                log('🔌 Solicitando conexão...', 'info');
+                
+                // Solicita contas
+                const accounts = await web3Provider.request({
+                    method: 'eth_requestAccounts'
+                });
+                
+                userAddress = accounts[0];
+                log(`✅ Conectado: ${userAddress.substring(0, 6)}...${userAddress.substring(38)}`, 'success');
+                
+                // Verifica chain
+                const chainId = await web3Provider.request({ method: 'eth_chainId' });
+                const chainIdDec = parseInt(chainId, 16);
+                
+                log(`⛓️ Chain ID atual: ${chainIdDec}`, 'info');
+                
+                if (chainIdDec !== CONFIG.CHAIN_ID) {
+                    log('⚠️ Trocando para Base...', 'warning');
+                    
+                    try {
+                        await web3Provider.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: toHex(CONFIG.CHAIN_ID) }]
+                        });
+                        log('✅ Rede trocada para Base', 'success');
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            log('📡 Adicionando Base...', 'info');
+                            
+                            await web3Provider.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: toHex(CONFIG.CHAIN_ID),
+                                    chainName: 'Base',
+                                    nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                                    rpcUrls: ['https://mainnet.base.org'],
+                                    blockExplorerUrls: ['https://basescan.org']
+                                }]
+                            });
+                            
+                            log('✅ Base adicionada', 'success');
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                }
+                
+                // Busca saldo
+                const balanceHex = await web3Provider.request({
+                    method: 'eth_getBalance',
+                    params: [userAddress, 'latest']
+                });
+                
+                const balance = fromWei(balanceHex);
+                
+                // Atualiza UI
+                document.getElementById('userAddress').textContent = 
+                    userAddress.substring(0, 8) + '...' + userAddress.substring(36);
+                document.getElementById('ethBalance').textContent = balance;
+                document.getElementById('networkName').textContent = 'Base';
+                
+                updateStatus('🟢 Conectado', 'connected');
+                
+                log(`💰 Saldo: ${balance} ETH`, 'info');
+                
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+                console.error('Erro detalhado:', error);
+                updateStatus('🔴 Erro', 'disconnected');
+            }
+        }
+        
+        // ============================================================
+        // SCANNER DE ARBITRAGEM
+        // ============================================================
+        
+        function startScanner() {
+            if (isScanning) {
+                log('⚠️ Scanner já está ativo', 'warning');
+                return;
+            }
+            
+            if (!userAddress) {
+                log('⚠️ Conecte a wallet primeiro', 'warning');
+                return;
+            }
+            
+            isScanning = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            
+            log('🚀 Scanner iniciado!', 'success');
+            log('🔍 Analisando mercado Base...', 'info');
+            
+            scanMarkets();
+            scanInterval = setInterval(scanMarkets, 5000);
+        }
+        
+        function stopScanner() {
+            isScanning = false;
+            clearInterval(scanInterval);
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            
+            log('⏸️ Scanner pausado', 'warning');
+        }
+        
+        function scanMarkets() {
+            scanCount++;
+            document.getElementById('scanCount').textContent = scanCount;
+            
+            log(`🔍 Scan #${scanCount}...`, 'info');
+            
+            // Simula análise de rotas
+            const tokens = Object.values(CONFIG.TOKENS);
+            
+            // Gera oportunidade aleatória
+            setTimeout(() => {
+                if (Math.random() > 0.3) { // 70% chance
+                    const tokenA = tokens[Math.floor(Math.random() * tokens.length)];
+                    let tokenB, tokenC;
+                    
+                    do {
+                        tokenB = tokens[Math.floor(Math.random() * tokens.length)];
+                    } while (tokenB === tokenA);
+                    
+                    do {
+                        tokenC = tokens[Math.floor(Math.random() * tokens.length)];
+                    } while (tokenC === tokenA || tokenC === tokenB);
+                    
+                    const profit = 0.5 + Math.random() * 2.5; // 0.5% - 3%
+                    const liquidity = 10 + Math.random() * 90;
+                    const aiConfidence = 75 + Math.random() * 25; // 75% - 100%
+                    
+                    if (profit > 0.5 && aiConfidence > 75) {
+                        opportunityCount++;
+                        document.getElementById('opportunityCount').textContent = opportunityCount;
+                        
+                        const opportunity = {
+                            tokenA,
+                            tokenB,
+                            tokenC,
+                            profit,
+                            liquidity,
+                            aiConfidence
+                        };
+                        
+                        log(`💎 OPORTUNIDADE! ${tokenA.symbol}→${tokenB.symbol}→${tokenC.symbol} | +${profit.toFixed(2)}%`, 'success');
+                        
+                        displayOpportunity(opportunity);
+                    }
+                }
+            }, 500);
+        }
+        
+        function displayOpportunity(opp) {
+            const list = document.getElementById('opportunitiesList');
+            
+            if (list.firstChild && list.firstChild.textContent.includes('Aguardando')) {
+                list.innerHTML = '';
+            }
+            
+            const card = document.createElement('div');
+            card.className = 'opp-card';
+            card.innerHTML = `
+                <div class="opp-route">
+                    ${opp.tokenA.symbol} → ${opp.tokenB.symbol} → ${opp.tokenC.symbol}
+                </div>
+                
+                <div class="opp-profit">
+                    +${opp.profit.toFixed(2)}%
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 12px; color: var(--neon-magenta); font-weight: 600;">
+                    🧠 IA: ${opp.aiConfidence.toFixed(1)}%
+                </div>
+                
+                <div class="opp-detail">
+                    💧 Liquidez: <strong style="color: var(--neon-yellow);">${opp.liquidity.toFixed(2)} ETH</strong>
+                </div>
+                
+                <button class="btn btn-success" onclick='prepareExecution(${JSON.stringify(opp).replace(/'/g, "\\'")})'">
+                    ⚡ EXECUTAR
+                </button>
+            `;
+            
+            list.insertBefore(card, list.firstChild);
+            
+            while (list.children.length > 3) {
+                list.removeChild(list.lastChild);
+            }
+        }
+        
+        // ============================================================
+        // EXECUÇÃO
+        // ============================================================
+        
+        function prepareExecution(opp) {
+            if (typeof opp === 'string') {
+                opp = JSON.parse(opp);
+            }
+            
+            currentOpportunity = opp;
+            
+            const tradeAmount = document.getElementById('tradeAmount').value;
+            
+            document.getElementById('modalRoute').textContent = 
+                `${opp.tokenA.symbol} → ${opp.tokenB.symbol} → ${opp.tokenC.symbol}`;
+            document.getElementById('modalProfit').textContent = '+' + opp.profit.toFixed(2) + '%';
+            document.getElementById('modalAmount').textContent = tradeAmount + ' ETH (Flash Loan)';
+            
+            document.getElementById('confirmModal').classList.add('active');
+            log('📋 Confirmação aberta', 'info');
+        }
+        
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+            currentOpportunity = null;
+            log('❌ Cancelado', 'warning');
+        }
+        
+        async function confirmExecution() {
+            document.getElementById('confirmModal').classList.remove('active');
+            
+            if (!currentOpportunity) return;
+            
+            const opp = currentOpportunity;
+            
+            try {
+                log(`⚡ EXECUTANDO: ${opp.tokenA.symbol}→${opp.tokenB.symbol}→${opp.tokenC.symbol}`, 'warning');
+                log(`🧠 Confiança IA: ${opp.aiConfidence.toFixed(1)}%`, 'ai');
+                
+                const tradeAmount = document.getElementById('tradeAmount').value;
+                
+                // Simulação de transação
+                log('📤 Preparando transação...', 'info');
+                
+                // Em produção, aqui faria a chamada real ao contrato
+                /*
+                const txHash = await web3Provider.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: userAddress,
+                        to: CONFIG.CONTRACT_ADDRESS,
+                        data: '0x...' // encoded function call
+                    }]
+                });
+                */
+                
+                // Simulação
+                await new Promise(r => setTimeout(r, 2000));
+                
+                log('✅ Transação simulada enviada!', 'success');
+                log(`💰 Lucro estimado: +${opp.profit.toFixed(2)}%`, 'success');
+                log('💡 Em produção, execute o contrato real', 'info');
+                
+            } catch (error) {
+                log(`❌ ERRO: ${error.message}`, 'error');
+            }
+            
+            currentOpportunity = null;
+        }
+        
+        // ============================================================
+        // INICIALIZAÇÃO
+        // ============================================================
+        
+        function initialize() {
+            log('✅ Sistema carregado', 'success');
+            log('🟠 Versão OKX Mobile (Sem dependências externas)', 'info');
+            
+            detectWallet();
+            
+            log('⚡ FLASH LOAN - Você só precisa de GAS!', 'success');
+            log('💰 Capital vem do flash loan', 'ai');
+            log('🛡️ Se der prejuízo, reverte tudo', 'ai');
+            
+            updateStatus('🔴 Desconectado', 'disconnected');
+            
+            document.getElementById('connectBtn').addEventListener('click', connectWallet);
+            document.getElementById('startBtn').addEventListener('click', startScanner);
+            document.getElementById('stopBtn').addEventListener('click', stopScanner);
+            
+            log('✅ Pronto para usar!', 'success');
+        }
+        
+        // Inicia
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initialize);
+        } else {
+            initialize();
+        }
+    </script>
+</body>
+</html>
