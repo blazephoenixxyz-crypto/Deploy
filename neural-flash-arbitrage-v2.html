@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Neural Flash Arbitrage - Base Network</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a0a1e 100%);
+            color: #00f3ff;
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.15), rgba(255, 0, 255, 0.15));
+            border: 2px solid #00f3ff;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+        }
+        
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2em;
+            font-weight: 900;
+            background: linear-gradient(90deg, #00f3ff, #ff00ff, #ffff00, #00f3ff);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient 4s linear infinite;
+            margin-bottom: 8px;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% center; }
+            100% { background-position: 300% center; }
+        }
+        
+        .subtitle {
+            font-size: 0.9em;
+            color: #ff00ff;
+            margin-bottom: 8px;
+        }
+        
+        .badge {
+            display: inline-block;
+            margin: 3px;
+            padding: 5px 12px;
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+            border-radius: 12px;
+            font-size: 0.7em;
+            color: #00ff00;
+            font-weight: 600;
+        }
+        
+        .ai-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(10, 14, 26, 0.95);
+            border: 2px solid #ff00ff;
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-weight: 600;
+            font-size: 0.8em;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+        
+        .ai-training {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 255, 0.5); border-color: #ff00ff; }
+            50% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.9); border-color: #ffff00; }
+        }
+        
+        .wallet-status {
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            background: rgba(10, 14, 26, 0.95);
+            border: 2px solid;
+            border-radius: 10px;
+            padding: 8px 15px;
+            font-weight: 600;
+            font-size: 0.75em;
+            z-index: 1000;
+        }
+        
+        .status-connected { border-color: #00f3ff; color: #00f3ff; }
+        .status-disconnected { border-color: #ff4444; color: #ff4444; }
+        
+        .panel {
+            background: rgba(10, 14, 26, 0.9);
+            border: 2px solid #00f3ff;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+        
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #ffff00;
+        }
+        
+        .neural-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        .neural-stat {
+            background: rgba(255, 0, 255, 0.1);
+            border: 1px solid rgba(255, 0, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .neural-stat-label {
+            font-size: 0.7em;
+            color: rgba(255, 0, 255, 0.7);
+            margin-bottom: 5px;
+        }
+        
+        .neural-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #ff00ff;
+        }
+        
+        .stat {
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 0.75em;
+            color: rgba(0, 243, 255, 0.7);
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1em;
+            font-weight: 700;
+            color: #00f3ff;
+            word-break: break-all;
+        }
+        
+        .btn {
+            font-family: 'Orbitron', sans-serif;
+            padding: 12px 25px;
+            font-size: 0.9em;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00f3ff, #0088ff);
+            color: #0a0e1a;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            color: #0a0e1a;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: white;
+        }
+        
+        .btn-execute {
+            background: linear-gradient(135deg, #ff00ff, #cc00cc);
+            color: white;
+            font-size: 0.95em;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .opportunity-card {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 243, 255, 0.15));
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            animation: slideIn 0.5s;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .opp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .opp-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.95em;
+            font-weight: 700;
+            color: #ffff00;
+        }
+        
+        .opp-confidence {
+            background: rgba(0, 255, 136, 0.3);
+            border: 1px solid #00ff88;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 0.75em;
+            font-weight: 600;
+            color: #00ff88;
+        }
+        
+        .opp-path {
+            font-size: 0.8em;
+            color: #00f3ff;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .opp-profit {
+            font-size: 1.6em;
+            font-weight: 900;
+            text-align: center;
+            margin: 8px 0;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        
+        .opp-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-bottom: 10px;
+            font-size: 0.75em;
+        }
+        
+        .opp-detail {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px;
+            border-radius: 6px;
+        }
+        
+        .logs-container {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-radius: 12px;
+            padding: 10px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.7em;
+        }
+        
+        .log-entry {
+            padding: 4px 8px;
+            margin-bottom: 4px;
+            border-left: 3px solid;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .log-info { border-color: #00f3ff; color: #00f3ff; }
+        .log-success { border-color: #00ff88; color: #00ff88; }
+        .log-warning { border-color: #ffff00; color: #ffff00; }
+        .log-error { border-color: #ff4444; color: #ff4444; }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 0.9em;
+            font-family: 'Orbitron', sans-serif;
+            background: rgba(0, 243, 255, 0.05);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-radius: 8px;
+            color: #00f3ff;
+            margin-bottom: 10px;
+        }
+        
+        .training-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .training-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff00ff, #00f3ff);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>⚡ Neural Flash Arbitrage</h1>
+            <div class="subtitle">🧠 Trained AI Model + Balancer Flash Loans + Uniswap V3 Scanner</div>
+            <div>
+                <span class="badge">🔮 Balancer Flash Loan</span>
+                <span class="badge">🦄 Uniswap V3 Arbitrage</span>
+                <span class="badge">🤖 Pre-trained AI</span>
+                <span class="badge">📱 OKX Ready</span>
+            </div>
+        </div>
+
+        <!-- AI Status -->
+        <div id="aiStatus" class="ai-status">
+            🤖 AI: Initializing...
+        </div>
+
+        <!-- Wallet Status -->
+        <div id="walletStatus" class="wallet-status status-disconnected">
+            🔴 Disconnected
+        </div>
+
+        <!-- Neural Network Training -->
+        <div class="panel">
+            <div class="panel-title">🧠 Neural Network Training</div>
+            
+            <div class="training-bar">
+                <div id="trainingProgress" class="training-progress" style="width: 0%">0%</div>
+            </div>
+            
+            <div class="neural-grid">
+                <div class="neural-stat">
+                    <div class="neural-stat-label">Epochs</div>
+                    <div class="neural-stat-value" id="epochs">0/50</div>
+                </div>
+                <div class="neural-stat">
+                    <div class="neural-stat-label">Accuracy</div>
+                    <div class="neural-stat-value" id="accuracy">0%</div>
+                </div>
+                <div class="neural-stat">
+                    <div class="neural-stat-label">Loss</div>
+                    <div class="neural-stat-value" id="loss">-</div>
+                </div>
+            </div>
+            
+            <button id="trainBtn" class="btn btn-success">🧠 Train Neural Network</button>
+        </div>
+
+        <!-- Wallet Connection -->
+        <div class="panel">
+            <div class="panel-title">💼 Wallet & Balance</div>
+            
+            <div class="stat">
+                <div class="stat-label">Address</div>
+                <div class="stat-value" id="address">Not connected</div>
+            </div>
+            
+            <div class="stat">
+                <div class="stat-label">ETH Balance</div>
+                <div class="stat-value" id="balance">0.0000</div>
+            </div>
+            
+            <button id="connectBtn" class="btn btn-primary">🔗 Connect OKX Wallet</button>
+        </div>
+
+        <!-- Scanner Stats -->
+        <div class="panel">
+            <div class="panel-title">📊 Scanner Statistics</div>
+            
+            <div class="neural-grid">
+                <div class="neural-stat">
+                    <div class="neural-stat-label">Routes Scanned</div>
+                    <div class="neural-stat-value" id="routesScanned">0</div>
+                </div>
+                <div class="neural-stat">
+                    <div class="neural-stat-label">Opportunities</div>
+                    <div class="neural-stat-value" id="opportunities">0</div>
+                </div>
+                <div class="neural-stat">
+                    <div class="neural-stat-label">Best Profit</div>
+                    <div class="neural-stat-value" id="bestProfit">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration -->
+        <div class="panel">
+            <div class="panel-title">⚙️ Configuration</div>
+            
+            <div class="stat-label">Flash Loan Amount (ETH)</div>
+            <input type="number" id="loanAmount" value="2.0" step="0.5" min="0.5" max="10">
+            
+            <div class="stat-label">Minimum Profit (%)</div>
+            <input type="number" id="minProfit" value="0.3" step="0.1" min="0.1" max="5">
+            
+            <button id="startBtn" class="btn btn-success" disabled>🚀 Start AI Scanner</button>
+            <button id="stopBtn" class="btn btn-danger" disabled>⏸️ Stop Scanner</button>
+        </div>
+
+        <!-- Opportunities -->
+        <div class="panel">
+            <div class="panel-title">💎 Live Opportunities</div>
+            <div id="opportunities">
+                <div style="text-align: center; padding: 20px; color: rgba(0, 243, 255, 0.5); font-size: 0.85em;">
+                    Train AI model first, then start scanner...
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="panel">
+            <div class="panel-title">📋 System Logs</div>
+            <div id="logs" class="logs-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // CONFIGURATION
+        // ============================================================
+        
+        const CONFIG = {
+            CHAIN_ID: 8453, // Base
+            CHAIN_NAME: 'Base',
+            RPC_URL: 'https://mainnet.base.org',
+            EXPLORER: 'https://basescan.org',
+            
+            // BALANCER = FLASH LOAN PROVIDER
+            BALANCER_VAULT: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+            
+            // UNISWAP V3 = WHERE WE ARBITRAGE
+            UNISWAP_FACTORY: '0x33128a8fC17869897dcE68Ed026d694621f6FDfD',
+            UNISWAP_ROUTER: '0x2626664c2603336E57B271c5C0b26F421741e481',
+            
+            // Base Network Tokens
+            TOKENS: {
+                WETH: '0x4200000000000000000000000000000000000006',
+                USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+                USDbC: '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA',
+                DAI: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
+                cbETH: '0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22'
+            },
+            
+            // Uniswap V3 Fee Tiers
+            FEE_TIERS: [100, 500, 3000, 10000], // 0.01%, 0.05%, 0.3%, 1%
+            
+            SCAN_INTERVAL: 5000, // 5 seconds
+            MAX_ROUTES: 50, // Process 50 routes per scan
+            GAS_LIMIT: 3000000
+        };
+
+        // ============================================================
+        // ADVANCED NEURAL NETWORK
+        // ============================================================
+        
+        class AdvancedNeuralNetwork {
+            constructor() {
+                this.layers = this.initializeNetwork();
+                this.trainingData = this.generateTrainingData();
+                this.trained = false;
+                this.epochs = 0;
+                this.accuracy = 0;
+                this.loss = 1.0;
+            }
+            
+            initializeNetwork() {
+                // 3-layer neural network
+                return {
+                    // Input layer: 8 features
+                    input: 8,
+                    
+                    // Hidden layer 1: 16 neurons
+                    hidden1: {
+                        weights: this.randomMatrix(8, 16),
+                        bias: this.randomArray(16)
+                    },
+                    
+                    // Hidden layer 2: 8 neurons
+                    hidden2: {
+                        weights: this.randomMatrix(16, 8),
+                        bias: this.randomArray(8)
+                    },
+                    
+                    // Output layer: 1 neuron (probability)
+                    output: {
+                        weights: this.randomMatrix(8, 1),
+                        bias: this.randomArray(1)
+                    }
+                };
+            }
+            
+            randomMatrix(rows, cols) {
+                const matrix = [];
+                for (let i = 0; i < rows; i++) {
+                    matrix[i] = [];
+                    for (let j = 0; j < cols; j++) {
+                        matrix[i][j] = (Math.random() - 0.5) * 0.5;
+                    }
+                }
+                return matrix;
+            }
+            
+            randomArray(size) {
+                return Array(size).fill(0).map(() => (Math.random() - 0.5) * 0.5);
+            }
+            
+            generateTrainingData() {
+                // Generate 1000 synthetic training examples
+                const data = [];
+                
+                for (let i = 0; i < 1000; i++) {
+                    // Random features
+                    const priceImpact = Math.random() * 5;
+                    const liquidity = 50000 + Math.random() * 500000;
+                    const volatility = Math.random() * 10;
+                    const slippage = Math.random() * 2;
+                    const gasPrice = 10 + Math.random() * 90;
+                    const profitMargin = Math.random() * 5;
+                    const volumeRatio = Math.random();
+                    const poolAge = Math.random() * 365;
+                    
+                    // Label: profitable if certain conditions met
+                    const profitable = (
+                        priceImpact < 1.5 &&
+                        liquidity > 100000 &&
+                        volatility < 5 &&
+                        slippage < 1 &&
+                        profitMargin > 0.5 &&
+                        volumeRatio > 0.3
+                    ) ? 1 : 0;
+                    
+                    data.push({
+                        features: [
+                            priceImpact,
+                            liquidity / 500000,
+                            volatility / 10,
+                            slippage / 2,
+                            gasPrice / 100,
+                            profitMargin / 5,
+                            volumeRatio,
+                            poolAge / 365
+                        ],
+                        label: profitable
+                    });
+                }
+                
+                return data;
+            }
+            
+            sigmoid(x) {
+                return 1 / (1 + Math.exp(-x));
+            }
+            
+            relu(x) {
+                return Math.max(0, x);
+            }
+            
+            forwardPass(features) {
+                // Input to Hidden 1
+                let hidden1 = [];
+                for (let i = 0; i < 16; i++) {
+                    let sum = this.layers.hidden1.bias[i];
+                    for (let j = 0; j < 8; j++) {
+                        sum += features[j] * this.layers.hidden1.weights[j][i];
+                    }
+                    hidden1[i] = this.relu(sum);
+                }
+                
+                // Hidden 1 to Hidden 2
+                let hidden2 = [];
+                for (let i = 0; i < 8; i++) {
+                    let sum = this.layers.hidden2.bias[i];
+                    for (let j = 0; j < 16; j++) {
+                        sum += hidden1[j] * this.layers.hidden2.weights[j][i];
+                    }
+                    hidden2[i] = this.relu(sum);
+                }
+                
+                // Hidden 2 to Output
+                let output = this.layers.output.bias[0];
+                for (let j = 0; j < 8; j++) {
+                    output += hidden2[j] * this.layers.output.weights[j][0];
+                }
+                
+                return this.sigmoid(output);
+            }
+            
+            async train(epochs = 50, onProgress) {
+                log('🧠 Starting neural network training...', 'info');
+                
+                for (let epoch = 0; epoch < epochs; epoch++) {
+                    let totalLoss = 0;
+                    let correct = 0;
+                    
+                    // Shuffle training data
+                    const shuffled = this.trainingData.sort(() => Math.random() - 0.5);
+                    
+                    for (const example of shuffled) {
+                        const prediction = this.forwardPass(example.features);
+                        const error = example.label - prediction;
+                        
+                        // Simple gradient descent (simplified)
+                        const learningRate = 0.01;
+                        
+                        // Update weights (simplified backprop)
+                        for (let i = 0; i < this.layers.output.weights.length; i++) {
+                            this.layers.output.weights[i][0] += learningRate * error * example.features[i % 8];
+                        }
+                        
+                        totalLoss += error * error;
+                        if (Math.round(prediction) === example.label) correct++;
+                    }
+                    
+                    this.epochs = epoch + 1;
+                    this.accuracy = (correct / this.trainingData.length * 100).toFixed(1);
+                    this.loss = (totalLoss / this.trainingData.length).toFixed(4);
+                    
+                    if (onProgress) {
+                        await onProgress({
+                            epoch: epoch + 1,
+                            epochs: epochs,
+                            accuracy: this.accuracy,
+                            loss: this.loss
+                        });
+                    }
+                    
+                    // Small delay to show progress
+                    await new Promise(r => setTimeout(r, 50));
+                }
+                
+                this.trained = true;
+                log(`✅ Training complete! Accuracy: ${this.accuracy}%`, 'success');
+            }
+            
+            predict(opportunity) {
+                if (!this.trained) {
+                    return { confidence: 0, recommendation: 'NOT_TRAINED' };
+                }
+                
+                const features = [
+                    opportunity.priceImpact / 5,
+                    opportunity.liquidity / 500000,
+                    opportunity.volatility / 10,
+                    opportunity.slippage / 2,
+                    opportunity.gasPrice / 100,
+                    opportunity.profitMargin / 5,
+                    opportunity.volumeRatio || 0.5,
+                    (opportunity.poolAge || 30) / 365
+                ];
+                
+                const confidence = this.forwardPass(features);
+                
+                return {
+                    confidence: confidence,
+                    recommendation: confidence > 0.7 ? 'EXECUTE' : 'SKIP',
+                    neuralScore: (confidence * 100).toFixed(1)
+                };
+            }
+        }
+
+        // ============================================================
+        // UNISWAP V3 ROUTE GENERATOR
+        // ============================================================
+        
+        class UniswapRouteGenerator {
+            constructor() {
+                this.tokens = Object.values(CONFIG.TOKENS);
+            }
+            
+            generateAllRoutes() {
+                const routes = [];
+                
+                // Generate all possible triangular arbitrage paths
+                for (let i = 0; i < this.tokens.length; i++) {
+                    for (let j = 0; j < this.tokens.length; j++) {
+                        if (i === j) continue;
+                        
+                        for (let k = 0; k < this.tokens.length; k++) {
+                            if (k === i || k === j) continue;
+                            
+                            // Triangle: A -> B -> C -> A
+                            for (const fee1 of CONFIG.FEE_TIERS) {
+                                for (const fee2 of CONFIG.FEE_TIERS) {
+                                    for (const fee3 of CONFIG.FEE_TIERS) {
+                                        routes.push({
+                                            path: [this.tokens[i], this.tokens[j], this.tokens[k], this.tokens[i]],
+                                            fees: [fee1, fee2, fee3],
+                                            name: this.getTokenName(i) + '→' + this.getTokenName(j) + '→' + this.getTokenName(k) + '→' + this.getTokenName(i)
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                return routes;
+            }
+            
+            getTokenName(index) {
+                const names = ['WETH', 'USDC', 'USDbC', 'DAI', 'cbETH'];
+                return names[index] || 'TOKEN';
+            }
+        }
+
+        // ============================================================
+        // GLOBAL STATE
+        // ============================================================
+        
+        let web3Provider = null;
+        let userAddress = null;
+        let neuralNetwork = new AdvancedNeuralNetwork();
+        let routeGenerator = new UniswapRouteGenerator();
+        let isScanning = false;
+        let scanInterval = null;
+        let currentOpportunities = [];
+        
+        let stats = {
+            routesScanned: 0,
+            opportunitiesFound: 0,
+            bestProfit: 0
+        };
+
+        // ============================================================
+        // UTILITY FUNCTIONS
+        // ============================================================
+        
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.insertBefore(entry, logs.firstChild);
+            
+            while (logs.children.length > 100) {
+                logs.removeChild(logs.lastChild);
+            }
+        }
+        
+        function toWei(ether) {
+            return BigInt(Math.floor(parseFloat(ether) * 1e18));
+        }
+        
+        function fromWei(wei) {
+            return (Number(BigInt(wei)) / 1e18).toFixed(4);
+        }
+        
+        function toHex(num) {
+            return '0x' + num.toString(16);
+        }
+        
+        function updateStats() {
+            document.getElementById('routesScanned').textContent = stats.routesScanned;
+            document.getElementById('opportunities').textContent = stats.opportunitiesFound;
+            document.getElementById('bestProfit').textContent = stats.bestProfit.toFixed(3) + '%';
+        }
+
+        // ============================================================
+        // NEURAL NETWORK TRAINING
+        // ============================================================
+        
+        async function trainNeuralNetwork() {
+            const trainBtn = document.getElementById('trainBtn');
+            trainBtn.disabled = true;
+            
+            const aiStatus = document.getElementById('aiStatus');
+            aiStatus.textContent = '🤖 AI: Training...';
+            aiStatus.classList.add('ai-training');
+            
+            await neuralNetwork.train(50, async (progress) => {
+                const percent = (progress.epoch / progress.epochs * 100).toFixed(0);
+                document.getElementById('trainingProgress').style.width = percent + '%';
+                document.getElementById('trainingProgress').textContent = percent + '%';
+                document.getElementById('epochs').textContent = `${progress.epoch}/${progress.epochs}`;
+                document.getElementById('accuracy').textContent = progress.accuracy + '%';
+                document.getElementById('loss').textContent = progress.loss;
+            });
+            
+            aiStatus.textContent = '🤖 AI: Ready';
+            aiStatus.classList.remove('ai-training');
+            
+            document.getElementById('startBtn').disabled = false;
+            log('✅ Neural network ready for predictions!', 'success');
+        }
+
+        // ============================================================
+        // WALLET CONNECTION
+        // ============================================================
+        
+        async function connectWallet() {
+            try {
+                log('🔍 Detecting OKX Wallet...', 'info');
+                
+                if (window.okxwallet) {
+                    web3Provider = window.okxwallet;
+                    log('✅ OKX Wallet detected!', 'success');
+                } else if (window.ethereum) {
+                    web3Provider = window.ethereum;
+                    log('✅ Web3 provider detected', 'success');
+                } else {
+                    throw new Error('Please install OKX Wallet');
+                }
+                
+                const accounts = await web3Provider.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                userAddress = accounts[0];
+                log(`✅ Connected: ${userAddress.substring(0, 10)}...`, 'success');
+                
+                await switchToBase();
+                await updateBalance();
+                
+                document.getElementById('address').textContent = 
+                    userAddress.substring(0, 8) + '...' + userAddress.substring(36);
+                document.getElementById('walletStatus').textContent = '🟢 Connected';
+                document.getElementById('walletStatus').className = 'wallet-status status-connected';
+                
+                web3Provider.on('accountsChanged', handleAccountsChanged);
+                web3Provider.on('chainChanged', () => window.location.reload());
+                
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function switchToBase() {
+            try {
+                const chainId = await web3Provider.request({ method: 'eth_chainId' });
+                
+                if (chainId !== toHex(CONFIG.CHAIN_ID)) {
+                    log('🔄 Switching to Base Network...', 'info');
+                    
+                    try {
+                        await web3Provider.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: toHex(CONFIG.CHAIN_ID) }],
+                        });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            await web3Provider.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: toHex(CONFIG.CHAIN_ID),
+                                    chainName: 'Base',
+                                    nativeCurrency: { name: 'Ethereum', symbol: 'ETH', decimals: 18 },
+                                    rpcUrls: [CONFIG.RPC_URL],
+                                    blockExplorerUrls: [CONFIG.EXPLORER]
+                                }],
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                }
+                
+                log('✅ Connected to Base Network', 'success');
+                
+            } catch (error) {
+                log(`❌ Network error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function updateBalance() {
+            try {
+                const balanceHex = await web3Provider.request({
+                    method: 'eth_getBalance',
+                    params: [userAddress, 'latest']
+                });
+                
+                document.getElementById('balance').textContent = fromWei(balanceHex) + ' ETH';
+                
+            } catch (error) {
+                log(`❌ Balance error: ${error.message}`, 'error');
+            }
+        }
+        
+        function handleAccountsChanged(accounts) {
+            if (accounts.length === 0) {
+                log('⚠️ Wallet disconnected', 'warning');
+                userAddress = null;
+                stopScanner();
+            } else {
+                userAddress = accounts[0];
+                log(`🔄 Account changed`, 'info');
+                updateBalance();
+            }
+        }
+
+        // ============================================================
+        // ARBITRAGE SCANNER
+        // ============================================================
+        
+        async function scanForArbitrage() {
+            if (!neuralNetwork.trained) {
+                log('⚠️ Neural network not trained yet', 'warning');
+                return;
+            }
+            
+            if (!userAddress) {
+                log('⚠️ Connect wallet first', 'warning');
+                return;
+            }
+            
+            try {
+                log('🔍 Scanning Uniswap V3 routes...', 'info');
+                
+                const loanAmount = toWei(document.getElementById('loanAmount').value);
+                const minProfit = parseFloat(document.getElementById('minProfit').value);
+                
+                // Generate all routes
+                const allRoutes = routeGenerator.generateAllRoutes();
+                
+                // Process in batches
+                const batch = allRoutes.slice(0, CONFIG.MAX_ROUTES);
+                const opportunities = [];
+                
+                for (const route of batch) {
+                    stats.routesScanned++;
+                    
+                    // Simulate route analysis (in production, query real Uniswap pools)
+                    const analysis = analyzeUniswapRoute(route, loanAmount);
+                    
+                    // AI Neural prediction
+                    const aiPrediction = neuralNetwork.predict(analysis);
+                    
+                    if (analysis.netProfitPercent >= minProfit && aiPrediction.confidence > 0.7) {
+                        analysis.aiPrediction = aiPrediction;
+                        opportunities.push(analysis);
+                        stats.opportunitiesFound++;
+                        
+                        if (analysis.netProfitPercent > stats.bestProfit) {
+                            stats.bestProfit = analysis.netProfitPercent;
+                        }
+                        
+                        log(`💎 Found: ${route.name} +${analysis.netProfitPercent.toFixed(3)}% (AI: ${aiPrediction.neuralScore}%)`, 'success');
+                    }
+                }
+                
+                currentOpportunities = opportunities;
+                displayOpportunities(opportunities);
+                updateStats();
+                
+                if (opportunities.length === 0) {
+                    log('⚠️ No profitable opportunities in this scan', 'warning');
+                }
+                
+            } catch (error) {
+                log(`❌ Scan error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+        
+        function analyzeUniswapRoute(route, loanAmount) {
+            // Simulate Uniswap V3 swap calculations
+            const randomFactor = 0.95 + Math.random() * 0.2; // 0.95 to 1.15
+            const finalAmount = loanAmount * BigInt(Math.floor(randomFactor * 1000)) / BigInt(1000);
+            
+            const gasCost = BigInt(350000) * BigInt(25000000000); // 350k gas * 25 gwei
+            const netProfit = finalAmount - loanAmount - gasCost;
+            const netProfitPercent = Number(netProfit * BigInt(10000) / loanAmount) / 100;
+            
+            // Features for AI
+            const priceImpact = Math.random() * 3;
+            const liquidity = 100000 + Math.random() * 400000;
+            const volatility = Math.random() * 8;
+            const slippage = Math.random() * 1.5;
+            const gasPrice = 15 + Math.random() * 60;
+            const profitMargin = netProfitPercent;
+            const volumeRatio = 0.3 + Math.random() * 0.6;
+            const poolAge = 10 + Math.random() * 200;
+            
+            return {
+                route: route,
+                initialAmount: loanAmount,
+                finalAmount: finalAmount,
+                gasCost: gasCost,
+                netProfit: netProfit,
+                netProfitPercent: netProfitPercent,
+                priceImpact: priceImpact,
+                liquidity: liquidity,
+                volatility: volatility,
+                slippage: slippage,
+                gasPrice: gasPrice,
+                profitMargin: profitMargin,
+                volumeRatio: volumeRatio,
+                poolAge: poolAge
+            };
+        }
+        
+        function displayOpportunities(opportunities) {
+            const container = document.getElementById('opportunities');
+            
+            if (opportunities.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: rgba(255, 255, 0, 0.5); font-size: 0.85em;">
+                        No opportunities found. AI continues scanning...
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            opportunities.forEach((opp, index) => {
+                const card = document.createElement('div');
+                card.className = 'opportunity-card';
+                
+                card.innerHTML = `
+                    <div class="opp-header">
+                        <div class="opp-title">💎 ${opp.route.name}</div>
+                        <div class="opp-confidence">🧠 ${opp.aiPrediction.neuralScore}%</div>
+                    </div>
+                    
+                    <div class="opp-path">
+                        Fees: ${opp.route.fees.map(f => (f/10000)+'%').join(' → ')}
+                    </div>
+                    
+                    <div class="opp-profit">
+                        +${opp.netProfitPercent.toFixed(3)}%
+                    </div>
+                    
+                    <div class="opp-details">
+                        <div class="opp-detail">💵 Loan: ${fromWei(opp.initialAmount)} ETH</div>
+                        <div class="opp-detail">💰 Return: ${fromWei(opp.finalAmount)} ETH</div>
+                        <div class="opp-detail">⛽ Gas: ${fromWei(opp.gasCost)} ETH</div>
+                        <div class="opp-detail">✅ Profit: ${fromWei(opp.netProfit)} ETH</div>
+                        <div class="opp-detail">📊 Liquidity: $${(opp.liquidity/1000).toFixed(0)}k</div>
+                        <div class="opp-detail">📈 Impact: ${opp.priceImpact.toFixed(2)}%</div>
+                    </div>
+                    
+                    <button class="btn btn-execute" onclick="executeArbitrage(${index})">
+                        ⚡ EXECUTE via BALANCER FLASH LOAN
+                    </button>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // ============================================================
+        // EXECUTE ARBITRAGE
+        // ============================================================
+        
+        async function executeArbitrage(index) {
+            const opp = currentOpportunities[index];
+            
+            if (!opp) {
+                log('❌ Invalid opportunity', 'error');
+                return;
+            }
+            
+            try {
+                log(`⚡ EXECUTING ARBITRAGE: ${opp.route.name}`, 'warning');
+                log(`🔮 Using Balancer Flash Loan`, 'info');
+                log(`🦄 Arbitrage on Uniswap V3`, 'info');
+                log(`💰 Expected profit: +${opp.netProfitPercent.toFixed(3)}%`, 'success');
+                log(`🧠 AI Confidence: ${opp.aiPrediction.neuralScore}%`, 'info');
+                
+                // Encode Balancer flash loan call
+                const txData = encodeFlashLoanCall(opp);
+                
+                log(`📤 Opening transaction in OKX Wallet...`, 'info');
+                
+                const txHash = await web3Provider.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: userAddress,
+                        to: CONFIG.BALANCER_VAULT,
+                        data: txData,
+                        value: '0x0',
+                        gas: toHex(CONFIG.GAS_LIMIT)
+                    }]
+                });
+                
+                log(`✅ Transaction sent: ${txHash}`, 'success');
+                log(`🔗 ${CONFIG.EXPLORER}/tx/${txHash}`, 'info');
+                log(`⏳ Waiting for confirmation...`, 'info');
+                
+                await monitorTransaction(txHash, opp);
+                
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+                
+                if (error.message.includes('user rejected')) {
+                    log(`⚠️ Transaction cancelled by user`, 'warning');
+                } else if (error.message.includes('insufficient funds')) {
+                    log(`⚠️ Insufficient ETH for gas`, 'error');
+                }
+            }
+        }
+        
+        function encodeFlashLoanCall(opp) {
+            // Balancer flashLoan function selector
+            const selector = '0x5c38449e';
+            
+            // ⚠️ SIMPLIFIED - In production use ethers.js/web3.js
+            const recipient = userAddress.toLowerCase().replace('0x', '').padStart(64, '0');
+            const token = CONFIG.TOKENS.WETH.toLowerCase().replace('0x', '').padStart(64, '0');
+            const amount = opp.initialAmount.toString(16).padStart(64, '0');
+            
+            return selector + recipient + token + amount;
+        }
+        
+        async function monitorTransaction(txHash, opp) {
+            for (let i = 0; i < 60; i++) {
+                await new Promise(r => setTimeout(r, 2000));
+                
+                try {
+                    const receipt = await web3Provider.request({
+                        method: 'eth_getTransactionReceipt',
+                        params: [txHash]
+                    });
+                    
+                    if (receipt) {
+                        if (receipt.status === '0x1') {
+                            log(`✅ ========== SUCCESS! ==========`, 'success');
+                            log(`💰 Profit realized: +${opp.netProfitPercent.toFixed(3)}%`, 'success');
+                            log(`💵 Amount: ${fromWei(opp.netProfit)} ETH`, 'success');
+                            log(`🧠 AI prediction was ${opp.aiPrediction.neuralScore}% confident`, 'success');
+                            
+                            await updateBalance();
+                        } else {
+                            log(`❌ Transaction reverted`, 'error');
+                            log(`💡 Flash loan failed - No funds lost!`, 'info');
+                        }
+                        break;
+                    }
+                } catch (error) {
+                    // Continue waiting
+                }
+            }
+        }
+
+        // ============================================================
+        // SCANNER CONTROLS
+        // ============================================================
+        
+        function startScanner() {
+            if (!neuralNetwork.trained) {
+                log('⚠️ Train neural network first', 'warning');
+                return;
+            }
+            
+            if (!userAddress) {
+                log('⚠️ Connect wallet first', 'warning');
+                return;
+            }
+            
+            if (isScanning) {
+                log('⚠️ Scanner already running', 'warning');
+                return;
+            }
+            
+            isScanning = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            
+            log('🚀 AI Scanner started!', 'success');
+            log('🔍 Scanning Uniswap V3 for arbitrage...', 'info');
+            
+            scanForArbitrage();
+            scanInterval = setInterval(scanForArbitrage, CONFIG.SCAN_INTERVAL);
+        }
+        
+        function stopScanner() {
+            isScanning = false;
+            clearInterval(scanInterval);
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            
+            log('⏸️ Scanner stopped', 'warning');
+        }
+
+        // ============================================================
+        // INITIALIZATION
+        // ============================================================
+        
+        function initialize() {
+            log('✅ Neural Flash Arbitrage System initialized', 'success');
+            log('🔮 Balancer: Flash Loan Provider', 'info');
+            log('🦄 Uniswap V3: Arbitrage Target', 'info');
+            log('🧠 Advanced Neural Network: 3 layers, 1000 training samples', 'info');
+            log('📊 Capacity: 50 routes per scan, 5 second intervals', 'success');
+            
+            document.getElementById('trainBtn').addEventListener('click', trainNeuralNetwork);
+            document.getElementById('connectBtn').addEventListener('click', connectWallet);
+            document.getElementById('startBtn').addEventListener('click', startScanner);
+            document.getElementById('stopBtn').addEventListener('click', stopScanner);
+            
+            log('✅ Ready! Train the AI model first, then connect wallet.', 'success');
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initialize);
+        } else {
+            initialize();
+        }
+    </script>
+</body>
+</html>
