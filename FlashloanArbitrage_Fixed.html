@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚡ Flashloan Arbitrage Pro - Deploy & Execute</title>
+    <!-- Usando versão 1.x do Web3 que é mais estável -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #fff;
+            padding: 10px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            background: linear-gradient(45deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .status-pills {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .pill.connected { background: #10b981; }
+        .pill.disconnected { background: #ef4444; }
+        .pill.scanning { 
+            background: #f59e0b; 
+            animation: pulse 2s infinite;
+        }
+        .pill.deploying {
+            background: #8b5cf6;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .card {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .card h2 {
+            font-size: 1.1em;
+            margin-bottom: 12px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #00d4ff, #0088ff);
+            color: #fff;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: #fff;
+        }
+
+        .btn-purple {
+            background: linear-gradient(45deg, #8b5cf6, #7c3aed);
+            color: #fff;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .info-item {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .info-item label {
+            font-size: 0.75em;
+            opacity: 0.7;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .info-item value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #00ff88;
+            display: block;
+        }
+
+        .opp-card {
+            background: rgba(0,212,255,0.1);
+            border: 1px solid rgba(0,212,255,0.3);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .opp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .opp-title {
+            font-weight: 600;
+            font-size: 1em;
+        }
+
+        .confidence {
+            background: #10b981;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+        }
+
+        .opp-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .log {
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.75em;
+            font-family: monospace;
+        }
+
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .log-success { color: #10b981; }
+        .log-error { color: #ef4444; }
+        .log-warning { color: #f59e0b; }
+        .log-info { color: #00d4ff; }
+
+        .address {
+            font-family: monospace;
+            font-size: 0.85em;
+            background: rgba(0,0,0,0.3);
+            padding: 8px;
+            border-radius: 6px;
+            word-break: break-all;
+        }
+
+        @media (max-width: 640px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>⚡ Flashloan Arbitrage Pro</h1>
+            <div class="status-pills">
+                <span class="pill disconnected" id="walletStatus">🔴 Wallet Off</span>
+                <span class="pill disconnected" id="contractStatus">🔴 Contract Off</span>
+                <span class="pill disconnected" id="scanStatus">⏸️ Scan Off</span>
+            </div>
+        </div>
+
+        <!-- 1. WALLET CONNECTION -->
+        <div class="card">
+            <h2>🔐 1. Conectar Wallet</h2>
+            <button class="btn btn-primary" id="connectBtn" onclick="connectWallet()">
+                Conectar Wallet
+            </button>
+            <div id="walletInfo" style="display: none; margin-top: 10px;">
+                <div class="address">
+                    <div style="opacity: 0.7; font-size: 0.85em; margin-bottom: 5px;">Conta Conectada:</div>
+                    <div id="accountAddress">-</div>
+                </div>
+                <div class="info-grid" style="margin-top: 10px;">
+                    <div class="info-item">
+                        <label>Saldo ETH</label>
+                        <value id="ethBalance">-</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Network</label>
+                        <value id="networkName">-</value>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. CONTRACT DEPLOY -->
+        <div class="card">
+            <h2>📝 2. Deploy do Contrato</h2>
+            <button class="btn btn-purple" id="deployBtn" onclick="deployContract()" disabled>
+                Deploy Contrato
+            </button>
+            <div id="contractInfo" style="display: none; margin-top: 10px;">
+                <div class="address">
+                    <div style="opacity: 0.7; font-size: 0.85em; margin-bottom: 5px;">Endereço do Contrato:</div>
+                    <div id="contractAddress">-</div>
+                </div>
+                <button class="btn btn-warning" onclick="updateBalances()" style="margin-top: 10px;">
+                    🔄 Atualizar Saldos
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. SCANNER CONFIG -->
+        <div class="card">
+            <h2>🔍 3. Configuração do Scanner</h2>
+            
+            <label>
+                Valor do Flashloan (USD)
+                <input type="number" id="flashloanAmount" value="1000" min="100" max="100000" step="100">
+            </label>
+
+            <label>
+                Lucro Mínimo (%)
+                <input type="number" id="minProfitPercent" value="0.5" min="0.1" max="10" step="0.1">
+            </label>
+
+            <label>
+                Slippage Tolerância (%)
+                <input type="number" id="slippageBps" value="1" min="0.1" max="5" step="0.1">
+            </label>
+
+            <label>
+                Intervalo de Scan (segundos)
+                <input type="number" id="scanInterval" value="30" min="10" max="300" step="10">
+            </label>
+
+            <label style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="autoExecute">
+                <span>🤖 Auto-executar oportunidades</span>
+            </label>
+
+            <div style="margin-top: 15px;">
+                <button class="btn btn-success" onclick="startScanner()" id="startScanBtn" disabled>
+                    ▶️ Iniciar Scanner
+                </button>
+                <button class="btn btn-danger" onclick="stopScanner()" id="stopScanBtn" style="display: none;">
+                    ⏹️ Parar Scanner
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. OPPORTUNITIES -->
+        <div class="card">
+            <h2>💰 4. Oportunidades Encontradas</h2>
+            <div style="text-align: center; opacity: 0.7; margin-bottom: 10px;">
+                Total: <span id="oppCount" style="color: #00ff88; font-weight: 600;">0</span> oportunidades
+            </div>
+            <div id="oppList">
+                <div style="text-align: center; opacity: 0.5; padding: 20px;">
+                    Aguardando scanner iniciar...
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. STATS -->
+        <div class="card">
+            <h2>📊 5. Estatísticas</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Execuções</label>
+                    <value id="statExecutions">0</value>
+                </div>
+                <div class="info-item">
+                    <label>Sucessos</label>
+                    <value id="statSuccesses">0</value>
+                </div>
+                <div class="info-item">
+                    <label>Lucro Total</label>
+                    <value id="statProfit">$0</value>
+                </div>
+                <div class="info-item">
+                    <label>Melhor Trade</label>
+                    <value id="statBest">$0</value>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. LOGS -->
+        <div class="card">
+            <h2>📋 6. Logs de Atividade</h2>
+            <div class="log" id="logContainer">
+                <div class="log-entry log-info">Sistema inicializado...</div>
+            </div>
+        </div>
+
+        <!-- 7. EMERGENCY -->
+        <div class="card">
+            <h2>🚨 7. Emergência</h2>
+            <button class="btn btn-danger" onclick="emergencyWithdraw()" id="emergencyBtn" disabled>
+                🆘 Retirar Fundos de Emergência
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ========== CONFIGURAÇÃO GLOBAL ==========
+        const CONFIG = {
+            CHAIN_ID: 42161,
+            RPC_URL: 'https://arb1.arbitrum.io/rpc',
+            EXPLORER: 'https://arbiscan.io',
+            AAVE_POOL: '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
+            
+            TOKENS: {
+                USDC: { address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', decimals: 6 },
+                USDT: { address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', decimals: 6 },
+                DAI: { address: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1', decimals: 18 },
+                WETH: { address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1', decimals: 18 },
+                ARB: { address: '0x912CE59144191C1204E64559FE8253a0e49E6548', decimals: 18 }
+            },
+            
+            DEXS: {
+                SUSHISWAP: { 
+                    router: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
+                    name: 'SushiSwap'
+                },
+                CAMELOT: { 
+                    router: '0xc873fEcbd354f5A56E00E710B90EF4201db2448d',
+                    name: 'Camelot'
+                }
+            }
+        };
+
+        // CONTRACT ABI (simplificado)
+        const CONTRACT_ABI = [
+            {
+                "inputs": [{"internalType": "address", "name": "_aavePool", "type": "address"}],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "asset", "type": "address"},
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"},
+                    {"internalType": "tuple", "name": "arbData", "type": "tuple", "components": [
+                        {"internalType": "address", "name": "router1", "type": "address"},
+                        {"internalType": "address", "name": "router2", "type": "address"},
+                        {"internalType": "address", "name": "tokenIn", "type": "address"},
+                        {"internalType": "address", "name": "tokenOut", "type": "address"},
+                        {"internalType": "uint256", "name": "minProfit", "type": "uint256"},
+                        {"internalType": "uint256", "name": "slippageBps", "type": "uint256"}
+                    ]}
+                ],
+                "name": "executeFlashloan",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "router1", "type": "address"},
+                    {"internalType": "address", "name": "router2", "type": "address"},
+                    {"internalType": "address", "name": "tokenIn", "type": "address"},
+                    {"internalType": "address", "name": "tokenOut", "type": "address"},
+                    {"internalType": "uint256", "name": "amountIn", "type": "uint256"}
+                ],
+                "name": "simulateArbitrage",
+                "outputs": [
+                    {"internalType": "bool", "name": "isProfitable", "type": "bool"},
+                    {"internalType": "uint256", "name": "estimatedProfit", "type": "uint256"}
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "address", "name": "token", "type": "address"}],
+                "name": "emergencyWithdraw",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        // BYTECODE (coloque o bytecode completo do seu contrato aqui)
+        const CONTRACT_BYTECODE = '0x608060405234801561001057600080fd5b50...'; // SUBSTITUA PELO BYTECODE COMPLETO
+
+        // ========== VARIÁVEIS GLOBAIS ==========
+        let web3;
+        let account;
+        let contract;
+        let scannerInterval;
+        let opportunities = [];
+        let autoExecuteEnabled = false;
+        let stats = {
+            executions: 0,
+            successes: 0,
+            totalProfit: 0,
+            bestProfit: 0
+        };
+
+        // ========== ADICIONAR LOG ==========
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            entry.textContent = `[${timestamp}] ${message}`;
+            
+            logContainer.insertBefore(entry, logContainer.firstChild);
+            
+            // Manter apenas últimas 50 entradas
+            if (logContainer.children.length > 50) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        // ========== CONECTAR WALLET ==========
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    alert('❌ MetaMask ou wallet compatível não detectada!\n\nInstale OKX Wallet, MetaMask ou outra wallet Web3.');
+                    return;
+                }
+
+                addLog('Conectando wallet...', 'info');
+
+                // Inicializar Web3
+                web3 = new Web3(window.ethereum);
+                
+                // Solicitar contas
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                account = accounts[0];
+
+                // Verificar rede
+                const chainId = await web3.eth.getChainId();
+                if (chainId !== CONFIG.CHAIN_ID) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: web3.utils.toHex(CONFIG.CHAIN_ID) }],
+                        });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            alert('Adicione a rede Arbitrum One manualmente');
+                        }
+                        throw switchError;
+                    }
+                }
+
+                // Atualizar UI
+                document.getElementById('walletStatus').textContent = '🟢 Wallet On';
+                document.getElementById('walletStatus').className = 'pill connected';
+                document.getElementById('accountAddress').textContent = account;
+                document.getElementById('walletInfo').style.display = 'block';
+                document.getElementById('deployBtn').disabled = false;
+
+                await updateBalances();
+
+                addLog('✅ Wallet conectada com sucesso!', 'success');
+                addLog(`Conta: ${account}`, 'info');
+
+                // Listener para mudanças de conta
+                window.ethereum.on('accountsChanged', (accounts) => {
+                    if (accounts.length > 0) {
+                        window.location.reload();
+                    }
+                });
+
+            } catch (error) {
+                addLog(`❌ Erro ao conectar: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        // ========== ATUALIZAR SALDOS ==========
+        async function updateBalances() {
+            if (!web3 || !account) return;
+
+            try {
+                const ethBalance = await web3.eth.getBalance(account);
+                const ethFormatted = web3.utils.fromWei(ethBalance, 'ether');
+                document.getElementById('ethBalance').textContent = parseFloat(ethFormatted).toFixed(4);
+                document.getElementById('networkName').textContent = 'Arbitrum One';
+            } catch (error) {
+                console.error('Erro ao atualizar saldos:', error);
+            }
+        }
+
+        // ========== DEPLOY CONTRATO ==========
+        async function deployContract() {
+            if (!web3 || !account) {
+                alert('Conecte a wallet primeiro!');
+                return;
+            }
+
+            try {
+                addLog('Iniciando deploy do contrato...', 'warning');
+                document.getElementById('deployBtn').disabled = true;
+                document.getElementById('deployBtn').textContent = 'Deploying...';
+                document.getElementById('contractStatus').textContent = '🟡 Deploying';
+                document.getElementById('contractStatus').className = 'pill deploying';
+
+                const ContractFactory = new web3.eth.Contract(CONTRACT_ABI);
+                
+                const deployTx = ContractFactory.deploy({
+                    data: CONTRACT_BYTECODE,
+                    arguments: [CONFIG.AAVE_POOL]
+                });
+
+                const gas = await deployTx.estimateGas({ from: account });
+                
+                const newContract = await deployTx.send({
+                    from: account,
+                    gas: Math.floor(gas * 1.2)
+                });
+
+                contract = newContract;
+                const contractAddress = newContract.options.address;
+
+                // Atualizar UI
+                document.getElementById('contractStatus').textContent = '🟢 Contract On';
+                document.getElementById('contractStatus').className = 'pill connected';
+                document.getElementById('contractAddress').textContent = contractAddress;
+                document.getElementById('contractInfo').style.display = 'block';
+                document.getElementById('startScanBtn').disabled = false;
+                document.getElementById('emergencyBtn').disabled = false;
+
+                addLog('✅ Contrato deployed com sucesso!', 'success');
+                addLog(`Endereço: ${contractAddress}`, 'info');
+                addLog(`Ver no Explorer: ${CONFIG.EXPLORER}/address/${contractAddress}`, 'info');
+
+            } catch (error) {
+                addLog(`❌ Erro no deploy: ${error.message}`, 'error');
+                document.getElementById('deployBtn').disabled = false;
+                document.getElementById('deployBtn').textContent = 'Deploy Contrato';
+                document.getElementById('contractStatus').textContent = '🔴 Contract Off';
+                document.getElementById('contractStatus').className = 'pill disconnected';
+            }
+        }
+
+        // ========== EMERGENCY WITHDRAW ==========
+        async function emergencyWithdraw() {
+            if (!contract || !account) {
+                alert('Contrato não deployado!');
+                return;
+            }
+
+            const confirm = window.confirm('⚠️ EMERGENCY WITHDRAW\n\nDeseja retirar todos os fundos do contrato?');
+            if (!confirm) return;
+
+            try {
+                addLog('Executando emergency withdraw...', 'warning');
+
+                // Retirar ETH
+                await contract.methods.emergencyWithdraw(
+                    '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+                ).send({ from: account });
+
+                addLog('✅ Fundos retirados com sucesso!', 'success');
+                updateBalances();
+
+            } catch (error) {
+                addLog(`❌ Erro no withdraw: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== START SCANNER ==========
+        async function startScanner() {
+            if (!contract || !account) {
+                alert('Conecte a wallet e deploy o contrato primeiro!');
+                return;
+            }
+
+            const interval = parseInt(document.getElementById('scanInterval').value) * 1000;
+
+            document.getElementById('startScanBtn').style.display = 'none';
+            document.getElementById('stopScanBtn').style.display = 'block';
+            document.getElementById('scanStatus').textContent = '🟢 Scanning';
+            document.getElementById('scanStatus').className = 'pill scanning';
+
+            addLog('🔍 Scanner iniciado!', 'success');
+
+            // Primeira execução imediata
+            await scanForOpportunities();
+
+            // Intervalo recorrente
+            scannerInterval = setInterval(async () => {
+                await scanForOpportunities();
+            }, interval);
+        }
+
+        // ========== SCAN FOR OPPORTUNITIES ==========
+        async function scanForOpportunities() {
+            addLog('Escaneando mercado...', 'info');
+
+            try {
+                opportunities = await findOpportunities();
+                displayOpportunities();
+
+                if (opportunities.length > 0 && autoExecuteEnabled) {
+                    const best = opportunities[0];
+                    addLog(`🤖 Auto-executando melhor oportunidade: ${best.pair}`, 'warning');
+                    await executeArbitrage(0);
+                }
+
+            } catch (error) {
+                addLog(`⚠️ Erro no scan: ${error.message}`, 'warning');
+            }
+        }
+
+        // ========== STOP SCANNER ==========
+        function stopScanner() {
+            clearInterval(scannerInterval);
+            document.getElementById('startScanBtn').style.display = 'block';
+            document.getElementById('stopScanBtn').style.display = 'none';
+            document.getElementById('scanStatus').textContent = '⏸️ Scan Off';
+            document.getElementById('scanStatus').className = 'pill disconnected';
+
+            addLog('Scanner parado', 'info');
+        }
+
+        // ========== ENCONTRAR OPORTUNIDADES ==========
+        async function findOpportunities() {
+            const opps = [];
+            const flashAmount = parseFloat(document.getElementById('flashloanAmount').value);
+            
+            const pairs = [
+                { tokenIn: 'USDC', tokenOut: 'USDT' },
+                { tokenIn: 'USDC', tokenOut: 'DAI' },
+                { tokenIn: 'USDC', tokenOut: 'WETH' },
+                { tokenIn: 'USDT', tokenOut: 'USDC' },
+                { tokenIn: 'WETH', tokenOut: 'USDC' },
+                { tokenIn: 'WETH', tokenOut: 'ARB' },
+                { tokenIn: 'ARB', tokenOut: 'USDC' },
+            ];
+
+            const dexCombos = [
+                { dex1: 'SUSHISWAP', dex2: 'CAMELOT' },
+                { dex1: 'CAMELOT', dex2: 'SUSHISWAP' }
+            ];
+
+            for (const pair of pairs) {
+                for (const combo of dexCombos) {
+                    try {
+                        const tokenIn = CONFIG.TOKENS[pair.tokenIn];
+                        const tokenOut = CONFIG.TOKENS[pair.tokenOut];
+                        const dex1 = CONFIG.DEXS[combo.dex1];
+                        const dex2 = CONFIG.DEXS[combo.dex2];
+
+                        const amountIn = web3.utils.toBN(flashAmount).mul(
+                            web3.utils.toBN(10).pow(web3.utils.toBN(tokenIn.decimals))
+                        ).toString();
+
+                        const result = await contract.methods.simulateArbitrage(
+                            dex1.router,
+                            dex2.router,
+                            tokenIn.address,
+                            tokenOut.address,
+                            amountIn
+                        ).call();
+
+                        if (result.isProfitable) {
+                            const profitRaw = parseFloat(result.estimatedProfit);
+                            const profitUSD = profitRaw / (10 ** tokenIn.decimals);
+                            const profitPercent = (profitUSD / flashAmount) * 100;
+
+                            opps.push({
+                                pair: `${pair.tokenIn}→${pair.tokenOut}`,
+                                dex1Name: dex1.name,
+                                dex2Name: dex2.name,
+                                profit: profitUSD,
+                                profitPercent: profitPercent,
+                                dex1Router: dex1.router,
+                                dex2Router: dex2.router,
+                                tokenIn: tokenIn,
+                                tokenOut: tokenOut,
+                                amount: flashAmount
+                            });
+
+                            addLog(`✅ ${pair.tokenIn}→${pair.tokenOut} | ${dex1.name}→${dex2.name} | $${profitUSD.toFixed(2)} (${profitPercent.toFixed(2)}%)`, 'success');
+                        }
+
+                    } catch (err) {
+                        // Silenciar erros de pares sem liquidez
+                    }
+                }
+            }
+
+            opps.sort((a, b) => b.profit - a.profit);
+
+            if (opps.length === 0) {
+                addLog('Nenhuma oportunidade lucrativa encontrada', 'warning');
+            } else {
+                addLog(`${opps.length} oportunidade(s) encontrada(s)!`, 'success');
+            }
+
+            return opps;
+        }
+
+        // ========== DISPLAY OPORTUNIDADES ==========
+        function displayOpportunities() {
+            const container = document.getElementById('oppList');
+            document.getElementById('oppCount').textContent = opportunities.length;
+
+            if (opportunities.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; opacity: 0.5; padding: 20px;">
+                        Nenhuma oportunidade encontrada.<br>
+                        Aguardando próximo scan...
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            opportunities.forEach((opp, index) => {
+                const card = document.createElement('div');
+                card.className = 'opp-card';
+                
+                const confidence = Math.min(95, 60 + (opp.profitPercent * 10));
+                
+                card.innerHTML = `
+                    <div class="opp-header">
+                        <div class="opp-title">${opp.pair}</div>
+                        <div class="confidence">${confidence.toFixed(0)}%</div>
+                    </div>
+                    <div style="font-size: 0.8em; opacity: 0.8; margin-bottom: 8px;">
+                        ${opp.dex1Name} → ${opp.dex2Name}
+                    </div>
+                    <div class="opp-details">
+                        <div>
+                            <div style="opacity: 0.6;">Lucro</div>
+                            <div style="color: #10b981; font-weight: 600;">$${opp.profit.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <div style="opacity: 0.6;">ROI</div>
+                            <div style="color: #00d4ff; font-weight: 600;">${opp.profitPercent.toFixed(2)}%</div>
+                        </div>
+                        <div>
+                            <div style="opacity: 0.6;">Valor</div>
+                            <div>$${opp.amount}</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" onclick="executeArbitrage(${index})">
+                        ⚡ Executar Agora
+                    </button>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // ========== EXECUTAR ARBITRAGEM ==========
+        async function executeArbitrage(index) {
+            if (!contract || !account) {
+                alert('Conecte a carteira e deploy o contrato primeiro!');
+                return;
+            }
+
+            const opp = opportunities[index];
+            if (!opp) return;
+
+            try {
+                addLog(`Executando: ${opp.pair} via ${opp.dex1Name}→${opp.dex2Name}`, 'warning');
+
+                const amount = web3.utils.toBN(opp.amount).mul(
+                    web3.utils.toBN(10).pow(web3.utils.toBN(opp.tokenIn.decimals))
+                ).toString();
+
+                const minProfitPercent = parseFloat(document.getElementById('minProfitPercent').value);
+                const minProfit = web3.utils.toBN(opp.amount).mul(
+                    web3.utils.toBN(Math.floor(minProfitPercent * 100))
+                ).div(web3.utils.toBN(10000)).mul(
+                    web3.utils.toBN(10).pow(web3.utils.toBN(opp.tokenIn.decimals))
+                ).toString();
+
+                const slippageBps = Math.floor(parseFloat(document.getElementById('slippageBps').value) * 100);
+
+                const arbData = {
+                    router1: opp.dex1Router,
+                    router2: opp.dex2Router,
+                    tokenIn: opp.tokenIn.address,
+                    tokenOut: opp.tokenOut.address,
+                    minProfit: minProfit,
+                    slippageBps: slippageBps
+                };
+
+                addLog('Enviando transação...', 'info');
+
+                const tx = await contract.methods.executeFlashloan(
+                    opp.tokenIn.address,
+                    amount,
+                    arbData
+                ).send({
+                    from: account,
+                    gas: 1200000
+                });
+
+                addLog(`✅ SUCESSO! TX: ${tx.transactionHash.substring(0,10)}...`, 'success');
+                addLog(`Ver: ${CONFIG.EXPLORER}/tx/${tx.transactionHash}`, 'info');
+
+                stats.executions++;
+                stats.successes++;
+                stats.totalProfit += opp.profit;
+                if (opp.profit > stats.bestProfit) {
+                    stats.bestProfit = opp.profit;
+                }
+                updateStats();
+                updateBalances();
+
+            } catch (error) {
+                addLog(`❌ ERRO: ${error.message}`, 'error');
+                stats.executions++;
+                updateStats();
+            }
+        }
+
+        // ========== ATUALIZAR STATS ==========
+        function updateStats() {
+            document.getElementById('statExecutions').textContent = stats.executions;
+            document.getElementById('statSuccesses').textContent = stats.successes;
+            document.getElementById('statProfit').textContent = '$' + stats.totalProfit.toFixed(2);
+            document.getElementById('statBest').textContent = '$' + stats.bestProfit.toFixed(2);
+        }
+
+        // ========== INICIALIZAÇÃO ==========
+        window.addEventListener('load', () => {
+            addLog('Sistema carregado e pronto!', 'success');
+            addLog('Rede: Arbitrum One', 'info');
+            addLog('Passo 1: Conectar wallet', 'info');
+            addLog('Passo 2: Deploy do contrato', 'info');
+            addLog('Passo 3: Iniciar scanner', 'info');
+        });
+
+        // Auto-conectar se já autorizado
+        if (typeof window.ethereum !== 'undefined') {
+            window.ethereum.request({ method: 'eth_accounts' })
+                .then(accounts => {
+                    if (accounts.length > 0) {
+                        connectWallet();
+                    }
+                });
+        }
+
+        // Atualizar checkbox auto-execute
+        document.getElementById('autoExecute').addEventListener('change', (e) => {
+            autoExecuteEnabled = e.target.checked;
+            if (autoExecuteEnabled) {
+                addLog('🤖 Auto-execução ATIVADA!', 'warning');
+            } else {
+                addLog('Auto-execução desativada', 'info');
+            }
+        });
+    </script>
+</body>
+</html>
