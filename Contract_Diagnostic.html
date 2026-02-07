@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Diagnóstico - Flashloan Arbitrage</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #fff;
+            padding: 15px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            background: linear-gradient(45deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .card h2 {
+            color: #00d4ff;
+            margin-bottom: 12px;
+            font-size: 1.2em;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #00d4ff, #0088ff);
+            color: #fff;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: #fff;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 0.9em;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+
+        .test-result {
+            background: rgba(0,0,0,0.3);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.85em;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .test-item {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .test-pass { color: #10b981; }
+        .test-fail { color: #ef4444; }
+        .test-info { color: #00d4ff; }
+        .test-warn { color: #f59e0b; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .badge-pass { background: #10b981; }
+        .badge-fail { background: #ef4444; }
+        .badge-pending { background: #f59e0b; }
+
+        .info-box {
+            background: rgba(0,212,255,0.1);
+            border: 1px solid rgba(0,212,255,0.3);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.85em;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #00d4ff;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Diagnóstico do Contrato</h1>
+            <p>Identifique problemas no seu contrato de arbitragem</p>
+        </div>
+
+        <!-- SETUP -->
+        <div class="card">
+            <h2>📝 1. Setup</h2>
+            <input type="text" id="contractAddress" placeholder="Endereço do Contrato (0x...)" value="0x3F06144bE49116Ee59dD1601539E7A87d7FEa670">
+            <button class="btn btn-primary" onclick="connectWallet()">
+                🔗 Conectar Wallet & Iniciar Diagnóstico
+            </button>
+        </div>
+
+        <!-- TESTES -->
+        <div class="card" id="testsCard" style="display: none;">
+            <h2>🧪 2. Testes Executados</h2>
+            <div id="testResults"></div>
+        </div>
+
+        <!-- RECOMENDAÇÕES -->
+        <div class="card" id="recsCard" style="display: none;">
+            <h2>💡 3. Recomendações</h2>
+            <div id="recommendations"></div>
+        </div>
+
+        <!-- AÇÕES -->
+        <div class="card" id="actionsCard" style="display: none;">
+            <h2>🔧 4. Ações Corretivas</h2>
+            <div id="actions"></div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            CHAIN_ID: 42161,
+            TOKENS: {
+                USDC: { address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', decimals: 6, symbol: 'USDC' },
+                USDT: { address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', decimals: 6, symbol: 'USDT' },
+                DAI: { address: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1', decimals: 18, symbol: 'DAI' },
+                WETH: { address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1', decimals: 18, symbol: 'WETH' },
+                ARB: { address: '0x912CE59144191C1204E64559FE8253a0e49E6548', decimals: 18, symbol: 'ARB' }
+            },
+            DEXS: {
+                SUSHISWAP: { 
+                    router: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
+                    name: 'SushiSwap',
+                    factory: '0xc35DADB65012eC5796536bD9864eD8773aBc74C4'
+                },
+                CAMELOT: { 
+                    router: '0xc873fEcbd354f5A56E00E710B90EF4201db2448d',
+                    name: 'Camelot',
+                    factory: '0x6EcCab422D763aC031210895C81787E87B43A652'
+                }
+            }
+        };
+
+        const CONTRACT_ABI = [
+            {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
+            {"inputs":[],"name":"AAVE_POOL","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"CAMELOT","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"SUSHISWAP","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"router1","type":"address"},{"internalType":"address","name":"router2","type":"address"},{"internalType":"address","name":"tokenIn","type":"address"},{"internalType":"address","name":"tokenOut","type":"address"},{"internalType":"uint256","name":"amountIn","type":"uint256"}],"name":"simulateArbitrage","outputs":[{"internalType":"uint256","name":"estimatedProfit","type":"uint256"},{"internalType":"bool","name":"isProfitable","type":"bool"}],"stateMutability":"view","type":"function"}
+        ];
+
+        const ROUTER_ABI = [
+            {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"}],"name":"getAmountsOut","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"factory","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}
+        ];
+
+        const FACTORY_ABI = [
+            {"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"getPair","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}
+        ];
+
+        let web3, account, contract;
+        let testResults = [];
+
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    alert('❌ Wallet não detectada!');
+                    return;
+                }
+
+                addTest('Conectando wallet...', 'info');
+
+                web3 = new Web3(window.ethereum);
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                account = accounts[0];
+
+                const chainId = await web3.eth.getChainId();
+                if (chainId !== CONFIG.CHAIN_ID) {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: web3.utils.toHex(CONFIG.CHAIN_ID) }],
+                    });
+                }
+
+                addTest('✅ Wallet conectada', 'pass');
+                addTest(`Conta: ${account}`, 'info');
+
+                await runDiagnostics();
+
+            } catch (error) {
+                addTest(`❌ Erro: ${error.message}`, 'fail');
+            }
+        }
+
+        async function runDiagnostics() {
+            document.getElementById('testsCard').style.display = 'block';
+
+            const contractAddr = document.getElementById('contractAddress').value.trim();
+            
+            if (!web3.utils.isAddress(contractAddr)) {
+                addTest('❌ Endereço do contrato inválido!', 'fail');
+                return;
+            }
+
+            contract = new web3.eth.Contract(CONTRACT_ABI, contractAddr);
+
+            addTest('', 'info');
+            addTest('=== TESTE 1: VERIFICAÇÃO DO CONTRATO ===', 'info');
+            
+            // Teste 1: Verificar se é o contrato correto
+            try {
+                const owner = await contract.methods.owner().call();
+                addTest(`✅ Owner: ${owner}`, 'pass');
+                
+                if (owner.toLowerCase() !== account.toLowerCase()) {
+                    addTest(`⚠️ AVISO: Você não é o owner deste contrato!`, 'warn');
+                }
+
+                const aavePool = await contract.methods.AAVE_POOL().call();
+                addTest(`✅ Aave Pool: ${aavePool}`, 'pass');
+
+                const sushi = await contract.methods.SUSHISWAP().call();
+                addTest(`✅ SushiSwap: ${sushi}`, 'pass');
+
+                const camelot = await contract.methods.CAMELOT().call();
+                addTest(`✅ Camelot: ${camelot}`, 'pass');
+
+            } catch (error) {
+                addTest(`❌ Erro ao ler contrato: ${error.message}`, 'fail');
+                addTest('💡 Possível causa: Contrato não possui as funções esperadas', 'warn');
+                return;
+            }
+
+            addTest('', 'info');
+            addTest('=== TESTE 2: VERIFICAÇÃO DOS DEXs ===', 'info');
+
+            // Teste 2: Verificar DEXs
+            await testDEX('SushiSwap', CONFIG.DEXS.SUSHISWAP);
+            await testDEX('Camelot', CONFIG.DEXS.CAMELOT);
+
+            addTest('', 'info');
+            addTest('=== TESTE 3: VERIFICAÇÃO DE PARES ===', 'info');
+
+            // Teste 3: Verificar pares
+            await testPairs();
+
+            addTest('', 'info');
+            addTest('=== TESTE 4: SIMULAÇÃO DE ARBITRAGEM ===', 'info');
+
+            // Teste 4: Tentar simular arbitragens
+            await testArbitrageSimulations();
+
+            // Gerar recomendações
+            generateRecommendations();
+        }
+
+        async function testDEX(name, dex) {
+            try {
+                const router = new web3.eth.Contract(ROUTER_ABI, dex.router);
+                const factoryAddr = await router.methods.factory().call();
+                
+                addTest(`✅ ${name} Router OK: ${dex.router}`, 'pass');
+                addTest(`  └─ Factory: ${factoryAddr}`, 'info');
+
+                if (factoryAddr.toLowerCase() !== dex.factory.toLowerCase()) {
+                    addTest(`  └─ ⚠️ Factory diferente da configurada!`, 'warn');
+                }
+
+            } catch (error) {
+                addTest(`❌ ${name} Router FALHOU: ${error.message}`, 'fail');
+            }
+        }
+
+        async function testPairs() {
+            const pairs = [
+                ['USDC', 'USDT'],
+                ['USDC', 'WETH'],
+                ['WETH', 'ARB']
+            ];
+
+            for (const [token1, token2] of pairs) {
+                await checkPairLiquidity(token1, token2, 'SUSHISWAP');
+                await checkPairLiquidity(token1, token2, 'CAMELOT');
+            }
+        }
+
+        async function checkPairLiquidity(token1Symbol, token2Symbol, dexName) {
+            try {
+                const token1 = CONFIG.TOKENS[token1Symbol];
+                const token2 = CONFIG.TOKENS[token2Symbol];
+                const dex = CONFIG.DEXS[dexName];
+
+                const router = new web3.eth.Contract(ROUTER_ABI, dex.router);
+                const factory = new web3.eth.Contract(FACTORY_ABI, dex.factory);
+
+                const pairAddr = await factory.methods.getPair(token1.address, token2.address).call();
+
+                if (pairAddr === '0x0000000000000000000000000000000000000000') {
+                    addTest(`❌ ${dexName}: ${token1Symbol}/${token2Symbol} - PAR NÃO EXISTE!`, 'fail');
+                    return false;
+                }
+
+                // Tentar obter preço
+                const amountIn = web3.utils.toBN(1000).mul(
+                    web3.utils.toBN(10).pow(web3.utils.toBN(token1.decimals))
+                ).toString();
+
+                const amounts = await router.methods.getAmountsOut(amountIn, [token1.address, token2.address]).call();
+                
+                addTest(`✅ ${dexName}: ${token1Symbol}/${token2Symbol} - Par: ${pairAddr.substring(0,10)}...`, 'pass');
+                addTest(`  └─ Liquidez OK: 1000 ${token1Symbol} → ${(amounts[1] / 10**token2.decimals).toFixed(2)} ${token2Symbol}`, 'info');
+                
+                return true;
+
+            } catch (error) {
+                addTest(`⚠️ ${dexName}: ${token1Symbol}/${token2Symbol} - Erro: ${error.message}`, 'warn');
+                return false;
+            }
+        }
+
+        async function testArbitrageSimulations() {
+            const tests = [
+                { tokenIn: 'USDC', tokenOut: 'USDT', amount: 1000, dex1: 'SUSHISWAP', dex2: 'CAMELOT' },
+                { tokenIn: 'USDC', tokenOut: 'USDT', amount: 1000, dex1: 'CAMELOT', dex2: 'SUSHISWAP' },
+                { tokenIn: 'USDC', tokenOut: 'WETH', amount: 1000, dex1: 'SUSHISWAP', dex2: 'CAMELOT' },
+                { tokenIn: 'WETH', tokenOut: 'ARB', amount: 1, dex1: 'SUSHISWAP', dex2: 'CAMELOT' }
+            ];
+
+            let foundOpportunities = 0;
+
+            for (const test of tests) {
+                try {
+                    const tokenIn = CONFIG.TOKENS[test.tokenIn];
+                    const tokenOut = CONFIG.TOKENS[test.tokenOut];
+                    const dex1 = CONFIG.DEXS[test.dex1];
+                    const dex2 = CONFIG.DEXS[test.dex2];
+
+                    const amountIn = web3.utils.toBN(test.amount).mul(
+                        web3.utils.toBN(10).pow(web3.utils.toBN(tokenIn.decimals))
+                    ).toString();
+
+                    const result = await contract.methods.simulateArbitrage(
+                        dex1.router,
+                        dex2.router,
+                        tokenIn.address,
+                        tokenOut.address,
+                        amountIn
+                    ).call();
+
+                    const profitRaw = parseFloat(result.estimatedProfit);
+                    const profitUSD = profitRaw / (10 ** tokenIn.decimals);
+                    const profitPercent = (profitUSD / test.amount) * 100;
+
+                    if (result.isProfitable) {
+                        addTest(`✅ ${test.tokenIn}→${test.tokenOut} (${dex1.name}→${dex2.name}): LUCRATIVO! Lucro: $${profitUSD.toFixed(2)} (${profitPercent.toFixed(3)}%)`, 'pass');
+                        foundOpportunities++;
+                    } else {
+                        addTest(`⚠️ ${test.tokenIn}→${test.tokenOut} (${dex1.name}→${dex2.name}): Não lucrativo (perda: $${Math.abs(profitUSD).toFixed(2)})`, 'warn');
+                    }
+
+                } catch (error) {
+                    addTest(`❌ ${test.tokenIn}→${test.tokenOut} (${test.dex1}→${test.dex2}): ERRO - ${error.message}`, 'fail');
+                }
+            }
+
+            addTest('', 'info');
+            if (foundOpportunities > 0) {
+                addTest(`🎉 ENCONTRADAS ${foundOpportunities} OPORTUNIDADE(S) LUCRATIVA(S)!`, 'pass');
+            } else {
+                addTest(`⚠️ NENHUMA OPORTUNIDADE LUCRATIVA NO MOMENTO`, 'warn');
+                addTest(`💡 Isso pode ser normal - mercado está eficiente agora`, 'info');
+            }
+        }
+
+        function generateRecommendations() {
+            document.getElementById('recsCard').style.display = 'block';
+            document.getElementById('actionsCard').style.display = 'block';
+
+            const recsDiv = document.getElementById('recommendations');
+            const actionsDiv = document.getElementById('actions');
+
+            const failCount = testResults.filter(t => t.type === 'fail').length;
+            const warnCount = testResults.filter(t => t.type === 'warn').length;
+
+            let recs = '';
+            let actions = '';
+
+            if (failCount > 0) {
+                recs += '<div class="info-box"><strong>⚠️ PROBLEMAS CRÍTICOS DETECTADOS:</strong><br>';
+                recs += 'Alguns componentes não estão funcionando corretamente. Revise os erros acima.</div>';
+                
+                actions += '<button class="btn btn-primary" onclick="window.location.reload()">🔄 Executar Diagnóstico Novamente</button>';
+            } else if (warnCount > 0) {
+                recs += '<div class="info-box"><strong>💡 SITUAÇÃO NORMAL:</strong><br>';
+                recs += 'O contrato está funcionando, mas não há oportunidades lucrativas no momento.<br><br>';
+                recs += '<strong>Por quê?</strong><br>';
+                recs += '• Os mercados estão eficientes agora<br>';
+                recs += '• Os spreads entre DEXs estão muito pequenos<br>';
+                recs += '• A volatilidade está baixa<br><br>';
+                recs += '<strong>O que fazer?</strong><br>';
+                recs += '• Continue escaneando a cada 30-60 segundos<br>';
+                recs += '• Oportunidades aparecem em momentos de volatilidade<br>';
+                recs += '• Teste valores maiores (10k, 50k, 100k USD)<br>';
+                recs += '• Teste outros pares de tokens</div>';
+
+                actions += '<button class="btn btn-success" onclick="testLargerAmounts()">💰 Testar com Valores Maiores</button>';
+                actions += '<button class="btn btn-primary" onclick="testMorePairs()">🔄 Testar Mais Pares de Tokens</button>';
+            } else {
+                recs += '<div class="info-box" style="background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3);"><strong>✅ TUDO FUNCIONANDO PERFEITAMENTE!</strong><br>';
+                recs += 'O contrato e todos os componentes estão operacionais. Continue monitorando para capturar oportunidades.</div>';
+
+                actions += '<button class="btn btn-success" onclick="window.open(\'FlashloanArbitrage_1Click.html\', \'_blank\')">🚀 Abrir Interface Principal</button>';
+            }
+
+            recsDiv.innerHTML = recs;
+            actionsDiv.innerHTML = actions;
+        }
+
+        async function testLargerAmounts() {
+            addTest('', 'info');
+            addTest('=== TESTE COM VALORES MAIORES ===', 'info');
+            
+            const amounts = [5000, 10000, 50000, 100000];
+            
+            for (const amount of amounts) {
+                addTest(`Testando com $${amount.toLocaleString()}...`, 'info');
+                
+                const tokenIn = CONFIG.TOKENS['USDC'];
+                const tokenOut = CONFIG.TOKENS['USDT'];
+                const dex1 = CONFIG.DEXS['SUSHISWAP'];
+                const dex2 = CONFIG.DEXS['CAMELOT'];
+
+                const amountIn = web3.utils.toBN(amount).mul(
+                    web3.utils.toBN(10).pow(web3.utils.toBN(tokenIn.decimals))
+                ).toString();
+
+                try {
+                    const result = await contract.methods.simulateArbitrage(
+                        dex1.router,
+                        dex2.router,
+                        tokenIn.address,
+                        tokenOut.address,
+                        amountIn
+                    ).call();
+
+                    const profitRaw = parseFloat(result.estimatedProfit);
+                    const profitUSD = profitRaw / (10 ** tokenIn.decimals);
+
+                    if (result.isProfitable) {
+                        addTest(`✅ $${amount.toLocaleString()} - LUCRATIVO! Lucro: $${profitUSD.toFixed(2)}`, 'pass');
+                    } else {
+                        addTest(`⚠️ $${amount.toLocaleString()} - Não lucrativo`, 'warn');
+                    }
+                } catch (error) {
+                    addTest(`❌ $${amount.toLocaleString()} - Erro: ${error.message}`, 'fail');
+                }
+            }
+        }
+
+        async function testMorePairs() {
+            addTest('', 'info');
+            addTest('=== TESTE DE MAIS PARES ===', 'info');
+            
+            const pairs = [
+                ['USDC', 'DAI'],
+                ['USDT', 'DAI'],
+                ['WETH', 'USDC'],
+                ['ARB', 'USDC']
+            ];
+
+            for (const [token1, token2] of pairs) {
+                await checkPairLiquidity(token1, token2, 'SUSHISWAP');
+                await checkPairLiquidity(token1, token2, 'CAMELOT');
+            }
+        }
+
+        function addTest(message, type) {
+            const resultsDiv = document.getElementById('testResults');
+            const div = document.createElement('div');
+            div.className = `test-item test-${type}`;
+            div.textContent = message;
+            resultsDiv.appendChild(div);
+            testResults.push({ message, type });
+            
+            // Auto scroll
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>
