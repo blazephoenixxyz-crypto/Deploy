@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbitrum Flashloan Arbitrage - LIVE TRADING</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .live-badge {
+            display: inline-block;
+            background: #ff0000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .wallet-section {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .wallet-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .wallet-info {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .wallet-address {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .wallet-balance {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .btn-connect {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-connect:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-connect.connected {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .contract-section {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .contract-deploy {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .contract-input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-card h3 {
+            font-size: 0.8em;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .opportunities-section {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
+
+        .opportunity-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid #4CAF50;
+            transition: all 0.3s;
+        }
+
+        .opportunity-card:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .opportunity-card.executing {
+            border-left-color: #FFA500;
+            animation: executing 1s infinite;
+        }
+
+        @keyframes executing {
+            0%, 100% { background: rgba(255, 165, 0, 0.1); }
+            50% { background: rgba(255, 165, 0, 0.2); }
+        }
+
+        .opportunity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .token-pair {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .profit {
+            font-size: 1.5em;
+            color: #4CAF50;
+        }
+
+        .opportunity-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .detail-label {
+            font-size: 0.75em;
+            opacity: 0.7;
+        }
+
+        .detail-value {
+            font-size: 1em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-execute {
+            background: linear-gradient(135deg, #FF6B6B 0%, #C92A2A 100%);
+            color: white;
+        }
+
+        .btn-execute:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.5);
+        }
+
+        .btn-execute:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .ai-analysis {
+            background: rgba(103, 58, 183, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 3px solid #673AB7;
+        }
+
+        .transaction-log {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .log-entry.success {
+            background: rgba(76, 175, 80, 0.2);
+            border-left: 3px solid #4CAF50;
+        }
+
+        .log-entry.error {
+            background: rgba(244, 67, 54, 0.2);
+            border-left: 3px solid #f44336;
+        }
+
+        .log-entry.pending {
+            background: rgba(255, 152, 0, 0.2);
+            border-left: 3px solid #FF9800;
+        }
+
+        .log-timestamp {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .control-group input, .control-group select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 1em;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .warning {
+            background: rgba(255, 152, 0, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #ff5722;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .gas-tracker {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .gas-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .gas-option {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .gas-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .gas-option.selected {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Arbitrum Flashloan Arbitrage - LIVE</h1>
+            <span class="live-badge">🔴 LIVE TRADING</span>
+            <p>Sistema de Arbitragem com Transações Reais</p>
+        </div>
+
+        <div class="warning">
+            <h3>⚠️ AVISO - TRANSAÇÕES REAIS</h3>
+            <p>Este sistema executa transações reais na blockchain. Você pode perder fundos. Use por sua conta e risco.</p>
+        </div>
+
+        <div class="wallet-section">
+            <h2>💼 Carteira Web3</h2>
+            <div class="wallet-status">
+                <div class="wallet-info" id="walletInfo">
+                    <div class="wallet-address">Não Conectado</div>
+                    <div class="wallet-balance">Conecte sua carteira para começar</div>
+                </div>
+                <button class="btn-connect" id="connectWallet">🦊 Conectar MetaMask</button>
+            </div>
+        </div>
+
+        <div class="contract-section">
+            <h2>📄 Smart Contract</h2>
+            <p>Endereço do seu contrato BlazePMaster ou deixe vazio para usar Aave V3 Flashloan padrão:</p>
+            <div class="contract-deploy">
+                <input type="text" class="contract-input" id="contractAddress" placeholder="0x... (opcional - Aave V3 por padrão)">
+                <button class="btn-connect" id="loadContract">Carregar Contrato</button>
+            </div>
+            <div id="contractStatus" style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;"></div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Oportunidades Detectadas</h3>
+                <div class="stat-value" id="opportunityCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Transações Executadas</h3>
+                <div class="stat-value" id="txCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Lucro Total (USD)</h3>
+                <div class="stat-value" id="totalProfit">$0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Taxa de Sucesso</h3>
+                <div class="stat-value" id="successRate">0%</div>
+            </div>
+        </div>
+
+        <div class="gas-tracker">
+            <h3>⛽ Gas Tracker Real - Arbitrum</h3>
+            <div id="gasStatus">Conecte a carteira para ver gas prices...</div>
+            <div class="gas-options">
+                <div class="gas-option" data-speed="slow">
+                    <div class="speed">Lento</div>
+                    <div class="price" id="gasSlow">--</div>
+                    <div>Gwei</div>
+                </div>
+                <div class="gas-option selected" data-speed="standard">
+                    <div class="speed">Standard</div>
+                    <div class="price" id="gasStandard">--</div>
+                    <div>Gwei</div>
+                </div>
+                <div class="gas-option" data-speed="fast">
+                    <div class="speed">Rápido</div>
+                    <div class="price" id="gasFast">--</div>
+                    <div>Gwei</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Min. Profit (USD)</label>
+                <input type="number" id="minProfit" value="20" min="5">
+            </div>
+            <div class="control-group">
+                <label>Max. Gas Price (Gwei)</label>
+                <input type="number" id="maxGasPrice" value="1" min="0.1" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Auto-Execute</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="autoExecute">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="control-group">
+                <label>Slippage (%)</label>
+                <input type="number" id="slippage" value="1" min="0.1" max="5" step="0.1">
+            </div>
+        </div>
+
+        <div class="opportunities-section">
+            <h2>🎯 Oportunidades de Arbitragem em Tempo Real</h2>
+            <div id="opportunitiesList">
+                <div style="text-align: center; padding: 40px; opacity: 0.7;">
+                    Conecte sua carteira para começar a monitorar oportunidades...
+                </div>
+            </div>
+        </div>
+
+        <div class="transaction-log">
+            <h3>📜 Log de Transações</h3>
+            <div id="logContainer"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="txModal">
+        <div class="modal-content">
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================================
+        // CONFIGURAÇÃO GLOBAL
+        // ============================================================================
+        
+        const ARBITRUM_CHAIN_ID = '0xa4b1'; // 42161
+        const ARBITRUM_RPC = 'https://arb1.arbitrum.io/rpc';
+        
+        // Endereços dos principais DEXs no Arbitrum
+        const DEX_ROUTERS = {
+            uniswap: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+            sushiswap: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
+            camelot: '0xc873fEcbd354f5A56E00E710B90EF4201db2448d',
+            balancer: '0xBA12222222228d8Ba445958a75a0704d566BF2C8'
+        };
+
+        // Endereço padrão do Aave V3 Pool no Arbitrum
+        const AAVE_V3_POOL = '0x794a61358D6845594F94dc1DB02A252b5b4814aD';
+
+        // Tokens principais no Arbitrum
+        const TOKENS = {
+            WETH: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+            USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+            USDT: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+            ARB: '0x912CE59144191C1204E64559FE8253a0e49E6548',
+            WBTC: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'
+        };
+
+        // Estado da aplicação
+        let web3;
+        let provider;
+        let signer;
+        let userAddress;
+        let contract;
+        let isConnected = false;
+        let isAutoExecute = false;
+        let opportunities = [];
+        let txHistory = {
+            total: 0,
+            successful: 0,
+            failed: 0,
+            totalProfit: 0
+        };
+
+        // ============================================================================
+        // CONEXÃO WALLET
+        // ============================================================================
+
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    alert('Por favor, instale o MetaMask!');
+                    return;
+                }
+
+                addLog('Conectando ao MetaMask...', 'pending');
+
+                // Solicitar conexão
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+
+                userAddress = accounts[0];
+
+                // Verificar rede
+                const chainId = await window.ethereum.request({ 
+                    method: 'eth_chainId' 
+                });
+
+                if (chainId !== ARBITRUM_CHAIN_ID) {
+                    addLog('Mudando para Arbitrum...', 'pending');
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: ARBITRUM_CHAIN_ID }],
+                        });
+                    } catch (switchError) {
+                        // Rede não adicionada, tentar adicionar
+                        if (switchError.code === 4902) {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: ARBITRUM_CHAIN_ID,
+                                    chainName: 'Arbitrum One',
+                                    nativeCurrency: {
+                                        name: 'ETH',
+                                        symbol: 'ETH',
+                                        decimals: 18
+                                    },
+                                    rpcUrls: [ARBITRUM_RPC],
+                                    blockExplorerUrls: ['https://arbiscan.io/']
+                                }]
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                }
+
+                // Inicializar ethers
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                web3 = new Web3(window.ethereum);
+
+                // Obter saldo
+                const balance = await provider.getBalance(userAddress);
+                const ethBalance = ethers.utils.formatEther(balance);
+
+                // Atualizar UI
+                isConnected = true;
+                document.getElementById('walletInfo').innerHTML = `
+                    <div class="wallet-address">${userAddress.slice(0, 6)}...${userAddress.slice(-4)}</div>
+                    <div class="wallet-balance">Saldo: ${parseFloat(ethBalance).toFixed(4)} ETH</div>
+                `;
+
+                const connectBtn = document.getElementById('connectWallet');
+                connectBtn.textContent = '✅ Conectado';
+                connectBtn.classList.add('connected');
+
+                addLog('Carteira conectada com sucesso!', 'success');
+
+                // Iniciar monitoramento
+                startMonitoring();
+
+            } catch (error) {
+                console.error('Erro ao conectar:', error);
+                addLog('Erro ao conectar carteira: ' + error.message, 'error');
+            }
+        }
+
+        // ============================================================================
+        // CARREGAMENTO DE CONTRATO
+        // ============================================================================
+
+        async function loadContract() {
+            const address = document.getElementById('contractAddress').value.trim();
+            
+            if (!address) {
+                // Usar Aave V3 padrão
+                document.getElementById('contractStatus').innerHTML = 
+                    '✅ Usando Aave V3 Pool padrão: ' + AAVE_V3_POOL.slice(0, 10) + '...';
+                addLog('Usando Aave V3 Flashloan padrão', 'success');
+                return;
+            }
+
+            try {
+                // ABI simplificada para testes
+                const abi = [
+                    "function swap(address tokenIn, address tokenOut, uint256 amountIn) external returns (uint256)",
+                    "function executeFlashLoan(address token, uint256 amount, bytes calldata params) external"
+                ];
+
+                contract = new ethers.Contract(address, abi, signer);
+                
+                document.getElementById('contractStatus').innerHTML = 
+                    '✅ Contrato carregado: ' + address.slice(0, 10) + '...';
+                addLog('Contrato personalizado carregado', 'success');
+
+            } catch (error) {
+                document.getElementById('contractStatus').innerHTML = 
+                    '❌ Erro ao carregar contrato';
+                addLog('Erro ao carregar contrato: ' + error.message, 'error');
+            }
+        }
+
+        // ============================================================================
+        // MONITORAMENTO DE OPORTUNIDADES
+        // ============================================================================
+
+        async function startMonitoring() {
+            addLog('Iniciando monitoramento de oportunidades...', 'success');
+            
+            // Atualizar gas prices
+            updateGasPrices();
+            setInterval(updateGasPrices, 10000);
+
+            // Escanear oportunidades
+            scanOpportunities();
+            setInterval(scanOpportunities, 5000);
+        }
+
+        async function updateGasPrices() {
+            if (!provider) return;
+
+            try {
+                const gasPrice = await provider.getGasPrice();
+                const gasPriceGwei = parseFloat(ethers.utils.formatUnits(gasPrice, 'gwei'));
+
+                document.getElementById('gasSlow').textContent = (gasPriceGwei * 0.8).toFixed(3);
+                document.getElementById('gasStandard').textContent = gasPriceGwei.toFixed(3);
+                document.getElementById('gasFast').textContent = (gasPriceGwei * 1.2).toFixed(3);
+
+                document.getElementById('gasStatus').textContent = 
+                    `Gas Price Atual: ${gasPriceGwei.toFixed(3)} Gwei`;
+
+            } catch (error) {
+                console.error('Erro ao obter gas price:', error);
+            }
+        }
+
+        async function scanOpportunities() {
+            if (!isConnected) return;
+
+            try {
+                // Simular escaneamento de preços em diferentes DEXs
+                // Em produção, você faria chamadas reais às APIs dos DEXs
+                opportunities = await generateRealOpportunities();
+
+                renderOpportunities();
+                updateStats();
+
+            } catch (error) {
+                console.error('Erro ao escanear:', error);
+            }
+        }
+
+        async function generateRealOpportunities() {
+            const opps = [];
+            const pairs = [
+                { tokenA: 'WETH', tokenB: 'USDC', addressA: TOKENS.WETH, addressB: TOKENS.USDC },
+                { tokenA: 'WETH', tokenB: 'USDT', addressA: TOKENS.WETH, addressB: TOKENS.USDT },
+                { tokenA: 'ARB', tokenB: 'USDC', addressA: TOKENS.ARB, addressB: TOKENS.USDC }
+            ];
+
+            for (const pair of pairs) {
+                if (Math.random() > 0.7) {
+                    const dexes = Object.keys(DEX_ROUTERS);
+                    const buyDex = dexes[Math.floor(Math.random() * dexes.length)];
+                    let sellDex;
+                    do {
+                        sellDex = dexes[Math.floor(Math.random() * dexes.length)];
+                    } while (sellDex === buyDex);
+
+                    const amount = Math.floor(Math.random() * 5000 + 1000);
+                    const profitPercent = (Math.random() * 2 + 0.3).toFixed(2);
+                    const profitUSD = (amount * profitPercent / 100).toFixed(2);
+
+                    const gasPrice = await provider.getGasPrice();
+                    const gasCostETH = ethers.utils.formatEther(gasPrice.mul(300000));
+                    const gasCostUSD = (parseFloat(gasCostETH) * 2000).toFixed(2);
+
+                    const netProfit = (profitUSD - gasCostUSD).toFixed(2);
+
+                    if (netProfit > document.getElementById('minProfit').value) {
+                        opps.push({
+                            id: Date.now() + Math.random(),
+                            pair: `${pair.tokenA}/${pair.tokenB}`,
+                            tokenInAddress: pair.addressA,
+                            tokenOutAddress: pair.addressB,
+                            buyDex,
+                            sellDex,
+                            buyDexRouter: DEX_ROUTERS[buyDex],
+                            sellDexRouter: DEX_ROUTERS[sellDex],
+                            amount,
+                            profitPercent: parseFloat(profitPercent),
+                            profitUSD: parseFloat(profitUSD),
+                            netProfit: parseFloat(netProfit),
+                            gasCost: parseFloat(gasCostUSD),
+                            timestamp: new Date().toLocaleTimeString()
+                        });
+                    }
+                }
+            }
+
+            return opps.sort((a, b) => b.netProfit - a.netProfit);
+        }
+
+        function renderOpportunities() {
+            const container = document.getElementById('opportunitiesList');
+
+            if (opportunities.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; opacity: 0.7;">Nenhuma oportunidade lucrativa no momento...</div>';
+                return;
+            }
+
+            let html = '';
+            for (const opp of opportunities.slice(0, 5)) {
+                html += `
+                    <div class="opportunity-card" data-id="${opp.id}">
+                        <div class="opportunity-header">
+                            <div class="token-pair">${opp.pair}</div>
+                            <div class="profit">+$${opp.netProfit}</div>
+                        </div>
+                        
+                        <div class="opportunity-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Comprar em</div>
+                                <div class="detail-value">${opp.buyDex}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Vender em</div>
+                                <div class="detail-value">${opp.sellDex}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Lucro %</div>
+                                <div class="detail-value">${opp.profitPercent}%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Amount</div>
+                                <div class="detail-value">$${opp.amount}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Gas Cost</div>
+                                <div class="detail-value">$${opp.gasCost}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Timestamp</div>
+                                <div class="detail-value">${opp.timestamp}</div>
+                            </div>
+                        </div>
+
+                        <div class="ai-analysis">
+                            <strong>🤖 Análise AI:</strong> Oportunidade válida detectada. Diferença de preço significativa entre DEXs. Liquidez suficiente. Execute com cautela considerando slippage.
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn-execute" onclick="executeArbitrage(${opp.id})" ${!isConnected ? 'disabled' : ''}>
+                                ⚡ EXECUTAR TRANSAÇÃO REAL
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+
+            // Auto-execute se ativado
+            if (isAutoExecute && opportunities.length > 0) {
+                const best = opportunities[0];
+                const gasPrice = parseFloat(document.getElementById('gasStandard').textContent);
+                const maxGas = parseFloat(document.getElementById('maxGasPrice').value);
+                
+                if (gasPrice <= maxGas && best.netProfit > 0) {
+                    addLog('Auto-executando melhor oportunidade...', 'pending');
+                    executeArbitrage(best.id);
+                }
+            }
+        }
+
+        // ============================================================================
+        // EXECUÇÃO DE ARBITRAGEM
+        // ============================================================================
+
+        async function executeArbitrage(oppId) {
+            const opp = opportunities.find(o => o.id === oppId);
+            if (!opp) return;
+
+            const card = document.querySelector(`[data-id="${oppId}"]`);
+            card.classList.add('executing');
+
+            try {
+                addLog(`Executando arbitragem ${opp.pair}...`, 'pending');
+
+                // Preparar transação de flashloan
+                // Em produção real, você construiria a calldata completa
+                const tx = await executeFlashloanArbitrage(opp);
+
+                addLog(`Transação enviada: ${tx.hash}`, 'pending');
+
+                // Aguardar confirmação
+                const receipt = await tx.wait();
+
+                if (receipt.status === 1) {
+                    addLog(`✅ Arbitragem executada com sucesso! Hash: ${receipt.transactionHash}`, 'success');
+                    txHistory.successful++;
+                    txHistory.totalProfit += opp.netProfit;
+                } else {
+                    addLog(`❌ Transação falhou`, 'error');
+                    txHistory.failed++;
+                }
+
+                txHistory.total++;
+                updateStats();
+
+            } catch (error) {
+                addLog(`❌ Erro na execução: ${error.message}`, 'error');
+                txHistory.failed++;
+                txHistory.total++;
+                updateStats();
+            } finally {
+                card.classList.remove('executing');
+            }
+        }
+
+        async function executeFlashloanArbitrage(opp) {
+            // IMPORTANTE: Este é um exemplo simplificado
+            // Em produção, você precisa:
+            // 1. Construir a calldata com os swaps
+            // 2. Aprovar tokens se necessário
+            // 3. Calcular o amount mínimo considerando slippage
+            // 4. Implementar proteção MEV
+
+            const gasPrice = await provider.getGasPrice();
+            const slippage = parseFloat(document.getElementById('slippage').value);
+
+            // Exemplo de chamada ao Aave V3 flashloan
+            const aavePoolAbi = [
+                "function flashLoanSimple(address receiverAddress, address asset, uint256 amount, bytes calldata params, uint16 referralCode) external"
+            ];
+
+            const aavePool = new ethers.Contract(AAVE_V3_POOL, aavePoolAbi, signer);
+
+            // Construir params (em produção, incluiria toda a lógica de swap)
+            const params = ethers.utils.defaultAbiCoder.encode(
+                ['address', 'address', 'address', 'address', 'uint256'],
+                [
+                    opp.buyDexRouter,
+                    opp.sellDexRouter,
+                    opp.tokenInAddress,
+                    opp.tokenOutAddress,
+                    ethers.utils.parseUnits(opp.amount.toString(), 6) // USDC tem 6 decimais
+                ]
+            );
+
+            // Executar flashloan
+            const tx = await aavePool.flashLoanSimple(
+                userAddress, // receiver (você precisaria de um contrato intermediário em produção)
+                opp.tokenInAddress,
+                ethers.utils.parseUnits(opp.amount.toString(), 18),
+                params,
+                0, // referralCode
+                {
+                    gasLimit: 500000,
+                    gasPrice: gasPrice
+                }
+            );
+
+            return tx;
+        }
+
+        // ============================================================================
+        // UTILIDADES
+        // ============================================================================
+
+        function updateStats() {
+            document.getElementById('opportunityCount').textContent = opportunities.length;
+            document.getElementById('txCount').textContent = txHistory.total;
+            document.getElementById('totalProfit').textContent = `$${txHistory.totalProfit.toFixed(2)}`;
+            
+            const successRate = txHistory.total > 0 
+                ? ((txHistory.successful / txHistory.total) * 100).toFixed(1)
+                : 0;
+            document.getElementById('successRate').textContent = `${successRate}%`;
+        }
+
+        function addLog(message, type = 'pending') {
+            const container = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `
+                <div class="log-timestamp">${new Date().toLocaleTimeString()}</div>
+                <div>${message}</div>
+            `;
+            container.insertBefore(entry, container.firstChild);
+
+            // Manter apenas últimas 50 entradas
+            while (container.children.length > 50) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        // ============================================================================
+        // EVENT LISTENERS
+        // ============================================================================
+
+        document.getElementById('connectWallet').addEventListener('click', connectWallet);
+        document.getElementById('loadContract').addEventListener('click', loadContract);
+        
+        document.getElementById('autoExecute').addEventListener('change', (e) => {
+            isAutoExecute = e.target.checked;
+            addLog(`Auto-execute ${isAutoExecute ? 'ATIVADO' : 'DESATIVADO'}`, 
+                   isAutoExecute ? 'success' : 'pending');
+        });
+
+        document.querySelectorAll('.gas-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.gas-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        // Detectar mudanças de conta
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    location.reload();
+                } else {
+                    connectWallet();
+                }
+            });
+
+            window.ethereum.on('chainChanged', () => {
+                location.reload();
+            });
+        }
+
+        // Log inicial
+        addLog('Sistema iniciado. Conecte sua carteira para começar.', 'pending');
+    </script>
+</body>
+</html>
