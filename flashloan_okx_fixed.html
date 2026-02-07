@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flashloan Bot - Arbitrum</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+            padding-bottom: 30px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+
+        .status-badge.connected {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-badge.disconnected {
+            background: #ef4444;
+            color: white;
+        }
+
+        .wallet-info {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:active {
+            background: #5568d3;
+            transform: scale(0.98);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:active {
+            background: #059669;
+            transform: scale(0.98);
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:active {
+            background: #d97706;
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .balance-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .balance-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+        }
+
+        .balance-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .balance-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .token-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .token-btn {
+            padding: 15px;
+            background: #f3f4f6;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .token-btn:active {
+            transform: scale(0.95);
+        }
+
+        .token-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .log-container {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .log-entry {
+            margin-bottom: 6px;
+            padding: 4px;
+            border-left: 3px solid #667eea;
+            padding-left: 8px;
+        }
+
+        .log-entry.success {
+            border-left-color: #10b981;
+            color: #10b981;
+        }
+
+        .log-entry.error {
+            border-left-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .log-entry.warning {
+            border-left-color: #f59e0b;
+            color: #f59e0b;
+        }
+
+        .log-entry.info {
+            border-left-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>⚡ Flashloan Bot</h1>
+            <div id="connectionStatus" class="status-badge disconnected">
+                ⚠️ Não Conectado
+            </div>
+            <div class="wallet-info" id="walletAddress">
+                Toque para conectar
+            </div>
+            <button id="connectBtn" class="btn btn-primary" onclick="connectWallet()">
+                🔗 Conectar Wallet
+            </button>
+        </div>
+
+        <!-- Network Alert -->
+        <div id="networkAlert" class="alert alert-warning hidden">
+            ⚠️ Conecte-se à rede <strong>Arbitrum</strong>
+        </div>
+
+        <!-- Balances -->
+        <div class="card">
+            <h2>💰 Saldos</h2>
+            <div class="balance-grid">
+                <div class="balance-item">
+                    <div class="balance-label">USDC</div>
+                    <div class="balance-value" id="usdcBalance">0.00</div>
+                </div>
+                <div class="balance-item">
+                    <div class="balance-label">USDT</div>
+                    <div class="balance-value" id="usdtBalance">0.00</div>
+                </div>
+                <div class="balance-item">
+                    <div class="balance-label">WETH</div>
+                    <div class="balance-value" id="wethBalance">0.0000</div>
+                </div>
+                <div class="balance-item">
+                    <div class="balance-label">DAI</div>
+                    <div class="balance-value" id="daiBalance">0.00</div>
+                </div>
+            </div>
+            <button class="btn btn-success" onclick="refreshBalances()" id="refreshBtn">
+                🔄 Atualizar
+            </button>
+        </div>
+
+        <!-- Withdraw -->
+        <div class="card">
+            <h2>💸 Sacar</h2>
+            <div class="alert alert-info">
+                Saque os lucros para sua carteira
+            </div>
+            <div class="form-group">
+                <label>Selecione o Token</label>
+                <div class="token-selector">
+                    <button class="token-btn active" onclick="selectToken('USDC', event)">USDC</button>
+                    <button class="token-btn" onclick="selectToken('USDT', event)">USDT</button>
+                    <button class="token-btn" onclick="selectToken('WETH', event)">WETH</button>
+                    <button class="token-btn" onclick="selectToken('DAI', event)">DAI</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Disponível</label>
+                <input type="text" id="withdrawAmount" readonly placeholder="0.00">
+            </div>
+            <button class="btn btn-success" onclick="withdraw()" id="withdrawBtn">
+                💰 Sacar
+            </button>
+        </div>
+
+        <!-- Flashloan -->
+        <div class="card">
+            <h2>⚡ Flashloan</h2>
+            <div class="alert alert-warning">
+                ⚠️ Teste com valores pequenos!
+            </div>
+            
+            <div class="form-group">
+                <label>Token</label>
+                <select id="flashToken">
+                    <option value="USDC">USDC</option>
+                    <option value="USDT">USDT</option>
+                    <option value="DAI">DAI</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="flashAmount" placeholder="10000">
+                <small>Ex: 10000 para 10k USDC</small>
+            </div>
+
+            <div class="form-group">
+                <label>Token Intermediário</label>
+                <select id="intermediateToken">
+                    <option value="WETH">WETH</option>
+                    <option value="USDC">USDC</option>
+                    <option value="USDT">USDT</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Router 1</label>
+                <select id="router1">
+                    <option value="0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506">SushiSwap V2</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Router 2</label>
+                <select id="router2">
+                    <option value="0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506">SushiSwap V2</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Lucro Mínimo</label>
+                <input type="number" id="minProfit" placeholder="10">
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Taxa</div>
+                    <div class="stat-value">0.09%</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Custo</div>
+                    <div class="stat-value" id="cost">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Break</div>
+                    <div class="stat-value" id="breakeven">-</div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="executeFlashloan()" id="executeBtn">
+                ⚡ Executar
+            </button>
+        </div>
+
+        <!-- Logs -->
+        <div class="card">
+            <h2>📊 Logs</h2>
+            <div class="log-container" id="logs">
+                <div class="log-entry info">Sistema iniciado...</div>
+            </div>
+            <button class="btn btn-warning" onclick="clearLogs()">
+                🗑️ Limpar
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ============= CONFIG =============
+        const CONFIG = {
+            CHAIN_ID: 42161,
+            CONTRACT: '0xc7cb7192953d3db51fe27cc577a7cf689ac3eed3',
+            TOKENS: {
+                USDC: { address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', decimals: 6 },
+                USDT: { address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', decimals: 6 },
+                WETH: { address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1', decimals: 18 },
+                DAI: { address: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1', decimals: 18 }
+            }
+        };
+
+        // ============= GLOBALS =============
+        let provider;
+        let account;
+        let selectedToken = 'USDC';
+
+        // ============= UTILS =============
+        function log(msg, type = 'info') {
+            const logs = document.getElementById('logs');
+            const time = new Date().toLocaleTimeString('pt-BR');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${time}] ${msg}`;
+            logs.appendChild(entry);
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '<div class="log-entry info">Logs limpos</div>';
+        }
+
+        function updateStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            const wallet = document.getElementById('walletAddress');
+            const btn = document.getElementById('connectBtn');
+
+            if (connected) {
+                status.className = 'status-badge connected';
+                status.textContent = '✅ Conectado';
+                wallet.textContent = `${account.slice(0, 6)}...${account.slice(-4)}`;
+                btn.textContent = '✓ Conectado';
+                btn.disabled = true;
+            } else {
+                status.className = 'status-badge disconnected';
+                status.textContent = '⚠️ Desconectado';
+                wallet.textContent = 'Toque para conectar';
+                btn.textContent = '🔗 Conectar Wallet';
+                btn.disabled = false;
+            }
+        }
+
+        // ============= ENCODING HELPERS =============
+        function encodeAddress(address) {
+            return address.slice(2).toLowerCase().padStart(64, '0');
+        }
+
+        function encodeUint256(value) {
+            return value.toString(16).padStart(64, '0');
+        }
+
+        function decodeUint256(hex) {
+            if (!hex || hex === '0x' || hex.length < 3) {
+                return BigInt(0);
+            }
+            try {
+                return BigInt(hex);
+            } catch (e) {
+                return BigInt(0);
+            }
+        }
+
+        // ============= WEB3 FUNCTIONS =============
+        async function connectWallet() {
+            try {
+                log('🔍 Detectando wallet...', 'info');
+
+                // Detectar provider (OKX, MetaMask, etc)
+                if (window.okxwallet && window.okxwallet.ethereum) {
+                    provider = window.okxwallet.ethereum;
+                    log('✅ OKX Wallet detectada!', 'success');
+                } else if (window.ethereum) {
+                    provider = window.ethereum;
+                    log('✅ Wallet detectada!', 'success');
+                } else {
+                    log('❌ Nenhuma wallet encontrada!', 'error');
+                    alert('Por favor, use OKX Wallet ou MetaMask');
+                    return;
+                }
+
+                // Solicitar conta
+                log('🔐 Solicitando acesso...', 'info');
+                const accounts = await provider.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+
+                if (!accounts || accounts.length === 0) {
+                    log('❌ Nenhuma conta disponível', 'error');
+                    return;
+                }
+
+                account = accounts[0];
+                log(`✅ Conta: ${account.slice(0, 6)}...`, 'success');
+
+                // Verificar rede
+                const chainId = await provider.request({ method: 'eth_chainId' });
+                const currentChain = parseInt(chainId, 16);
+                
+                log(`📡 Rede: Chain ID ${currentChain}`, 'info');
+
+                if (currentChain !== CONFIG.CHAIN_ID) {
+                    log('⚠️ Rede errada! Mudando...', 'warning');
+                    document.getElementById('networkAlert').classList.remove('hidden');
+                    await switchNetwork();
+                    return;
+                }
+
+                document.getElementById('networkAlert').classList.add('hidden');
+                
+                updateStatus(true);
+                log('🎉 Conectado com sucesso!', 'success');
+
+                // Verificar owner
+                await checkOwner();
+                
+                // Carregar saldos
+                await refreshBalances();
+
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function switchNetwork() {
+            try {
+                await provider.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0xa4b1' }],
+                });
+                log('✅ Rede alterada!', 'success');
+                setTimeout(() => connectWallet(), 1000);
+            } catch (error) {
+                if (error.code === 4902) {
+                    await addNetwork();
+                } else {
+                    log(`❌ Erro ao mudar rede: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function addNetwork() {
+            try {
+                await provider.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                        chainId: '0xa4b1',
+                        chainName: 'Arbitrum One',
+                        nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                        rpcUrls: ['https://arb1.arbitrum.io/rpc'],
+                        blockExplorerUrls: ['https://arbiscan.io/']
+                    }]
+                });
+                setTimeout(() => connectWallet(), 1000);
+            } catch (error) {
+                log(`❌ Erro ao adicionar rede: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkOwner() {
+            try {
+                // owner() = 0x8da5cb5b
+                const data = '0x8da5cb5b';
+                const result = await provider.request({
+                    method: 'eth_call',
+                    params: [{
+                        to: CONFIG.CONTRACT,
+                        data: data
+                    }, 'latest']
+                });
+                
+                if (result && result !== '0x' && result.length >= 42) {
+                    const owner = '0x' + result.slice(-40);
+                    if (owner.toLowerCase() === account.toLowerCase()) {
+                        log('👑 Você é o owner!', 'success');
+                    } else {
+                        log(`ℹ️ Owner: ${owner.slice(0, 6)}...`, 'info');
+                    }
+                }
+            } catch (error) {
+                log(`⚠️ Erro ao verificar owner: ${error.message}`, 'warning');
+                console.error('checkOwner error:', error);
+            }
+        }
+
+        async function refreshBalances() {
+            if (!account) {
+                log('⚠️ Conecte primeiro!', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('refreshBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Carregando...';
+
+            try {
+                log('🔄 Atualizando saldos...', 'info');
+
+                for (const [symbol, token] of Object.entries(CONFIG.TOKENS)) {
+                    try {
+                        // getBalance(address) = 0xf8b2cb4f
+                        const data = '0xf8b2cb4f' + encodeAddress(token.address);
+                        
+                        log(`🔍 Consultando ${symbol}...`, 'info');
+                        
+                        const result = await provider.request({
+                            method: 'eth_call',
+                            params: [{
+                                to: CONFIG.CONTRACT,
+                                data: data,
+                                from: account
+                            }, 'latest']
+                        });
+
+                        log(`📦 ${symbol} resultado: ${result}`, 'info');
+
+                        const balance = decodeUint256(result);
+                        const decimals = token.decimals;
+                        const divisor = BigInt(10 ** decimals);
+                        const formatted = (Number(balance) / Number(divisor)).toFixed(
+                            decimals === 18 ? 4 : 2
+                        );
+
+                        document.getElementById(`${symbol.toLowerCase()}Balance`).textContent = formatted;
+                        log(`💰 ${symbol}: ${formatted}`, 'success');
+
+                    } catch (error) {
+                        log(`❌ Erro ${symbol}: ${error.message}`, 'error');
+                        console.error(`Error fetching ${symbol}:`, error);
+                    }
+                }
+
+                updateWithdrawAmount();
+                log('✅ Saldos atualizados!', 'success');
+
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+                console.error('refreshBalances error:', error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔄 Atualizar';
+            }
+        }
+
+        function selectToken(symbol, event) {
+            selectedToken = symbol;
+            document.querySelectorAll('.token-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            updateWithdrawAmount();
+            log(`🎯 Selecionado: ${symbol}`, 'info');
+        }
+
+        async function updateWithdrawAmount() {
+            if (!account) return;
+            
+            try {
+                const token = CONFIG.TOKENS[selectedToken];
+                const data = '0xf8b2cb4f' + encodeAddress(token.address);
+                
+                const result = await provider.request({
+                    method: 'eth_call',
+                    params: [{ 
+                        to: CONFIG.CONTRACT, 
+                        data: data,
+                        from: account
+                    }, 'latest']
+                });
+
+                const balance = decodeUint256(result);
+                const formatted = (Number(balance) / Number(10 ** token.decimals)).toFixed(
+                    token.decimals === 18 ? 4 : 2
+                );
+
+                document.getElementById('withdrawAmount').value = `${formatted} ${selectedToken}`;
+            } catch (error) {
+                console.error('updateWithdrawAmount error:', error);
+            }
+        }
+
+        async function withdraw() {
+            if (!account) {
+                log('⚠️ Conecte primeiro!', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('withdrawBtn');
+            btn.disabled = true;
+            btn.textContent = '💸 Sacando...';
+
+            try {
+                const token = CONFIG.TOKENS[selectedToken];
+                
+                // withdraw(address) = 0x51cff8d9
+                const data = '0x51cff8d9' + encodeAddress(token.address);
+
+                log(`💸 Sacando ${selectedToken}...`, 'info');
+
+                const txHash = await provider.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: account,
+                        to: CONFIG.CONTRACT,
+                        data: data,
+                        gas: '0x186A0'
+                    }]
+                });
+
+                log(`📝 TX: ${txHash.slice(0, 10)}...`, 'info');
+                log('⏳ Aguardando confirmação...', 'info');
+
+                await waitForTx(txHash);
+                
+                log(`✅ Saque confirmado!`, 'success');
+                setTimeout(() => refreshBalances(), 2000);
+
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '💰 Sacar';
+            }
+        }
+
+        async function executeFlashloan() {
+            if (!account) {
+                log('⚠️ Conecte primeiro!', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('executeBtn');
+            btn.disabled = true;
+            btn.textContent = '⚡ Executando...';
+
+            try {
+                const flashToken = document.getElementById('flashToken').value;
+                const amount = document.getElementById('flashAmount').value;
+                const intermediate = document.getElementById('intermediateToken').value;
+                const router1 = document.getElementById('router1').value;
+                const router2 = document.getElementById('router2').value;
+                const minProfit = document.getElementById('minProfit').value;
+
+                if (!amount || !minProfit) {
+                    log('⚠️ Preencha todos os campos!', 'warning');
+                    return;
+                }
+
+                const tokenConfig = CONFIG.TOKENS[flashToken];
+                const intermediateConfig = CONFIG.TOKENS[intermediate];
+
+                const amountWei = BigInt(Math.floor(amount * (10 ** tokenConfig.decimals)));
+                const minProfitWei = BigInt(Math.floor(minProfit * (10 ** tokenConfig.decimals)));
+
+                // startFlashloan(address,uint256,bytes) = 0xc7c9c2dc
+                const paramsEncoded = 
+                    '0000000000000000000000000000000000000000000000000000000000000020' +
+                    '00000000000000000000000000000000000000000000000000000000000000a0' +
+                    encodeAddress(router1) +
+                    encodeAddress(router2) +
+                    encodeAddress(tokenConfig.address) +
+                    encodeAddress(intermediateConfig.address) +
+                    encodeUint256(minProfitWei);
+
+                const data = '0xc7c9c2dc' +
+                    encodeAddress(tokenConfig.address) +
+                    encodeUint256(amountWei) +
+                    '0000000000000000000000000000000000000000000000000000000000000060' +
+                    paramsEncoded;
+
+                log(`⚡ Executando flashloan...`, 'info');
+                log(`💰 ${amount} ${flashToken}`, 'info');
+
+                const txHash = await provider.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: account,
+                        to: CONFIG.CONTRACT,
+                        data: data,
+                        gas: '0xF4240'
+                    }]
+                });
+
+                log(`📝 TX: ${txHash.slice(0, 10)}...`, 'info');
+                log('⏳ Aguardando...', 'info');
+
+                await waitForTx(txHash);
+                
+                log(`✅ Executado!`, 'success');
+                setTimeout(() => refreshBalances(), 3000);
+
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '⚡ Executar';
+            }
+        }
+
+        async function waitForTx(txHash) {
+            let receipt = null;
+            let attempts = 0;
+            
+            while (!receipt && attempts < 60) {
+                try {
+                    receipt = await provider.request({
+                        method: 'eth_getTransactionReceipt',
+                        params: [txHash]
+                    });
+                    
+                    if (!receipt) {
+                        await new Promise(r => setTimeout(r, 2000));
+                        attempts++;
+                    }
+                } catch (error) {
+                    attempts++;
+                    await new Promise(r => setTimeout(r, 2000));
+                }
+            }
+            
+            return receipt;
+        }
+
+        // Amount change listener
+        document.getElementById('flashAmount').addEventListener('input', (e) => {
+            const amount = parseFloat(e.target.value) || 0;
+            const fee = amount * 0.0009;
+            document.getElementById('cost').textContent = fee.toFixed(2);
+            document.getElementById('breakeven').textContent = (fee * 1.1).toFixed(2);
+        });
+
+        // Auto-connect on load
+        window.addEventListener('load', () => {
+            log('🚀 Sistema pronto', 'info');
+            log(`📍 Contrato: ${CONFIG.CONTRACT}`, 'info');
+            
+            // Auto-detect if already connected
+            if ((window.okxwallet && window.okxwallet.ethereum) || window.ethereum) {
+                const p = window.okxwallet ? window.okxwallet.ethereum : window.ethereum;
+                if (p.selectedAddress) {
+                    log('🔍 Wallet detectada, conectando...', 'info');
+                    setTimeout(() => connectWallet(), 500);
+                }
+            }
+        });
+
+        // Listen to account/network changes
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', () => location.reload());
+            window.ethereum.on('chainChanged', () => location.reload());
+        }
+        if (window.okxwallet && window.okxwallet.ethereum) {
+            window.okxwallet.ethereum.on('accountsChanged', () => location.reload());
+            window.okxwallet.ethereum.on('chainChanged', () => location.reload());
+        }
+    </script>
+</body>
+</html>
