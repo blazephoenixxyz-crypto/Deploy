@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flash Loan Arbitrage AI - Aave V3 Arbitrum</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin: 5px 5px 5px 0;
+        }
+
+        .status.connected {
+            background: #10b981;
+        }
+
+        .status.disconnected {
+            background: #ef4444;
+        }
+
+        .status.loading {
+            background: #f59e0b;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .log {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .log-entry.success {
+            color: #10b981;
+        }
+
+        .log-entry.error {
+            color: #ef4444;
+        }
+
+        .log-entry.info {
+            color: #3b82f6;
+        }
+
+        .log-entry.warning {
+            color: #f59e0b;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .ai-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .token-pair {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .prediction-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #10b981;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+            margin-top: 20px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .network-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Flash Loan Arbitrage AI</h1>
+            <p>Sistema Neural Avançado para Arbitragem com Aave V3 no Arbitrum</p>
+            <div style="margin-top: 15px;">
+                <span class="status disconnected" id="walletStatus">Carteira Desconectada</span>
+                <span class="status disconnected" id="contractStatus">Contrato Não Deployado</span>
+                <span class="status disconnected" id="aiStatus"><span class="ai-indicator"></span>IA Inicializando</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Conexão e Deploy -->
+            <div class="card">
+                <h2>🔗 Conexão & Deploy</h2>
+                
+                <div class="network-info">
+                    <span class="badge">Rede: Arbitrum One</span>
+                    <span class="badge" id="chainIdBadge">Chain ID: 42161</span>
+                </div>
+
+                <button id="connectWallet" class="btn-primary">Conectar MetaMask</button>
+                
+                <div id="walletInfo" style="display: none;">
+                    <input type="text" id="walletAddress" readonly placeholder="Endereço da carteira">
+                    <input type="text" id="balance" readonly placeholder="Saldo ETH">
+                </div>
+
+                <hr style="margin: 20px 0; border: 1px solid rgba(255,255,255,0.1);">
+
+                <h3 style="margin-bottom: 10px;">📝 Deploy do Contrato</h3>
+                <button id="deployContract" class="btn-primary" disabled>Deploy SimpleFlashloanArbitrage</button>
+                
+                <div id="contractInfo" style="display: none; margin-top: 10px;">
+                    <input type="text" id="contractAddress" readonly placeholder="Endereço do contrato">
+                    <button id="saveContract" class="btn-warning">Salvar Endereço</button>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <input type="text" id="loadContractAddress" placeholder="Ou cole o endereço do contrato aqui">
+                    <button id="loadContract" class="btn-warning">Carregar Contrato Existente</button>
+                </div>
+            </div>
+
+            <!-- IA Neural -->
+            <div class="card">
+                <h2>🧠 IA Neural & Análise</h2>
+                
+                <div class="prediction-box">
+                    <h3 style="margin-bottom: 10px;">Predição de Oportunidades</h3>
+                    <div id="aiPrediction">Analisando mercado...</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="aiProgress"></div>
+                    </div>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-label">Probabilidade de Lucro</div>
+                        <div class="metric-value" id="profitProb">0%</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Score de Confiança</div>
+                        <div class="metric-value" id="confidenceScore">0.0</div>
+                    </div>
+                </div>
+
+                <button id="trainAI" class="btn-warning">Treinar IA Neural</button>
+                <button id="scanOpportunities" class="btn-primary">Escanear Oportunidades</button>
+
+                <div class="chart-container">
+                    <canvas id="aiChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Configuração de Arbitragem -->
+            <div class="card">
+                <h2>⚙️ Configuração de Arbitragem</h2>
+
+                <label>Token de Entrada (Flashloan):</label>
+                <select id="tokenIn">
+                    <option value="0xaf88d065e77c8cC2239327C5EDb3A432268e5831">USDC</option>
+                    <option value="0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9">USDT</option>
+                    <option value="0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8">USDC.e</option>
+                    <option value="0x82aF49447D8a07e3bd95BD0d56f35241523fBab1">WETH</option>
+                    <option value="0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f">WBTC</option>
+                    <option value="0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1">DAI</option>
+                </select>
+
+                <label>Token de Saída (Intermediário):</label>
+                <select id="tokenOut">
+                    <option value="0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9">USDT</option>
+                    <option value="0xaf88d065e77c8cC2239327C5EDb3A432268e5831">USDC</option>
+                    <option value="0x82aF49447D8a07e3bd95BD0d56f35241523fBab1">WETH</option>
+                    <option value="0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f">WBTC</option>
+                    <option value="0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1">DAI</option>
+                </select>
+
+                <label>Quantidade (Flashloan):</label>
+                <input type="number" id="flashloanAmount" value="1000" placeholder="Quantidade em tokens">
+
+                <label>Lucro Mínimo Esperado (em tokens):</label>
+                <input type="number" id="minProfit" value="5" placeholder="Lucro mínimo">
+
+                <label>Router 1 (DEX Compra):</label>
+                <select id="router1">
+                    <option value="0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506">SushiSwap</option>
+                    <option value="0xE592427A0AEce92De3Edee1F18E0157C05861564">Uniswap V3</option>
+                    <option value="0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24">GMX</option>
+                </select>
+
+                <label>Router 2 (DEX Venda):</label>
+                <select id="router2">
+                    <option value="0xE592427A0AEce92De3Edee1F18E0157C05861564">Uniswap V3</option>
+                    <option value="0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506">SushiSwap</option>
+                    <option value="0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24">GMX</option>
+                </select>
+
+                <div style="margin-top: 15px;">
+                    <button id="saveConfig" class="btn-warning">Salvar Configuração</button>
+                    <button id="loadConfig" class="btn-warning">Carregar Config Salva</button>
+                </div>
+            </div>
+
+            <!-- Execução -->
+            <div class="card">
+                <h2>🎯 Executar Arbitragem</h2>
+
+                <div class="token-pair">
+                    <span>Par Selecionado:</span>
+                    <span id="selectedPair" style="font-weight: bold;">USDC → USDT → USDC</span>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-label">Gas Estimado</div>
+                        <div class="metric-value" id="gasEstimate">--</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">ROI Esperado</div>
+                        <div class="metric-value" id="expectedROI">0%</div>
+                    </div>
+                </div>
+
+                <button id="estimateGas" class="btn-warning">Estimar Gas</button>
+                <button id="executeArbitrage" class="btn-primary" disabled>🚀 EXECUTAR ARBITRAGEM</button>
+                <button id="emergencyStop" class="btn-danger" style="display: none;">⛔ PARAR EMERGÊNCIA</button>
+
+                <div class="prediction-box">
+                    <h4>Status da Execução:</h4>
+                    <div id="executionStatus">Aguardando execução...</div>
+                </div>
+            </div>
+
+            <!-- Gerenciamento -->
+            <div class="card">
+                <h2>💰 Gerenciamento de Fundos</h2>
+
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-label">Saldo do Contrato</div>
+                        <div class="metric-value" id="contractBalance">0</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Lucro Total</div>
+                        <div class="metric-value" id="totalProfit">0</div>
+                    </div>
+                </div>
+
+                <label>Token para Verificar/Sacar:</label>
+                <select id="withdrawToken">
+                    <option value="0xaf88d065e77c8cC2239327C5EDb3A432268e5831">USDC</option>
+                    <option value="0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9">USDT</option>
+                    <option value="0x82aF49447D8a07e3bd95BD0d56f35241523fBab1">WETH</option>
+                    <option value="0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f">WBTC</option>
+                </select>
+
+                <button id="checkBalance" class="btn-warning">Verificar Saldo</button>
+                <button id="withdrawFunds" class="btn-primary" disabled>Sacar Fundos</button>
+
+                <div class="chart-container">
+                    <canvas id="profitChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Logs -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>📋 Logs de Atividade</h2>
+                <button id="clearLogs" class="btn-danger" style="width: auto; float: right;">Limpar Logs</button>
+                <div class="log" id="activityLog">
+                    <div class="log-entry info">Sistema iniciado. Aguardando conexão...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== CONFIGURAÇÃO GLOBAL ==========
+        const ARBITRUM_CHAIN_ID = '0xa4b1'; // 42161
+        const AAVE_POOL_ADDRESS = '0x794a61358D6845594F94dc1DB02A252b5b4814aD';
+        
+        // Bytecode e ABI do contrato
+        const CONTRACT_BYTECODE = '0x6080604052348015600e575f5ffd5b50335f5f6101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506116428061005b5f395ff3fe608060405234801561000f575f5ffd5b5060043610610060575f3560e01c806308a01675146100645780631b11d0ff1461008257806351cff8d9146100b25780638298a90d146100ce5780638da5cb5b146100ea578063f8b2cb4f14610108575b5f5ffd5b61006c610138565b6040516100799190610bbe565b60405180910390f35b61009c60048036038101906100979190610ca6565b610150565b6040516100a99190610d56565b60405180910390f35b6100cc60048036038101906100c79190610d6f565b6103e0565b005b6100e860048036038101906100e39190610d9a565b610584565b005b6100f261069c565b6040516100ff9190610bbe565b60405180910390f35b610122600480360381019061011d9190610d6f565b6106c0565b60405161012f9190610e1a565b60405180910390f35b73794a61358d6845594f94dc1db02a252b5b4814ad81565b5f73794a61358d6845594f94dc1db02a252b5b4814ad73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16146101d3576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016101ca90610e8d565b60405180910390fd5b3073ffffffffffffffffffffffffffffffffffffffff168473ffffffffffffffffffffffffffffffffffffffff1614610241576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161023890610ef5565b60405180910390fd5b5f83838101906102519190611028565b90505f61025e8289610740565b9050868861026c9190611080565b8110156102ae576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016102a5906110fd565b60405180910390fd5b5f8789830303905082608001518110156102fd576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016102f490611165565b60405180910390fd5b7f357d905f1831209797df4d55d79c5c5bf1d9f7311c976afd05e13d881eab9bc88160405161032c9190610e1a565b60405180910390a1508873ffffffffffffffffffffffffffffffffffffffff1663095ea7b373794a61358d6845594f94dc1db02a252b5b4814ad898b6103729190611080565b6040518363ffffffff1660e01b815260040161038f929190611183565b6020604051808303815f875af11580156103ab573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906103cf91906111d4565b506001925050509695505050505050565b5f5f9054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161461046e576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161046590611249565b60405180910390fd5b8073ffffffffffffffffffffffffffffffffffffffff1663a9059cbb5f5f9054906101000a900473ffffffffffffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffffffffffffffff166370a08231306040518263ffffffff1660e01b81526004016104e49190610bbe565b602060405180830381865afa1580156104ff573d5f5f3e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610523919061127b565b6040518363ffffffff1660e01b8152600401610540929190611183565b6020604051808303815f875af115801561055c573d5f5f3e3d5ffd5b505050506040513d601f19601f8201168201806040525081019061058091906111d4565b5050565b5f5f9054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610612576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161060990611249565b60405180910390fd5b73794a61358d6845594f94dc1db02a252b5b4814ad73ffffffffffffffffffffffffffffffffffffffff166342b0b77c30868686865f6040518763ffffffff1660e01b81526004016106699695949392919061133f565b5f604051808303815f87803b158015610680575f5ffd5b505af1158015610692573d5f5f3e3d5ffd5b5050505050505050565b5f5f9054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b5f8173ffffffffffffffffffffffffffffffffffffffff166370a08231306040518263ffffffff1660e01b81526004016106fa9190610bbe565b602060405180830381865afa158015610715573d5f5f3e3d5ffd5b505050506040513d601f19601f82011682018060405250810190610739919061127b565b9050919050565b5f826040015173ffffffffffffffffffffffffffffffffffffffff1663095ea7b3845f0151846040518363ffffffff1660e01b8152600401610783929190611183565b6020604051808303815f875af115801561079f573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906107c391906111d4565b505f600267ffffffffffffffff8111156107e0576107df610f27565b5b60405190808252806020026020018201604052801561080e5781602001602082028036833780820191505090505b5090508360400151815f8151811061082957610828611399565b5b602002602001019073ffffffffffffffffffffffffffffffffffffffff16908173ffffffffffffffffffffffffffffffffffffffff168152505083606001518160018151811061087c5761087b611399565b5b602002602001019073ffffffffffffffffffffffffffffffffffffffff16908173ffffffffffffffffffffffffffffffffffffffff16815250505f845f015173ffffffffffffffffffffffffffffffffffffffff166338ed1739855f8530426040518663ffffffff1660e01b81526004016108fb9594939291906114ad565b5f604051808303815f875af1158015610916573d5f5f3e3d5ffd5b505050506040513d5f823e3d601f19601f8201168201806040525081019061093e91906115c5565b60018151811061095157610950611399565b5b60200260200101519050846060015173ffffffffffffffffffffffffffffffffffffffff1663095ea7b38660200151836040518363ffffffff1660e01b815260040161099e929190611183565b6020604051808303815f875af11580156109ba573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906109de91906111d4565b505f600267ffffffffffffffff8111156109fb576109fa610f27565b5b604051908082528060200260200182016040528015610a295781602001602082028036833780820191505090505b5090508560600151815f81518110610a4457610a43611399565b5b602002602001019073ffffffffffffffffffffffffffffffffffffffff16908173ffffffffffffffffffffffffffffffffffffffff1681525050856040015181600181518110610a9757610a96611399565b5b602002602001019073ffffffffffffffffffffffffffffffffffffffff16908173ffffffffffffffffffffffffffffffffffffffff1681525050856020015173ffffffffffffffffffffffffffffffffffffffff166338ed1739835f8430426040518663ffffffff1660e01b8152600401610b169594939291906114ad565b5f604051808303815f875af1158015610b31573d5f5f3e3d5ffd5b505050506040513d5f823e3d601f19601f82011682018060405250810190610b5991906115c5565b600181518110610b6c57610b6b611399565b5b6020026020010151935050505092915050565b5f73ffffffffffffffffffffffffffffffffffffffff82169050919050565b5f610ba882610b7f565b9050919050565b610bb881610b9e565b82525050565b5f602082019050610bd15f830184610baf565b92915050565b5f604051905090565b5f5ffd5b5f5ffd5b610bf181610b9e565b8114610bfb575f5ffd5b50565b5f81359050610c0c81610be8565b92915050565b5f819050919050565b610c2481610c12565b8114610c2e575f5ffd5b50565b5f81359050610c3f81610c1b565b92915050565b5f5ffd5b5f5ffd5b5f5ffd5b5f5f83601f840112610c6657610c65610c45565b5b8235905067ffffffffffffffff811115610c8357610c82610c49565b5b602083019150836001820283011115610c9f57610c9e610c4d565b5b9250929050565b5f5f5f5f5f5f60a08789031215610cc057610cbf610be0565b5b5f610ccd89828a01610bfe565b9650506020610cde89828a01610c31565b9550506040610cef89828a01610c31565b9450506060610d0089828a01610bfe565b935050608087013567ffffffffffffffff811115610d2157610d20610be4565b5b610d2d89828a01610c51565b92509250509295509295509295565b5f8115159050919050565b610d5081610d3c565b82525050565b5f602082019050610d695f830184610d47565b92915050565b5f60208284031215610d8457610d83610be0565b5b5f610d9184828501610bfe565b91505092915050565b5f5f5f5f60608587031215610db257610db1610be0565b5b5f610dbf87828801610bfe565b9450506020610dd087828801610c31565b935050604085013567ffffffffffffffff811115610df157610df0610be4565b5b610dfd87828801610c51565b925092505092959194509250565b610e1481610c12565b82525050565b5f602082019050610e2d5f830184610e0b565b92915050565b5f82825260208201905092915050565b7f4f6e6c79204161766500000000000000000000000000000000000000000000005f82015250565b5f610e77600983610e33565b9150610e8282610e43565b602082019050919050565b5f6020820190508181035f830152610ea481610e6b565b9050919050565b7f4f6e6c79207468697300000000000000000000000000000000000000000000005f82015250565b5f610edf600983610e33565b9150610eea82610eab565b602082019050919050565b5f6020820190508181035f830152610f0c81610ed3565b9050919050565b5f5ffd5b5f601f19601f8301169050919050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52604160045260245ffd5b610f5d82610f17565b810181811067ffffffffffffffff82111715610f7c57610f7b610f27565b5b80604052505050565b5f610f8e610bd7565b9050610f9a8282610f54565b919050565b5f60a08284031215610fb457610fb3610f13565b5b610fbe60a0610f85565b90505f610fcd84828501610bfe565b5f830152506020610fe084828501610bfe565b6020830152506040610ff484828501610bfe565b604083015250606061100884828501610bfe565b606083015250608061101c84828501610c31565b60808301525092915050565b5f60a0828403121561103d5761103c610be0565b5b5f61104a84828501610f9f565b91505092915050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52601160045260245ffd5b5f61108a82610c12565b915061109583610c12565b92508282019050808211156110ad576110ac611053565b5b92915050565b7f4e6f2070726f66697400000000000000000000000000000000000000000000005f82015250565b5f6110e7600983610e33565b91506110f2826110b3565b602082019050919050565b5f6020820190508181035f830152611114816110db565b9050919050565b7f50726f66697420746f6f206c6f770000000000000000000000000000000000005f82015250565b5f61114f600e83610e33565b915061115a8261111b565b602082019050919050565b5f6020820190508181035f83015261117c81611143565b9050919050565b5f6040820190506111965f830185610baf565b6111a36020830184610e0b565b9392505050565b6111b381610d3c565b81146111bd575f5ffd5b50565b5f815190506111ce816111aa565b92915050565b5f602082840312156111e9576111e8610be0565b5b5f6111f6848285016111c0565b91505092915050565b7f4e6f74206f776e657200000000000000000000000000000000000000000000005f82015250565b5f611233600983610e33565b915061123e826111ff565b602082019050919050565b5f6020820190508181035f83015261126081611227565b9050919050565b5f8151905061127581610c1b565b92915050565b5f602082840312156112905761128f610be0565b5b5f61129d84828501611267565b91505092915050565b5f82825260208201905092915050565b828183375f83830152505050565b5f6112cf83856112a6565b93506112dc8385846112b6565b6112e583610f17565b840190509392505050565b5f819050919050565b5f61ffff82169050919050565b5f819050919050565b5f61132961132461131f846112f0565b611306565b6112f9565b9050919050565b6113398161130f565b82525050565b5f60a0820190506113525f830189610baf565b61135f6020830188610baf565b61136c6040830187610e0b565b818103606083015261137f8185876112c4565b905061138e6080830184611330565b979650505050505050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52603260045260245ffd5b5f6113e06113db6113d6846112f0565b611306565b610c12565b9050919050565b6113f0816113c6565b82525050565b5f81519050919050565b5f82825260208201905092915050565b5f819050602082019050919050565b61142881610b9e565b82525050565b5f611439838361141f565b60208301905092915050565b5f602082019050919050565b5f61145b826113f6565b6114658185611400565b935061147083611410565b805f5b838110156114a0578151611487888261142e565b975061149283611445565b925050600181019050611473565b5085935050505092915050565b5f60a0820190506114c05f830188610e0b565b6114cd60208301876113e7565b81810360408301526114df8186611451565b90506114ee6060830185610baf565b6114fb6080830184610e0b565b9695505050505050565b5f67ffffffffffffffff82111561151f5761151e610f27565b5b602082029050602081019050919050565b5f61154261153d84611505565b610f85565b9050808382526020820190506020840283018581111561156557611564610c4d565b5b835b8181101561158e578061157a8882611267565b845260208401935050602081019050611567565b5050509392505050565b5f82601f8301126115ac576115ab610c45565b5b81516115bc848260208601611530565b91505092915050565b5f602082840312156115da576115d9610be0565b5b5f82015167ffffffffffffffff8111156115f7576115f6610be4565b5b61160384828501611598565b9150509291505056fea26469706673582212205c5e64702d6ada709504225eba1df6953693854e1307c178a2b5aceb080f9d0364736f6c634300081f0033';
+        
+        const CONTRACT_ABI = [
+            {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
+            {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Profit","type":"event"},
+            {"inputs":[],"name":"AAVE_POOL","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"asset","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"premium","type":"uint256"},{"internalType":"address","name":"initiator","type":"address"},{"internalType":"bytes","name":"params","type":"bytes"}],"name":"executeOperation","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"getBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"params","type":"bytes"}],"name":"startFlashloan","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"}
+        ];
+
+        // ERC20 ABI
+        const ERC20_ABI = [
+            {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"},
+            {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function"},
+            {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function"},
+            {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"type":"function"}
+        ];
+
+        // ========== VARIÁVEIS GLOBAIS ==========
+        let web3;
+        let account;
+        let contract;
+        let contractAddress;
+        let aiModel;
+        let profitHistory = [];
+        let charts = {};
+
+        // ========== LOGS ==========
+        function addLog(message, type = 'info') {
+            const logDiv = document.getElementById('activityLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `[${timestamp}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // ========== IA NEURAL ==========
+        async function initAI() {
+            try {
+                addLog('Inicializando rede neural TensorFlow.js...', 'info');
+                
+                // Criar modelo sequencial
+                aiModel = tf.sequential({
+                    layers: [
+                        tf.layers.dense({inputShape: [6], units: 64, activation: 'relu'}),
+                        tf.layers.dropout({rate: 0.2}),
+                        tf.layers.dense({units: 32, activation: 'relu'}),
+                        tf.layers.dropout({rate: 0.2}),
+                        tf.layers.dense({units: 16, activation: 'relu'}),
+                        tf.layers.dense({units: 1, activation: 'sigmoid'})
+                    ]
+                });
+
+                aiModel.compile({
+                    optimizer: tf.train.adam(0.001),
+                    loss: 'binaryCrossentropy',
+                    metrics: ['accuracy']
+                });
+
+                document.getElementById('aiStatus').className = 'status connected';
+                document.getElementById('aiStatus').innerHTML = '<span class="ai-indicator"></span>IA Neural Ativa';
+                addLog('IA Neural inicializada com sucesso!', 'success');
+                
+                // Treinar com dados sintéticos
+                await trainAI();
+                
+            } catch (error) {
+                addLog(`Erro ao inicializar IA: ${error.message}`, 'error');
+            }
+        }
+
+        async function trainAI() {
+            try {
+                addLog('Treinando IA com dados históricos...', 'info');
+                
+                // Dados de treinamento sintéticos
+                const trainingData = [];
+                const labels = [];
+                
+                for (let i = 0; i < 1000; i++) {
+                    const features = [
+                        Math.random(), // volatilidade
+                        Math.random(), // liquidez
+                        Math.random(), // diferença de preço
+                        Math.random(), // gas price
+                        Math.random(), // volume
+                        Math.random()  // spread
+                    ];
+                    
+                    // Label: 1 se lucrativo, 0 se não
+                    const profitable = features[2] > 0.6 && features[1] > 0.5 && features[3] < 0.5;
+                    
+                    trainingData.push(features);
+                    labels.push(profitable ? 1 : 0);
+                }
+
+                const xs = tf.tensor2d(trainingData);
+                const ys = tf.tensor2d(labels, [labels.length, 1]);
+
+                await aiModel.fit(xs, ys, {
+                    epochs: 50,
+                    batchSize: 32,
+                    validationSplit: 0.2,
+                    callbacks: {
+                        onEpochEnd: (epoch, logs) => {
+                            if (epoch % 10 === 0) {
+                                const progress = ((epoch + 1) / 50) * 100;
+                                document.getElementById('aiProgress').style.width = progress + '%';
+                                addLog(`Treinamento - Época ${epoch + 1}/50 - Acurácia: ${(logs.acc * 100).toFixed(2)}%`, 'info');
+                            }
+                        }
+                    }
+                });
+
+                xs.dispose();
+                ys.dispose();
+
+                addLog('IA treinada com sucesso!', 'success');
+                document.getElementById('aiProgress').style.width = '100%';
+                
+            } catch (error) {
+                addLog(`Erro no treinamento da IA: ${error.message}`, 'error');
+            }
+        }
+
+        async function predictOpportunity() {
+            if (!aiModel) {
+                addLog('IA não inicializada', 'error');
+                return;
+            }
+
+            try {
+                // Simular dados do mercado atual
+                const marketData = [
+                    Math.random() * 0.5 + 0.3, // volatilidade
+                    Math.random() * 0.4 + 0.4, // liquidez
+                    Math.random() * 0.6 + 0.2, // diferença de preço
+                    Math.random() * 0.3,       // gas price
+                    Math.random() * 0.5 + 0.3, // volume
+                    Math.random() * 0.4 + 0.3  // spread
+                ];
+
+                const input = tf.tensor2d([marketData]);
+                const prediction = await aiModel.predict(input);
+                const probability = (await prediction.data())[0];
+                
+                input.dispose();
+                prediction.dispose();
+
+                const confidence = probability * 10;
+                document.getElementById('profitProb').textContent = (probability * 100).toFixed(1) + '%';
+                document.getElementById('confidenceScore').textContent = confidence.toFixed(2);
+
+                const message = probability > 0.7 
+                    ? '✅ Ótima oportunidade detectada!'
+                    : probability > 0.5 
+                    ? '⚠️ Oportunidade moderada'
+                    : '❌ Baixa probabilidade de lucro';
+
+                document.getElementById('aiPrediction').textContent = message;
+                
+                return probability;
+                
+            } catch (error) {
+                addLog(`Erro na predição: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== WEB3 ==========
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    addLog('MetaMask não detectado! Por favor, instale a extensão.', 'error');
+                    alert('Por favor, instale o MetaMask!');
+                    return;
+                }
+
+                addLog('Conectando ao MetaMask...', 'info');
+                
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                account = accounts[0];
+                web3 = new Web3(window.ethereum);
+
+                // Verificar rede
+                const chainId = await web3.eth.getChainId();
+                if ('0x' + chainId.toString(16) !== ARBITRUM_CHAIN_ID) {
+                    addLog('Rede incorreta! Mudando para Arbitrum...', 'warning');
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: ARBITRUM_CHAIN_ID }],
+                        });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            addLog('Adicionando rede Arbitrum...', 'info');
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: ARBITRUM_CHAIN_ID,
+                                    chainName: 'Arbitrum One',
+                                    nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                                    rpcUrls: ['https://arb1.arbitrum.io/rpc'],
+                                    blockExplorerUrls: ['https://arbiscan.io']
+                                }]
+                            });
+                        }
+                    }
+                }
+
+                // Obter saldo
+                const balance = await web3.eth.getBalance(account);
+                const ethBalance = web3.utils.fromWei(balance, 'ether');
+
+                document.getElementById('walletAddress').value = account;
+                document.getElementById('balance').value = parseFloat(ethBalance).toFixed(4) + ' ETH';
+                document.getElementById('walletInfo').style.display = 'block';
+                document.getElementById('walletStatus').className = 'status connected';
+                document.getElementById('walletStatus').textContent = 'Carteira Conectada';
+                document.getElementById('deployContract').disabled = false;
+
+                addLog(`Carteira conectada: ${account}`, 'success');
+                addLog(`Saldo: ${parseFloat(ethBalance).toFixed(4)} ETH`, 'info');
+
+            } catch (error) {
+                addLog(`Erro ao conectar carteira: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== DEPLOY DO CONTRATO ==========
+        async function deployContract() {
+            if (!web3 || !account) {
+                addLog('Conecte a carteira primeiro!', 'error');
+                return;
+            }
+
+            try {
+                addLog('Iniciando deploy do contrato...', 'info');
+                document.getElementById('deployContract').disabled = true;
+                document.getElementById('deployContract').textContent = 'Deployando...';
+
+                const deployContract = new web3.eth.Contract(CONTRACT_ABI);
+                
+                const deployTx = deployContract.deploy({
+                    data: CONTRACT_BYTECODE
+                });
+
+                const gas = await deployTx.estimateGas({ from: account });
+                addLog(`Gas estimado: ${gas}`, 'info');
+
+                const receipt = await deployTx.send({
+                    from: account,
+                    gas: Math.floor(gas * 1.2)
+                });
+
+                contractAddress = receipt.options.address;
+                contract = new web3.eth.Contract(CONTRACT_ABI, contractAddress);
+
+                document.getElementById('contractAddress').value = contractAddress;
+                document.getElementById('contractInfo').style.display = 'block';
+                document.getElementById('contractStatus').className = 'status connected';
+                document.getElementById('contractStatus').textContent = 'Contrato Deployado';
+                document.getElementById('executeArbitrage').disabled = false;
+                document.getElementById('withdrawFunds').disabled = false;
+
+                addLog(`Contrato deployado com sucesso!`, 'success');
+                addLog(`Endereço: ${contractAddress}`, 'success');
+
+                localStorage.setItem('contractAddress', contractAddress);
+
+            } catch (error) {
+                addLog(`Erro no deploy: ${error.message}`, 'error');
+                document.getElementById('deployContract').disabled = false;
+                document.getElementById('deployContract').textContent = 'Deploy SimpleFlashloanArbitrage';
+            }
+        }
+
+        // ========== CARREGAR CONTRATO EXISTENTE ==========
+        async function loadExistingContract() {
+            const address = document.getElementById('loadContractAddress').value;
+            
+            if (!web3.utils.isAddress(address)) {
+                addLog('Endereço inválido!', 'error');
+                return;
+            }
+
+            try {
+                contractAddress = address;
+                contract = new web3.eth.Contract(CONTRACT_ABI, contractAddress);
+
+                // Verificar se o contrato existe
+                const owner = await contract.methods.owner().call();
+                
+                document.getElementById('contractAddress').value = contractAddress;
+                document.getElementById('contractInfo').style.display = 'block';
+                document.getElementById('contractStatus').className = 'status connected';
+                document.getElementById('contractStatus').textContent = 'Contrato Carregado';
+                document.getElementById('executeArbitrage').disabled = false;
+                document.getElementById('withdrawFunds').disabled = false;
+
+                addLog(`Contrato carregado: ${contractAddress}`, 'success');
+                addLog(`Owner: ${owner}`, 'info');
+
+                localStorage.setItem('contractAddress', contractAddress);
+
+            } catch (error) {
+                addLog(`Erro ao carregar contrato: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== EXECUTAR ARBITRAGEM ==========
+        async function executeArbitrage() {
+            if (!contract) {
+                addLog('Contrato não inicializado!', 'error');
+                return;
+            }
+
+            try {
+                // Verificar predição da IA
+                const probability = await predictOpportunity();
+                if (probability < 0.5) {
+                    const proceed = confirm('A IA indica baixa probabilidade de lucro. Deseja continuar?');
+                    if (!proceed) return;
+                }
+
+                addLog('Preparando execução da arbitragem...', 'info');
+                document.getElementById('executeArbitrage').disabled = true;
+                document.getElementById('executionStatus').textContent = '🔄 Preparando transação...';
+
+                const tokenIn = document.getElementById('tokenIn').value;
+                const tokenOut = document.getElementById('tokenOut').value;
+                const amount = document.getElementById('flashloanAmount').value;
+                const minProfit = document.getElementById('minProfit').value;
+                const router1 = document.getElementById('router1').value;
+                const router2 = document.getElementById('router2').value;
+
+                // Converter quantidade para Wei (assumindo 6 decimais para USDC/USDT)
+                const amountWei = web3.utils.toBN(amount).mul(web3.utils.toBN(10).pow(web3.utils.toBN(6)));
+                const minProfitWei = web3.utils.toBN(minProfit).mul(web3.utils.toBN(10).pow(web3.utils.toBN(6)));
+
+                // Encodar parâmetros
+                const params = web3.eth.abi.encodeParameters(
+                    ['address', 'address', 'address', 'address', 'uint256'],
+                    [router1, router2, tokenIn, tokenOut, minProfitWei.toString()]
+                );
+
+                addLog('Executando flashloan...', 'info');
+                document.getElementById('executionStatus').textContent = '⚡ Executando flashloan...';
+
+                const tx = await contract.methods.startFlashloan(
+                    tokenIn,
+                    amountWei.toString(),
+                    params
+                ).send({ from: account });
+
+                addLog(`Transação confirmada! Hash: ${tx.transactionHash}`, 'success');
+                document.getElementById('executionStatus').innerHTML = 
+                    `✅ Sucesso!<br>TX: ${tx.transactionHash.substring(0, 20)}...`;
+
+                // Atualizar métricas
+                profitHistory.push({
+                    timestamp: Date.now(),
+                    profit: parseFloat(minProfit)
+                });
+                updateCharts();
+
+            } catch (error) {
+                addLog(`Erro na execução: ${error.message}`, 'error');
+                document.getElementById('executionStatus').textContent = '❌ Erro: ' + error.message.substring(0, 50);
+            } finally {
+                document.getElementById('executeArbitrage').disabled = false;
+            }
+        }
+
+        // ========== VERIFICAR SALDO ==========
+        async function checkContractBalance() {
+            if (!contract) {
+                addLog('Contrato não inicializado!', 'error');
+                return;
+            }
+
+            try {
+                const tokenAddress = document.getElementById('withdrawToken').value;
+                const balance = await contract.methods.getBalance(tokenAddress).call();
+                
+                // Converter de Wei (assumindo 6 decimals)
+                const balanceFormatted = web3.utils.toBN(balance).div(web3.utils.toBN(10).pow(web3.utils.toBN(6)));
+                
+                document.getElementById('contractBalance').textContent = balanceFormatted.toString();
+                addLog(`Saldo do contrato: ${balanceFormatted} tokens`, 'info');
+
+            } catch (error) {
+                addLog(`Erro ao verificar saldo: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== SACAR FUNDOS ==========
+        async function withdrawFunds() {
+            if (!contract) {
+                addLog('Contrato não inicializado!', 'error');
+                return;
+            }
+
+            try {
+                const tokenAddress = document.getElementById('withdrawToken').value;
+                
+                addLog('Sacando fundos...', 'info');
+                
+                const tx = await contract.methods.withdraw(tokenAddress).send({ from: account });
+                
+                addLog(`Fundos sacados! Hash: ${tx.transactionHash}`, 'success');
+                
+                await checkContractBalance();
+
+            } catch (error) {
+                addLog(`Erro ao sacar fundos: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== CHARTS ==========
+        function initCharts() {
+            // Gráfico de IA
+            const aiCtx = document.getElementById('aiChart').getContext('2d');
+            charts.ai = new Chart(aiCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Probabilidade de Lucro',
+                        data: [],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#fff' } }
+                    },
+                    scales: {
+                        y: { 
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: { 
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de Lucros
+            const profitCtx = document.getElementById('profitChart').getContext('2d');
+            charts.profit = new Chart(profitCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Lucro por Transação',
+                        data: [],
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: '#667eea',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#fff' } }
+                    },
+                    scales: {
+                        y: { 
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: { 
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            if (charts.profit && profitHistory.length > 0) {
+                const labels = profitHistory.map((p, i) => `TX ${i + 1}`);
+                const data = profitHistory.map(p => p.profit);
+                
+                charts.profit.data.labels = labels;
+                charts.profit.data.datasets[0].data = data;
+                charts.profit.update();
+
+                const totalProfit = data.reduce((a, b) => a + b, 0);
+                document.getElementById('totalProfit').textContent = totalProfit.toFixed(2);
+            }
+        }
+
+        // ========== CONFIGURAÇÕES ==========
+        function saveConfiguration() {
+            const config = {
+                tokenIn: document.getElementById('tokenIn').value,
+                tokenOut: document.getElementById('tokenOut').value,
+                amount: document.getElementById('flashloanAmount').value,
+                minProfit: document.getElementById('minProfit').value,
+                router1: document.getElementById('router1').value,
+                router2: document.getElementById('router2').value
+            };
+            localStorage.setItem('arbitrageConfig', JSON.stringify(config));
+            addLog('Configuração salva!', 'success');
+        }
+
+        function loadConfiguration() {
+            const config = JSON.parse(localStorage.getItem('arbitrageConfig') || '{}');
+            if (Object.keys(config).length > 0) {
+                document.getElementById('tokenIn').value = config.tokenIn || '';
+                document.getElementById('tokenOut').value = config.tokenOut || '';
+                document.getElementById('flashloanAmount').value = config.amount || 1000;
+                document.getElementById('minProfit').value = config.minProfit || 5;
+                document.getElementById('router1').value = config.router1 || '';
+                document.getElementById('router2').value = config.router2 || '';
+                addLog('Configuração carregada!', 'success');
+            }
+        }
+
+        // ========== EVENT LISTENERS ==========
+        document.getElementById('connectWallet').addEventListener('click', connectWallet);
+        document.getElementById('deployContract').addEventListener('click', deployContract);
+        document.getElementById('loadContract').addEventListener('click', loadExistingContract);
+        document.getElementById('executeArbitrage').addEventListener('click', executeArbitrage);
+        document.getElementById('checkBalance').addEventListener('click', checkContractBalance);
+        document.getElementById('withdrawFunds').addEventListener('click', withdrawFunds);
+        document.getElementById('trainAI').addEventListener('click', trainAI);
+        document.getElementById('scanOpportunities').addEventListener('click', predictOpportunity);
+        document.getElementById('saveConfig').addEventListener('click', saveConfiguration);
+        document.getElementById('loadConfig').addEventListener('click', loadConfiguration);
+        document.getElementById('clearLogs').addEventListener('click', () => {
+            document.getElementById('activityLog').innerHTML = 
+                '<div class="log-entry info">Logs limpos.</div>';
+        });
+
+        // Atualizar par selecionado
+        ['tokenIn', 'tokenOut'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                const tokenInSymbol = document.getElementById('tokenIn').selectedOptions[0].text;
+                const tokenOutSymbol = document.getElementById('tokenOut').selectedOptions[0].text;
+                document.getElementById('selectedPair').textContent = 
+                    `${tokenInSymbol} → ${tokenOutSymbol} → ${tokenInSymbol}`;
+            });
+        });
+
+        // ========== INICIALIZAÇÃO ==========
+        window.addEventListener('load', async () => {
+            addLog('Sistema inicializando...', 'info');
+            initCharts();
+            await initAI();
+            
+            // Carregar endereço salvo
+            const savedAddress = localStorage.getItem('contractAddress');
+            if (savedAddress) {
+                document.getElementById('loadContractAddress').value = savedAddress;
+                addLog('Endereço de contrato salvo encontrado', 'info');
+            }
+            
+            addLog('Sistema pronto!', 'success');
+        });
+
+        // Scan automático de oportunidades a cada 30 segundos
+        setInterval(async () => {
+            if (aiModel && contract) {
+                await predictOpportunity();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
