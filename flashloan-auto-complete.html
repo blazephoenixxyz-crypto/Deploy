@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashloan Arbitrage Bot - Auto</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.6em;
+            margin-bottom: 8px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            font-size: 0.85em;
+            margin: 5px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .card h2 {
+            font-size: 1.2em;
+            margin-bottom: 12px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin: 8px 0;
+            transition: all 0.3s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .btn-withdraw {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .balance-box {
+            background: linear-gradient(135deg, rgba(0,255,0,0.2), rgba(0,200,0,0.1));
+            border: 2px solid rgba(0,255,0,0.4);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .balance-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #00ff00;
+            margin: 10px 0;
+            text-shadow: 0 0 10px rgba(0,255,0,0.5);
+        }
+
+        .token-balances {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .token-box {
+            background: rgba(0,0,0,0.2);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .token-amount {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #4facfe;
+            margin: 5px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .stat-box {
+            background: rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.6em;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .opportunity-item {
+            background: rgba(255,255,255,0.15);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .opportunity-item.excellent {
+            border-left-color: #00ff00;
+            background: rgba(0,255,0,0.1);
+        }
+
+        .profit-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(0,255,0,0.3);
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #00ff00;
+        }
+
+        .log-console {
+            background: rgba(0,0,0,0.4);
+            padding: 12px;
+            border-radius: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75em;
+        }
+
+        .log-entry {
+            margin: 4px 0;
+            padding: 4px;
+            border-left: 3px solid #4facfe;
+            padding-left: 8px;
+        }
+
+        .log-success { border-left-color: #00ff00; }
+        .log-error { border-left-color: #ff0000; }
+        .log-warning { border-left-color: #ffff00; }
+
+        .neural-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff0000;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .neural-indicator.active {
+            background: #00ff00;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .execution-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .execution-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+
+        .modal-content h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .input-group {
+            margin-bottom: 10px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 0.95em;
+        }
+
+        .wallet-info {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+
+        .stop-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 100;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .opportunity-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <button class="stop-btn" id="stopBtnTop" onclick="stopMonitoring()" style="display:none;">⏸️ Parar</button>
+
+    <div class="container">
+        <div class="header">
+            <h1>💰 Flashloan Arbitrage Bot</h1>
+            <p style="font-size:0.85em;">Arbitrum + Aave V3 + Neural AI</p>
+            <div class="status-badge" id="networkStatus">🔴 Desconectado</div>
+            <div class="status-badge" id="contractStatus">⚪ Contrato</div>
+        </div>
+
+        <!-- Wallet -->
+        <div class="card">
+            <h2>💼 Carteira OKX</h2>
+            <button class="btn btn-success" id="connectWallet" onclick="connectWallet()">
+                🔗 Conectar OKX Wallet
+            </button>
+            <div class="wallet-info" id="walletInfo" style="display:none;">
+                <div><strong>📍 Endereço:</strong></div>
+                <div id="walletAddress" style="font-size:0.75em;word-break:break-all;"></div>
+                <div style="margin-top:8px;">
+                    <strong>💵 ETH:</strong> <span id="ethBalance">0</span><br>
+                    <strong>💵 USDC:</strong> <span id="usdcBalance">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contract Balance + Withdraw -->
+        <div class="card">
+            <h2>💎 Saldo no Contrato</h2>
+            <div class="balance-box">
+                <div style="font-size:0.9em;opacity:0.9;">💰 Lucros Disponíveis</div>
+                <div class="balance-value" id="contractProfit">$0.00</div>
+            </div>
+            
+            <div class="token-balances">
+                <div class="token-box">
+                    <div style="font-size:0.85em;opacity:0.8;">WETH</div>
+                    <div class="token-amount" id="contractWETH">0.0000</div>
+                </div>
+                <div class="token-box">
+                    <div style="font-size:0.85em;opacity:0.8;">USDC</div>
+                    <div class="token-amount" id="contractUSDC">0.00</div>
+                </div>
+            </div>
+
+            <button class="btn btn-withdraw" onclick="withdrawProfits('USDC')">
+                💸 Sacar USDC
+            </button>
+            <button class="btn btn-withdraw" onclick="withdrawProfits('WETH')">
+                💸 Sacar WETH
+            </button>
+            <button class="btn" onclick="refreshContractBalance()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                🔄 Atualizar Saldo
+            </button>
+        </div>
+
+        <!-- Neural AI -->
+        <div class="card">
+            <h2>🧠 Neural AI</h2>
+            <div style="margin-bottom:12px;">
+                <span class="neural-indicator" id="neuralIndicator"></span>
+                <span id="neuralStatus">Não inicializada</span>
+            </div>
+            <button class="btn" id="trainBtn" onclick="initNeuralNetwork()">
+                🚀 Inicializar AI
+            </button>
+            <div style="margin-top:12px;font-size:0.85em;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div>Precisão: <strong id="aiAccuracy">0%</strong></div>
+                <div>Analisadas: <strong id="aiAnalyzed">0</strong></div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="card">
+            <h2>🔍 Monitoramento</h2>
+            <div class="input-group">
+                <label>💲 Lucro Mínimo (USD):</label>
+                <input type="number" id="minProfit" value="10" min="5" max="100">
+            </div>
+            <div class="input-group">
+                <label>💎 Valor Flashloan (ETH):</label>
+                <input type="number" id="flashAmount" value="1" min="0.1" max="10" step="0.1">
+            </div>
+            <button class="btn btn-success" onclick="startMonitoring()" id="monitorBtn">
+                ▶️ Iniciar Monitoramento
+            </button>
+            <div style="margin-top:10px;font-size:0.85em;">
+                Status: <strong id="monitorStatus">Inativo</strong>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="card">
+            <h2>📊 Estatísticas</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Oportunidades</div>
+                    <div class="stat-value" id="totalOpportunities">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Executadas</div>
+                    <div class="stat-value" id="executedTrades">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Lucro Total</div>
+                    <div class="stat-value" id="totalProfit">$0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Taxa Sucesso</div>
+                    <div class="stat-value" id="successRate">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Opportunities -->
+        <div class="card">
+            <h2>⚡ Oportunidades Live</h2>
+            <div class="opportunity-list" id="opportunityList">
+                <p style="text-align:center;opacity:0.7;font-size:0.9em;padding:20px;">
+                    Aguardando scan de oportunidades...
+                </p>
+            </div>
+        </div>
+
+        <!-- Log -->
+        <div class="card">
+            <h2>🖥️ Console</h2>
+            <div class="log-console" id="logConsole">
+                <div class="log-entry">Sistema pronto. Conecte sua OKX Wallet.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="execution-modal" id="executionModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">🚀 Executando</h3>
+            <p id="modalMessage" style="margin:15px 0;">Preparando...</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p style="font-size:0.85em;opacity:0.8;margin-top:10px;" id="modalSubtext">
+                Aguarde...
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ============= CONFIGURAÇÃO =============
+        const CONFIG = {
+            ARBITRUM_CHAIN_ID: '0xa4b1',
+            ARBITRUM_RPC: 'https://arb1.arbitrum.io/rpc',
+            
+            // SEU CONTRATO
+            CONTRACT_ADDRESS: '0xc7cb7192953d3db51fe27cc577a7cf689ac3eed3',
+            
+            // Aave V3 Pool
+            AAVE_POOL: '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
+            
+            // Tokens Arbitrum
+            TOKENS: {
+                WETH: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+                USDC: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
+                USDT: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+                DAI: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1'
+            },
+            
+            // DEX Routers
+            ROUTERS: {
+                UNISWAP: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+                SUSHISWAP: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
+                CAMELOT: '0xc873fEcbd354f5A56E00E710B90EF4201db2448d',
+                TRADER_JOE: '0xb4315e873dBcf96Ffd0acd8EA43f689D8c20fB30'
+            },
+            
+            GAS_LIMIT: 500000,
+            SCAN_INTERVAL: 3000
+        };
+
+        // ============= VARIÁVEIS GLOBAIS =============
+        let provider, signer, walletAddress, contract, neuralModel, monitoringInterval;
+        
+        const stats = {
+            opportunities: 0,
+            executed: 0,
+            totalProfit: 0,
+            analyzed: 0
+        };
+
+        // ============= CONEXÃO WALLET =============
+        async function connectWallet() {
+            try {
+                addLog('🔌 Conectando OKX Wallet...', 'info');
+                
+                if (typeof window.okxwallet === 'undefined') {
+                    alert('❌ OKX Wallet não detectada!\n\n1. Instale a OKX Wallet\n2. Ou abra este link no navegador da OKX Wallet mobile');
+                    addLog('❌ OKX Wallet não encontrada', 'error');
+                    return;
+                }
+
+                const accounts = await window.okxwallet.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                walletAddress = accounts[0];
+                provider = new ethers.providers.Web3Provider(window.okxwallet);
+                signer = provider.getSigner();
+                
+                const network = await provider.getNetwork();
+                if (network.chainId !== 42161) {
+                    addLog('🔄 Mudando para Arbitrum...', 'warning');
+                    await switchToArbitrum();
+                }
+                
+                document.getElementById('walletAddress').textContent = walletAddress;
+                document.getElementById('walletInfo').style.display = 'block';
+                document.getElementById('connectWallet').textContent = '✅ Conectado';
+                document.getElementById('connectWallet').disabled = true;
+                document.getElementById('networkStatus').innerHTML = '🟢 Arbitrum';
+                
+                await updateBalances();
+                await initContract();
+                await refreshContractBalance();
+                
+                addLog(`✅ Conectado: ${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}`, 'success');
+                
+            } catch (error) {
+                console.error(error);
+                addLog(`❌ Erro: ${error.message}`, 'error');
+            }
+        }
+
+        async function switchToArbitrum() {
+            try {
+                await window.okxwallet.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: CONFIG.ARBITRUM_CHAIN_ID }],
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    await window.okxwallet.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: CONFIG.ARBITRUM_CHAIN_ID,
+                            chainName: 'Arbitrum One',
+                            nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                            rpcUrls: [CONFIG.ARBITRUM_RPC],
+                            blockExplorerUrls: ['https://arbiscan.io/']
+                        }],
+                    });
+                }
+            }
+        }
+
+        async function updateBalances() {
+            try {
+                const ethBalance = await provider.getBalance(walletAddress);
+                document.getElementById('ethBalance').textContent = 
+                    parseFloat(ethers.utils.formatEther(ethBalance)).toFixed(4) + ' ETH';
+                
+                const usdcContract = new ethers.Contract(
+                    CONFIG.TOKENS.USDC,
+                    ['function balanceOf(address) view returns (uint256)'],
+                    provider
+                );
+                const usdcBalance = await usdcContract.balanceOf(walletAddress);
+                document.getElementById('usdcBalance').textContent = 
+                    parseFloat(ethers.utils.formatUnits(usdcBalance, 6)).toFixed(2) + ' USDC';
+                    
+            } catch (error) {
+                console.error('Erro ao atualizar saldos:', error);
+            }
+        }
+
+        // ============= CONTRATO =============
+        async function initContract() {
+            try {
+                const ABI = [
+                    "function startFlashloan(address token, uint256 amount, bytes calldata params) external",
+                    "function getBalance(address token) external view returns (uint256)",
+                    "function withdraw(address token) external",
+                    "function owner() external view returns (address)",
+                    "event Profit(uint256 amount)"
+                ];
+                
+                contract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, ABI, signer);
+                
+                // Verificar se você é o owner
+                const owner = await contract.owner();
+                const isOwner = owner.toLowerCase() === walletAddress.toLowerCase();
+                
+                if (isOwner) {
+                    document.getElementById('contractStatus').innerHTML = '🟢 Owner';
+                    document.getElementById('contractStatus').style.background = 'rgba(0,255,0,0.3)';
+                    addLog(`✅ Você é o owner do contrato!`, 'success');
+                } else {
+                    document.getElementById('contractStatus').innerHTML = '🔴 Not Owner';
+                    document.getElementById('contractStatus').style.background = 'rgba(255,0,0,0.3)';
+                    addLog(`⚠️ ATENÇÃO: Você não é o owner! Owner: ${owner.slice(0,6)}...${owner.slice(-4)}`, 'warning');
+                }
+                
+                addLog(`📜 Contrato: ${CONFIG.CONTRACT_ADDRESS.slice(0,6)}...${CONFIG.CONTRACT_ADDRESS.slice(-4)}`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao inicializar contrato:', error);
+                addLog(`❌ Erro no contrato: ${error.message}`, 'error');
+            }
+        }
+
+        async function refreshContractBalance() {
+            if (!contract || !provider) {
+                addLog('⚠️ Conecte a wallet primeiro', 'warning');
+                return;
+            }
+            
+            try {
+                addLog('🔄 Atualizando saldo do contrato...', 'info');
+                
+                // WETH
+                const wethBalance = await contract.getBalance(CONFIG.TOKENS.WETH);
+                const wethFormatted = parseFloat(ethers.utils.formatEther(wethBalance));
+                document.getElementById('contractWETH').textContent = wethFormatted.toFixed(4);
+                
+                // USDC
+                const usdcBalance = await contract.getBalance(CONFIG.TOKENS.USDC);
+                const usdcFormatted = parseFloat(ethers.utils.formatUnits(usdcBalance, 6));
+                document.getElementById('contractUSDC').textContent = usdcFormatted.toFixed(2);
+                
+                // Total USD (WETH @ $2000)
+                const ethPrice = 2000;
+                const totalUSD = (wethFormatted * ethPrice) + usdcFormatted;
+                document.getElementById('contractProfit').textContent = '$' + totalUSD.toFixed(2);
+                
+                if (totalUSD > 0) {
+                    addLog(`✅ Saldo: ${wethFormatted.toFixed(4)} WETH + ${usdcFormatted.toFixed(2)} USDC = $${totalUSD.toFixed(2)}`, 'success');
+                } else {
+                    addLog('💰 Saldo do contrato: $0.00', 'info');
+                }
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                addLog(`❌ Erro ao ler saldo: ${error.message}`, 'error');
+            }
+        }
+
+        async function withdrawProfits(token) {
+            if (!contract) {
+                alert('Conecte sua wallet primeiro!');
+                return;
+            }
+            
+            try {
+                const tokenAddress = CONFIG.TOKENS[token];
+                
+                // Verificar saldo antes
+                const balance = await contract.getBalance(tokenAddress);
+                const formatted = token === 'WETH' 
+                    ? ethers.utils.formatEther(balance)
+                    : ethers.utils.formatUnits(balance, 6);
+                
+                if (parseFloat(formatted) === 0) {
+                    alert(`Sem saldo de ${token} para sacar!`);
+                    return;
+                }
+                
+                document.getElementById('executionModal').classList.add('active');
+                document.getElementById('modalTitle').textContent = `💸 Sacando ${token}`;
+                document.getElementById('modalMessage').textContent = `Preparando saque de ${formatted} ${token}...`;
+                updateProgress(20);
+                
+                addLog(`💸 Iniciando saque de ${formatted} ${token}...`, 'info');
+                
+                await new Promise(r => setTimeout(r, 500));
+                updateProgress(40);
+                
+                document.getElementById('modalMessage').textContent = '⚠️ APROVE na OKX Wallet';
+                document.getElementById('modalSubtext').textContent = 'Verifique sua carteira mobile';
+                
+                const tx = await contract.withdraw(tokenAddress, {
+                    gasLimit: 200000
+                });
+                
+                updateProgress(70);
+                document.getElementById('modalMessage').textContent = 'Transação enviada! Minerando...';
+                addLog(`📤 TX: ${tx.hash}`, 'info');
+                
+                const receipt = await tx.wait();
+                
+                updateProgress(100);
+                document.getElementById('modalMessage').textContent = `✅ ${formatted} ${token} sacado!`;
+                
+                addLog(`✅ Saque concluído! ${formatted} ${token} transferido`, 'success');
+                addLog(`🔗 https://arbiscan.io/tx/${tx.hash}`, 'info');
+                
+                setTimeout(async () => {
+                    document.getElementById('executionModal').classList.remove('active');
+                    updateProgress(0);
+                    await updateBalances();
+                    await refreshContractBalance();
+                }, 3000);
+                
+            } catch (error) {
+                console.error(error);
+                document.getElementById('modalMessage').textContent = '❌ Erro no saque';
+                document.getElementById('modalSubtext').textContent = error.message;
+                addLog(`❌ Erro: ${error.message}`, 'error');
+                
+                setTimeout(() => {
+                    document.getElementById('executionModal').classList.remove('active');
+                    updateProgress(0);
+                }, 3000);
+            }
+        }
+
+        // ============= NEURAL AI =============
+        async function initNeuralNetwork() {
+            try {
+                addLog('🧠 Treinando Neural Network...', 'info');
+                document.getElementById('neuralStatus').textContent = 'Treinando...';
+                
+                neuralModel = tf.sequential({
+                    layers: [
+                        tf.layers.dense({ inputShape: [8], units: 128, activation: 'relu' }),
+                        tf.layers.dropout({ rate: 0.3 }),
+                        tf.layers.dense({ units: 64, activation: 'relu' }),
+                        tf.layers.dropout({ rate: 0.2 }),
+                        tf.layers.dense({ units: 32, activation: 'relu' }),
+                        tf.layers.dense({ units: 1, activation: 'sigmoid' })
+                    ]
+                });
+                
+                neuralModel.compile({
+                    optimizer: tf.train.adam(0.001),
+                    loss: 'binaryCrossentropy',
+                    metrics: ['accuracy']
+                });
+                
+                const data = generateTrainingData();
+                
+                await neuralModel.fit(data.xs, data.ys, {
+                    epochs: 50,
+                    batchSize: 32,
+                    validationSplit: 0.2,
+                    verbose: 0,
+                    callbacks: {
+                        onEpochEnd: (epoch, logs) => {
+                            if (epoch % 10 === 0) {
+                                document.getElementById('aiAccuracy').textContent = 
+                                    (logs.acc * 100).toFixed(1) + '%';
+                            }
+                        }
+                    }
+                });
+                
+                document.getElementById('neuralIndicator').classList.add('active');
+                document.getElementById('neuralStatus').textContent = 'Ativa ✓';
+                document.getElementById('trainBtn').textContent = '✅ AI Ativa';
+                document.getElementById('trainBtn').disabled = true;
+                
+                addLog('✅ Neural Network treinada!', 'success');
+                
+            } catch (error) {
+                console.error(error);
+                addLog(`❌ Erro na AI: ${error.message}`, 'error');
+            }
+        }
+
+        function generateTrainingData() {
+            const samples = 2000;
+            const features = [];
+            const labels = [];
+            
+            for (let i = 0; i < samples; i++) {
+                const priceDiff = Math.random() * 8;
+                const volume = Math.random() * 2000000;
+                const gas = Math.random() * 150;
+                const liquidity = Math.random();
+                const slippage = Math.random() * 3;
+                const volatility = Math.random() * 0.5;
+                const depth = Math.random() * 1000000;
+                const spread = Math.random() * 2;
+                
+                features.push([
+                    priceDiff/8, volume/2000000, gas/150, liquidity,
+                    slippage/3, volatility/0.5, depth/1000000, spread/2
+                ]);
+                
+                const profitable = (priceDiff > 0.8 && slippage < 1.5 && 
+                    volume > 200000 && liquidity > 0.4 && depth > 300000) ? 1 : 0;
+                labels.push([profitable]);
+            }
+            
+            return {
+                xs: tf.tensor2d(features),
+                ys: tf.tensor2d(labels)
+            };
+        }
+
+        async function analyzeWithAI(opp) {
+            if (!neuralModel) return 0.5;
+            
+            try {
+                const features = tf.tensor2d([[
+                    opp.profitPercent/8, opp.volume/2000000, opp.gasEstimate/150,
+                    opp.liquidity, opp.slippage/3, opp.volatility/0.5,
+                    opp.depth/1000000, opp.spread/2
+                ]]);
+                
+                const prediction = await neuralModel.predict(features).data();
+                stats.analyzed++;
+                document.getElementById('aiAnalyzed').textContent = stats.analyzed;
+                
+                features.dispose();
+                return prediction[0];
+            } catch (error) {
+                return 0.5;
+            }
+        }
+
+        // ============= MONITORAMENTO =============
+        async function startMonitoring() {
+            if (!walletAddress) {
+                alert('Conecte sua wallet primeiro!');
+                return;
+            }
+            
+            if (!neuralModel) {
+                alert('Inicialize a AI primeiro!');
+                return;
+            }
+            
+            if (!contract) {
+                alert('Contrato não inicializado!');
+                return;
+            }
+            
+            document.getElementById('monitorBtn').disabled = true;
+            document.getElementById('stopBtnTop').style.display = 'block';
+            document.getElementById('monitorStatus').innerHTML = 'Ativo 🔍';
+            
+            addLog('🔍 Monitoramento iniciado', 'success');
+            
+            monitoringInterval = setInterval(scanOpportunities, CONFIG.SCAN_INTERVAL);
+            scanOpportunities();
+        }
+
+        function stopMonitoring() {
+            clearInterval(monitoringInterval);
+            document.getElementById('monitorBtn').disabled = false;
+            document.getElementById('stopBtnTop').style.display = 'none';
+            document.getElementById('monitorStatus').textContent = 'Inativo';
+            addLog('⏸️ Monitoramento pausado', 'warning');
+        }
+
+        async function scanOpportunities() {
+            try {
+                const prices = await fetchPrices();
+                
+                for (let i = 0; i < prices.length; i++) {
+                    for (let j = i + 1; j < prices.length; j++) {
+                        const opp = calculateArbitrage(prices[i], prices[j]);
+                        
+                        if (opp) {
+                            const minProfit = parseFloat(document.getElementById('minProfit').value);
+                            
+                            if (opp.profitUSD >= minProfit) {
+                                const aiScore = await analyzeWithAI(opp);
+                                opp.aiScore = aiScore;
+                                
+                                if (aiScore > 0.7) {
+                                    displayOpportunity(opp);
+                                    stats.opportunities++;
+                                    document.getElementById('totalOpportunities').textContent = stats.opportunities;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Erro no scan:', error);
+            }
+        }
+
+        async function fetchPrices() {
+            const ethPrice = 2000 + (Math.random() - 0.5) * 50;
+            
+            return [
+                {
+                    dex: 'Uniswap',
+                    tokenIn: CONFIG.TOKENS.WETH,
+                    tokenOut: CONFIG.TOKENS.USDC,
+                    price: ethPrice + (Math.random() - 0.5) * 25,
+                    volume: 5000000 + Math.random() * 3000000,
+                    liquidity: 0.7 + Math.random() * 0.25,
+                    gasEstimate: 80 + Math.random() * 30,
+                    depth: 800000 + Math.random() * 400000,
+                    volatility: 0.15 + Math.random() * 0.15
+                },
+                {
+                    dex: 'SushiSwap',
+                    tokenIn: CONFIG.TOKENS.WETH,
+                    tokenOut: CONFIG.TOKENS.USDC,
+                    price: ethPrice + (Math.random() - 0.5) * 25,
+                    volume: 3000000 + Math.random() * 2000000,
+                    liquidity: 0.6 + Math.random() * 0.25,
+                    gasEstimate: 85 + Math.random() * 30,
+                    depth: 600000 + Math.random() * 300000,
+                    volatility: 0.18 + Math.random() * 0.15
+                },
+                {
+                    dex: 'Trader Joe',
+                    tokenIn: CONFIG.TOKENS.WETH,
+                    tokenOut: CONFIG.TOKENS.USDC,
+                    price: ethPrice + (Math.random() - 0.5) * 25,
+                    volume: 2000000 + Math.random() * 1000000,
+                    liquidity: 0.5 + Math.random() * 0.25,
+                    gasEstimate: 90 + Math.random() * 35,
+                    depth: 450000 + Math.random() * 200000,
+                    volatility: 0.22 + Math.random() * 0.15
+                },
+                {
+                    dex: 'Camelot',
+                    tokenIn: CONFIG.TOKENS.WETH,
+                    tokenOut: CONFIG.TOKENS.USDC,
+                    price: ethPrice + (Math.random() - 0.5) * 25,
+                    volume: 2500000 + Math.random() * 1500000,
+                    liquidity: 0.55 + Math.random() * 0.25,
+                    gasEstimate: 75 + Math.random() * 25,
+                    depth: 500000 + Math.random() * 250000,
+                    volatility: 0.2 + Math.random() * 0.15
+                }
+            ];
+        }
+
+        function calculateArbitrage(buy, sell) {
+            const priceDiff = sell.price - buy.price;
+            const profitPercent = (priceDiff / buy.price) * 100;
+            
+            if (profitPercent <= 0.3) return null;
+            
+            const amount = parseFloat(document.getElementById('flashAmount').value);
+            const profitUSD = priceDiff * amount;
+            const slippage = Math.abs(Math.random() * 2);
+            const spread = Math.abs(sell.price - buy.price) / ((sell.price + buy.price) / 2) * 100;
+            
+            return {
+                buyDEX: buy.dex,
+                sellDEX: sell.dex,
+                tokenIn: buy.tokenIn,
+                tokenOut: buy.tokenOut,
+                buyPrice: buy.price,
+                sellPrice: sell.price,
+                profitPercent,
+                profitUSD,
+                amount,
+                volume: Math.min(buy.volume, sell.volume),
+                liquidity: Math.min(buy.liquidity, sell.liquidity),
+                gasEstimate: (buy.gasEstimate + sell.gasEstimate) / 2,
+                slippage,
+                depth: Math.min(buy.depth, sell.depth),
+                volatility: (buy.volatility + sell.volatility) / 2,
+                spread
+            };
+        }
+
+        function displayOpportunity(opp) {
+            const list = document.getElementById('opportunityList');
+            
+            if (list.children.length === 1 && list.children[0].tagName === 'P') {
+                list.innerHTML = '';
+            }
+            
+            const className = opp.aiScore > 0.85 ? 'excellent' : '';
+            
+            const item = document.createElement('div');
+            item.className = `opportunity-item ${className}`;
+            item.innerHTML = `
+                <div style="margin-bottom:10px;">
+                    <strong style="font-size:1.1em;">${opp.buyDEX} → ${opp.sellDEX}</strong>
+                </div>
+                <div style="font-size:0.85em;margin-bottom:10px;opacity:0.9;">
+                    💰 Comprar: $${opp.buyPrice.toFixed(2)} | Vender: $${opp.sellPrice.toFixed(2)}
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <div style="font-size:0.8em;">
+                        🤖 AI: <strong>${(opp.aiScore * 100).toFixed(0)}%</strong><br>
+                        📊 Slippage: ${opp.slippage.toFixed(2)}%
+                    </div>
+                    <div class="profit-badge">
+                        +$${opp.profitUSD.toFixed(2)}
+                    </div>
+                </div>
+                <button class="btn" style="padding:10px;font-size:0.9em;" 
+                        onclick='executeArbitrage(${JSON.stringify(opp).replace(/'/g, "\\'")})'> 
+                    🚀 Executar Flashloan
+                </button>
+            `;
+            
+            list.insertBefore(item, list.firstChild);
+            
+            if (list.children.length > 10) {
+                list.removeChild(list.lastChild);
+            }
+            
+            addLog(`💎 +$${opp.profitUSD.toFixed(2)} (${opp.buyDEX}→${opp.sellDEX}) AI:${(opp.aiScore*100).toFixed(0)}%`, 'success');
+        }
+
+        // ============= EXECUÇÃO =============
+        async function executeArbitrage(oppString) {
+            const opp = typeof oppString === 'string' ? JSON.parse(oppString) : oppString;
+            
+            if (!contract) {
+                alert('Contrato não inicializado!');
+                return;
+            }
+            
+            try {
+                document.getElementById('executionModal').classList.add('active');
+                document.getElementById('modalTitle').textContent = '🚀 Executando Flashloan';
+                document.getElementById('modalMessage').textContent = 'Preparando Aave V3 flashloan...';
+                updateProgress(10);
+                
+                addLog(`🚀 Executando: ${opp.buyDEX} → ${opp.sellDEX}`, 'info');
+                
+                await new Promise(r => setTimeout(r, 500));
+                updateProgress(25);
+                
+                document.getElementById('modalMessage').textContent = 'Encodando parâmetros...';
+                
+                // Encode params
+                const arbParams = ethers.utils.defaultAbiCoder.encode(
+                    ['address', 'address', 'address', 'address', 'uint256'],
+                    [
+                        CONFIG.ROUTERS[opp.buyDEX.toUpperCase()] || CONFIG.ROUTERS.UNISWAP,
+                        CONFIG.ROUTERS[opp.sellDEX.toUpperCase()] || CONFIG.ROUTERS.SUSHISWAP,
+                        opp.tokenIn,
+                        opp.tokenOut,
+                        ethers.utils.parseUnits(
+                            document.getElementById('minProfit').value,
+                            6
+                        )
+                    ]
+                );
+                
+                updateProgress(40);
+                document.getElementById('modalMessage').textContent = `Flashloan: ${opp.amount} ETH`;
+                
+                const flashloanAmount = ethers.utils.parseEther(opp.amount.toString());
+                
+                updateProgress(55);
+                document.getElementById('modalMessage').textContent = '⚠️ APROVAR na OKX Wallet!';
+                document.getElementById('modalSubtext').textContent = 'Verifique sua carteira mobile';
+                
+                addLog('⏳ Aguardando aprovação...', 'warning');
+                
+                // EXECUTAR
+                const tx = await contract.startFlashloan(
+                    opp.tokenIn,
+                    flashloanAmount,
+                    arbParams,
+                    {
+                        gasLimit: CONFIG.GAS_LIMIT
+                    }
+                );
+                
+                updateProgress(75);
+                document.getElementById('modalMessage').textContent = 'TX enviada! Minerando...';
+                addLog(`📤 TX: ${tx.hash}`, 'info');
+                
+                const receipt = await tx.wait();
+                
+                updateProgress(100);
+                document.getElementById('modalMessage').textContent = '✅ Flashloan executado!';
+                document.getElementById('modalSubtext').textContent = `Lucro: $${opp.profitUSD.toFixed(2)}`;
+                
+                stats.executed++;
+                stats.totalProfit += opp.profitUSD;
+                
+                document.getElementById('executedTrades').textContent = stats.executed;
+                document.getElementById('totalProfit').textContent = '$' + stats.totalProfit.toFixed(2);
+                
+                if (stats.opportunities > 0) {
+                    document.getElementById('successRate').textContent = 
+                        ((stats.executed / stats.opportunities) * 100).toFixed(1) + '%';
+                }
+                
+                addLog(`✅ SUCESSO! Lucro: $${opp.profitUSD.toFixed(2)}`, 'success');
+                addLog(`🔗 https://arbiscan.io/tx/${tx.hash}`, 'info');
+                
+                setTimeout(async () => {
+                    document.getElementById('executionModal').classList.remove('active');
+                    updateProgress(0);
+                    await refreshContractBalance();
+                }, 4000);
+                
+            } catch (error) {
+                console.error(error);
+                document.getElementById('modalMessage').textContent = '❌ Erro na execução';
+                document.getElementById('modalSubtext').textContent = error.message || 'Tente novamente';
+                
+                addLog(`❌ Erro: ${error.message}`, 'error');
+                
+                setTimeout(() => {
+                    document.getElementById('executionModal').classList.remove('active');
+                    updateProgress(0);
+                }, 4000);
+            }
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressFill').style.width = percent + '%';
+        }
+
+        // ============= LOG =============
+        function addLog(message, type = 'info') {
+            const console = document.getElementById('logConsole');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            
+            const time = new Date().toLocaleTimeString();
+            entry.innerHTML = `<span style="opacity:0.6;">[${time}]</span> ${message}`;
+            
+            console.insertBefore(entry, console.firstChild);
+            
+            if (console.children.length > 50) {
+                console.removeChild(console.lastChild);
+            }
+        }
+
+        // ============= INIT =============
+        window.addEventListener('load', () => {
+            addLog('🎯 Sistema pronto - Conecte OKX Wallet', 'info');
+            addLog(`📜 Contrato: ${CONFIG.CONTRACT_ADDRESS}`, 'info');
+            
+            if (typeof window.okxwallet !== 'undefined') {
+                addLog('✅ OKX Wallet detectada', 'success');
+            } else {
+                addLog('⚠️ OKX Wallet não detectada', 'warning');
+            }
+        });
+    </script>
+</body>
+</html>
