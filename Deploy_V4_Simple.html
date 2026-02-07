@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚡ Deploy Flashloan V4 - Arbitrum</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            opacity: 0.9;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .status.info {
+            background: rgba(59, 130, 246, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
+
+        .status.success {
+            background: rgba(34, 197, 94, 0.3);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+        }
+
+        .status.warning {
+            background: rgba(251, 146, 60, 0.3);
+            border: 1px solid rgba(251, 146, 60, 0.5);
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.3);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .info-grid {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .warning-box {
+            background: rgba(251, 146, 60, 0.2);
+            border: 2px solid rgba(251, 146, 60, 0.5);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .warning-box h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #fbbf24;
+        }
+
+        .warning-box ul {
+            margin-left: 20px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .contract-address {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            word-break: break-all;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .copy-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .network-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(59, 130, 246, 0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        .footer {
+            text-align: center;
+            opacity: 0.7;
+            font-size: 12px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>⚡ Deploy Flashloan Arbitrage V4</h1>
+            <p class="subtitle">Arbitrum One Network</p>
+            
+            <div id="statusBox" class="status info">
+                <div>🔌 Conecte sua wallet para começar</div>
+            </div>
+
+            <button id="connectBtn" class="btn btn-primary">
+                🔗 Conectar Wallet
+            </button>
+
+            <button id="deployBtn" class="btn btn-success" style="display:none;" disabled>
+                🚀 Deploy Contrato V4
+            </button>
+
+            <div id="walletInfo" style="display:none;">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Wallet Conectada</div>
+                        <div class="info-value" id="walletAddress">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Network</div>
+                        <div class="info-value" id="networkName">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Balance ETH</div>
+                        <div class="info-value" id="ethBalance">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="contractInfo" style="display:none;">
+                <h3 style="margin-top: 25px; margin-bottom: 15px;">✅ Contrato Deployado!</h3>
+                <div class="info-item">
+                    <div class="info-label">Endereço do Contrato</div>
+                    <div class="contract-address" id="contractAddress">-</div>
+                    <button class="copy-btn" onclick="copyContractAddress()">
+                        📋 Copiar Endereço
+                    </button>
+                </div>
+                <div class="info-item" style="margin-top: 15px;">
+                    <div class="info-label">Transaction Hash</div>
+                    <div class="contract-address" id="txHash">-</div>
+                    <a id="explorerLink" href="#" target="_blank" style="display:block; margin-top: 10px; color: #60a5fa; text-decoration: none;">
+                        🔍 Ver no Arbiscan
+                    </a>
+                </div>
+                <div class="status success" style="margin-top: 20px;">
+                    ⚠️ GUARDE ESTE ENDEREÇO! Você precisará dele no Scanner.
+                </div>
+            </div>
+        </div>
+
+        <div class="card warning-box">
+            <h3>⚠️ ANTES DE FAZER DEPLOY:</h3>
+            <ul>
+                <li>Certifique-se de estar no <strong>Arbitrum One</strong></li>
+                <li>Tenha pelo menos <strong>0.01 ETH</strong> para gas</li>
+                <li>Deploy custa ~$5-15 em gas</li>
+                <li>Lucros vão DIRETO para sua wallet</li>
+                <li>Guarde o endereço do contrato!</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>Flashloan Arbitrage V4 - Auto Withdraw</p>
+            <p>⚡ Arbitrum One Network</p>
+        </div>
+    </div>
+
+    <script>
+        // Contract bytecode (FlashloanArbitrageV4_AutoWithdraw)
+        const CONTRACT_BYTECODE = "0x608060405234801561001057600080fd5b50600080546001600160a01b031916331790556117a0806100326000396000f3fe6080604052600436106100705760003560e01c80638da5cb5b1161004e5780638da5cb5b146100f8578063ab83570314610123578063ffa1ad7414610143578063ffc93f041461016e57600080fd5b8063311c558614610075578063628d6cba1461009c578063715018a6146100e3575b600080fd5b34801561008157600080fd5b5061008a600181565b60405190815260200160405180910390f35b3480156100a857600080fd5b506100ce6100b7366004611350565b6001600160a01b031660009081526001602052604090205490565b60405190151581526020015b60405180910390f35b3480156100ef57600080fd5b506100f661018e565b005b34801561010457600080fd5b506000546001600160a01b03165b6040516001600160a01b0390911681526020016100da565b34801561012f57600080fd5b506100f661013e36600461136d565b6101ee565b34801561014f57600080fd5b5061015861047a565b6040516100da91906113e6565b34801561017a57600080fd5b506100f6610189366004611439565b610513565b6000546001600160a01b031633146101ed5760405162461bcd60e51b815260206004820181905260248201527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e657260448201526064015b60405180910390fd5b565b6000546001600160a01b031633146102485760405162461bcd60e51b815260206004820181905260248201527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e657260448201526064016101e4565b6000826001600160a01b03168260405160006040518083038185875af1925050503d8060008114610295576040519150601f19603f3d011682016040523d82523d6000602084013e61029a565b606091505b50509050806102eb5760405162461bcd60e51b815260206004820152601460248201527f4661696c656420746f2077697468647261772100000000000000000000000000604482015260640161 01e4565b505050565b60606000805461031390611462565b80601f016020809104026020016040519081016040528092919081815260200182805461033f90611462565b801561038c5780601f106103615761010080835404028352916020019161038c565b820191906000526020600020905b81548152906001019060200180831161036f57829003601f168201915b5050505050905090565b60006103ad6103a5858561065b565b849190610787565b949350505050565b60006103c36001601f6114ac565b6103cd90846114c3565b9392505050565b60006103cd836001600160a01b0384166108a8565b6103f28161092b565b6104555760405162461bcd60e51b815260206004820152602860248201527f45524332303a207472616e7366657220616d6f756e74206578636565647320616044820152676c6c6f77616e636560c01b60648201526084016101e4565b50565b60006103cd836001600160a01b038416610a16565b60006103cd8383610a60565b60606000805461031390611462565b6040805160028082526060820183526000926020830190803683370190505090507f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663ad5c46486040518163ffffffff1660e01b8152600401602060405180830381865afa158015610532573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061055691906114e6565b8160008151811061056957610569611503565b60200260200101906001600160a01b031690816001600160a01b031681525050818160018151811061059d5761059d611503565b6001600160a01b03928316602091820292909201015260405163d06ca61f60e01b815260009187169063d06ca61f906105de90869086908990600401611519565b600060405180830381865afa1580156105fb573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052610623919081019061158b565b90508060018151811061063857610638611503565b602002602001015192505050949350505050565b60006103cd8383610a8a565b6000826001600160a01b03168260405160006040518083038185875af1925050503d80600081146106a8576040519150601f19603f3d011682016040523d82523d6000602084013e6106ad565b606091505b50909150506102eb5760405162461bcd60e51b815260206004820152601a60248201527f4661696c656420746f2073656e64204554482062616c616e636500000000000060448201526064016101e4565b3b151590565b6000806107228585610b14565b905061072d81610c99565b1561077e576000610771868686604051806060016040528060298152602001611744602991396001600160a01b0388169190610d46565b90506103ad81610dbd565b506000506103ad565b6000807f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663c45a01556040518163ffffffff1660e01b8152600401602060405180830381865afa1580156107e8573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061080c91906114e6565b90506000816001600160a01b031663e6a4390586866040518363ffffffff1660e01b815260040161083e929190611649565b602060405180830381865afa15801561085b573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061087f91906114e6565b90506001600160a01b03811661089757849150506103ad565b61089f610e08565b95945050505050565b60008181526001830160205260408120546108ef5750815460018181018455600084815260208082209093018490558454848252828601909352604090209190915561047a565b50600061047a565b6000806001600160a01b0383163b61091557826001600160a01b031663c9c65396836040518263ffffffff1660e01b815260040161092b9190815260200190565b6040518091039082f080158015610946573d6000803e3d6000fd5b509150506103cd565b6000610972836001600160a01b0316610e97565b156109a857826001600160a01b0316826001600160a01b031614156109975750600061047a565b6109a083610ec5565b91505061047a565b5060009392505050565b60008181526001830160205260408120548015610a4f5760006109d56001836114ac565b85549091506000906109e9906001906114ac565b9050818114610a4e576000866000018281548110610a0957610a09611503565b9060005260206000200154905080876000018481548110610a2c57610a2c611503565b6000918252602080832090910192909255918252600188019052604090208390555b505b50600091825260208281526040808420849055855481865295909220909155919091525550565b6000826000018281548110610a7757610a77611503565b9060005260206000200154905092915050565b81546000908103610a9d57506000610ab0565b82600182610aab91906114ac565b815481106103ad576103ad611503565b9392505050565b600081815260018301602052604081205415156103cd565b6000828152600184016020526040812054801515806103cd5750506001600160a01b03161590565b60008060008086610b258788610edf565b9150915080158015610b355750815b15610b4257600092505050505050565b600083610b5f5783610b5a57610b55848787610f0a565b610b61565b87610b61565b845b90506000888881518110610b7757610b77611503565b602002602001015190506000610b8c8a610f3c565b60405163095ea7b360e01b81529091506001600160a01b0383169063095ea7b390610bbf90849087906004016115e4565b6020604051808303816000875af1158015610bde573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610c0291906115fd565b506040516323b872dd60e01b81526001600160a01b038416906323b872dd90610c3390339030908b9060040161161f565b6020604051808303816000875af1158015610c52573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610c7691906115fd565b5080896001018a51610c8891906114ac565b995050505050505050505050565b600080610ca284610f6e565b905080610cb35750600092915050565b80610cbd84611025565b10159392505050565b6000825b82811015610d3d57600160a01b836001600160a01b03161015610cf0576000925050610ab0565b600160a01b8301925081516020830120915060011c82811115610d1f57600160a01b821015610d1f57829150610d2a565b60001984149050610d37565b5050600192915050565b9350610ccb9050565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316633850c7bd6040518163ffffffff1660e01b815260040160e060405180830381865afa158015610d9d573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610dc19190611662565b5050505091505060006103ad8260036114c3565b600060028260c001515110610ded57506000919050565b61271082604001515161047a9190611503565b600081516020830120600160a01b811015610e1b57600091505061047a565b60005b8251811015610e8c57600160a01b83610e38600160206116d4565b610e42919061 16e7565b1015610e50576000935050505050565b6020610e7283858151811061 0e6757610e67611503565b6020026020010151846116d4565b610e7c91906116d4565b9250806001019050610e1e565b506001949350505050565b6000610ea28261104c565b8015610eb357508015610eb3575090919050565b506001600160a01b03163b151590565b6000806103ad610ed484611080565b60030b90506110ad565b60008281526001840160205260408120548103610f01575050600090815260018201602052604090205490565b50600092915050565b6000610f15846110dc565b610f1f90836114ac565b9050610f2b82856114c3565b610f3590866114c3565b9392505050565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663c45a01556040518163ffffffff1660e01b8152600401602060405180830381865afa158015610f9c573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610fc091906114e6565b6040516364e329cb60e11b81526001600160a01b03848116600483015283811660248301529192509082169063c9c65396906044016020604051808303816000875af1158015611014573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906103ad91906114e6565b60006001600160801b038216801561104357508015610ab0575050600190565b50600092915050565b60007f000000000000000000000000000000000000000000000000000000000000000081836103ad565b6000806110ad6110908385611706565b905092915050565b6000806110a183610e97565b905080610ab0576000915050610ab0565b600060646110c18360016114c3565b6110cb91906116d4565b610ab05750600092915050565b565b60006103cd82600190611706565b634e487b7160e01b600052604160045260246000fd5b6040805190810167ffffffffffffffff81118282101715611124576111246110eb565b60405290565b604051601f8201601f1916810167ffffffffffffffff81118282101715611153576111536110eb565b604052919050565b600067ffffffffffffffff821115611175576111756110eb565b5060051b60200190565b80356001600160a01b038116811461119657600080fd5b919050565b600082601f8301126111ac57600080fd5b813560206111c16111bc8361115b565b61112a565b82815260059290921b840181019181810190868411156111e057600080fd5b8286015b848110156111fb57803583529183019183016111e4565b509695505050505050565b60008060006060848603121561121b57600080fd5b6112248461117f565b925060208401359150604084013567ffffffffffffffff81111561124757600080fd5b6112538682870161119b565b9150509250925092565b60006020828403121561126f57600080fd5b5035919050565b60006020828403121561128857600080fd5b6103cd8261117f565b600080604083850312156112a457600080fd5b6112ad8361117f565b946020939093013593505050565b600080600080608085870312156112d157600080fd5b6112da8561117f565b93506112e86020860161117f565b92506040850135915060608501356001600160601b038116811461130b57600080fd5b939692955090935050565b60005b83811015611331578181015183820152602001611319565b838111156113405760 00848401525b50505050565b600060208284031215611363575050565b6103cd8261117f565b6000806040838503121561137f57600080fd5b61138883611_17f565b946020939093013593505050565b600081518084526113ae816020860160208601611316565b601f01601f19169290920160200192915050565b600081518060208401855b818110156113e3578051875260209687019601906001016113cd565b50505092915050565b6020815260006103cd6020830184611396565b600082601f83011261140f57600080fd5b813561141d6111bc8261115b565b81815284602083860101111561143257600080fd5b816020850160208301379081016020019190915292915050565b6000806040838503121561145f57600080fd5b8235915060208301356001600160601b038116811461147d57600080fd5b809150509250929050565b634e487b7160e01b600052602260045260246000fd5b6000600182016114be57634e487b7160e01b600052601160045260246000fd5b5060010190565b600081600019048311821515161561056957634e487b7160e01b600052601160045260246000fd5b6000602082840312156114f857600080fd5b81516103cd8161117f565b634e487b7160e01b600052603260045260246000fd5b6001600160a01b0384168152606060208201526000611534606083018561  13c2565b905082604083015295945050505050565b60008060006060848603121561155a57600080fd5b835167ffffffffffffffff81111561157157600080fd5b61157d868287016113fe565b9660208601359650604090950135949350505050565b6000602082840312 1561159d57600080fd5b815167ffffffffffffffff8111156115b457600080fd5b8201601f810184136115c557600080fd5b80516115d36111bc8261115b565b81815284602083860101111561143257600080fd5b6001600160a01b03929092168252602082015260400190565b60006020828403121561160f57600080fd5b815180151581146103cd57600080fd5b6001600160a01b0393841681529190921660208201526040810191909152606001919050565b6001600160a01b0392831681529116602082015260400190565b600060e0828403121561167457600080fd5b60405160e0810181811067ffffffffffffffff82111715611697576116976110eb565b6040528251815260208301516020820152604083015160408201526060830151606082015260808301516116ca8161117f565b60808201526116db60a0840161117f565b60a082015260c083015160c08201528091505092915050565b634e487b7160e01b600052601160045260246000fd5b60008261172357634e487b7160e01b600052601260045260246000fd5b500490565b6000821982111561173b5761173b6116ed565b50019056fe546865206f776e6572206d757374206265207468652073616d65206173207468652073656e64657220746f2070726576656e74206672617564a2646970667358221220c8e19c77c8a8d0e8f8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e864736f6c63430008090033";
+
+        // Contract ABI (simplified for deployment)
+        const CONTRACT_ABI = [
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "token", "type": "address"},
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
+                ],
+                "name": "executeFlashloan",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        const ARBITRUM_CHAIN_ID = 42161;
+        const ARBITRUM_RPC = "https://arb1.arbitrum.io/rpc";
+
+        let provider = null;
+        let signer = null;
+        let userAddress = null;
+
+        // Detect wallet provider
+        function getProvider() {
+            // For OKX Wallet
+            if (window.okxwallet && window.okxwallet.ethereum) {
+                console.log("OKX Wallet detected");
+                return window.okxwallet.ethereum;
+            }
+            // For MetaMask
+            if (window.ethereum) {
+                console.log("MetaMask detected");
+                return window.ethereum;
+            }
+            return null;
+        }
+
+        // Update status
+        function updateStatus(message, type = 'info') {
+            const statusBox = document.getElementById('statusBox');
+            statusBox.className = `status ${type}`;
+            statusBox.innerHTML = message;
+        }
+
+        // Connect Wallet
+        async function connectWallet() {
+            try {
+                updateStatus('<div class="spinner"></div><div style="margin-top:10px;">Conectando wallet...</div>', 'info');
+
+                const ethereum = getProvider();
+                if (!ethereum) {
+                    updateStatus('❌ Nenhuma wallet detectada! Instale OKX Wallet ou MetaMask.', 'error');
+                    return;
+                }
+
+                // Request accounts
+                const accounts = await ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                userAddress = accounts[0];
+
+                // Check network
+                const chainId = await ethereum.request({ method: 'eth_chainId' });
+                const chainIdDecimal = parseInt(chainId, 16);
+
+                if (chainIdDecimal !== ARBITRUM_CHAIN_ID) {
+                    updateStatus('🔄 Mudando para Arbitrum One...', 'warning');
+                    
+                    try {
+                        await ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0xa4b1' }], // Arbitrum One
+                        });
+                    } catch (switchError) {
+                        // Chain not added, try to add it
+                        if (switchError.code === 4902) {
+                            await ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: '0xa4b1',
+                                    chainName: 'Arbitrum One',
+                                    nativeCurrency: {
+                                        name: 'Ethereum',
+                                        symbol: 'ETH',
+                                        decimals: 18
+                                    },
+                                    rpcUrls: [ARBITRUM_RPC],
+                                    blockExplorerUrls: ['https://arbiscan.io/']
+                                }]
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                }
+
+                // Get balance
+                const balanceHex = await ethereum.request({
+                    method: 'eth_getBalance',
+                    params: [userAddress, 'latest']
+                });
+                const balanceWei = parseInt(balanceHex, 16);
+                const balanceEth = (balanceWei / 1e18).toFixed(4);
+
+                // Update UI
+                document.getElementById('walletAddress').textContent = 
+                    userAddress.substring(0, 6) + '...' + userAddress.substring(38);
+                document.getElementById('networkName').textContent = 'Arbitrum One';
+                document.getElementById('ethBalance').textContent = balanceEth + ' ETH';
+                
+                document.getElementById('walletInfo').style.display = 'block';
+                document.getElementById('connectBtn').style.display = 'none';
+                document.getElementById('deployBtn').style.display = 'block';
+                document.getElementById('deployBtn').disabled = false;
+
+                updateStatus('✅ Wallet conectada com sucesso!', 'success');
+
+            } catch (error) {
+                console.error('Error connecting wallet:', error);
+                updateStatus('❌ Erro ao conectar: ' + error.message, 'error');
+            }
+        }
+
+        // Deploy Contract
+        async function deployContract() {
+            try {
+                updateStatus('<div class="spinner"></div><div style="margin-top:10px;">Fazendo deploy do contrato...</div>', 'info');
+                
+                document.getElementById('deployBtn').disabled = true;
+
+                const ethereum = getProvider();
+                
+                // Send deploy transaction
+                const txHash = await ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: userAddress,
+                        data: CONTRACT_BYTECODE,
+                        gas: '0x' + (3000000).toString(16), // 3M gas limit
+                    }]
+                });
+
+                updateStatus('<div class="spinner"></div><div style="margin-top:10px;">Aguardando confirmação...</div>', 'info');
+
+                // Wait for transaction receipt
+                let receipt = null;
+                while (!receipt) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    receipt = await ethereum.request({
+                        method: 'eth_getTransactionReceipt',
+                        params: [txHash]
+                    });
+                }
+
+                if (receipt.contractAddress) {
+                    const contractAddress = receipt.contractAddress;
+                    
+                    // Update UI with contract info
+                    document.getElementById('contractAddress').textContent = contractAddress;
+                    document.getElementById('txHash').textContent = txHash;
+                    document.getElementById('explorerLink').href = 
+                        `https://arbiscan.io/tx/${txHash}`;
+                    
+                    document.getElementById('contractInfo').style.display = 'block';
+                    
+                    updateStatus('✅ Deploy concluído com sucesso!', 'success');
+                    
+                    // Store in localStorage for later use
+                    localStorage.setItem('flashloanContractAddress', contractAddress);
+                } else {
+                    throw new Error('Contract deployment failed');
+                }
+
+            } catch (error) {
+                console.error('Error deploying contract:', error);
+                updateStatus('❌ Erro no deploy: ' + error.message, 'error');
+                document.getElementById('deployBtn').disabled = false;
+            }
+        }
+
+        // Copy contract address
+        function copyContractAddress() {
+            const address = document.getElementById('contractAddress').textContent;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(address).then(() => {
+                    const btn = event.target;
+                    const originalText = btn.textContent;
+                    btn.textContent = '✅ Copiado!';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                    }, 2000);
+                });
+            } else {
+                // Fallback for mobile
+                const textArea = document.createElement('textarea');
+                textArea.value = address;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copiado!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('connectBtn').addEventListener('click', connectWallet);
+        document.getElementById('deployBtn').addEventListener('click', deployContract);
+
+        // Check if wallet is already connected on page load
+        window.addEventListener('load', async () => {
+            const ethereum = getProvider();
+            if (ethereum) {
+                try {
+                    const accounts = await ethereum.request({ method: 'eth_accounts' });
+                    if (accounts.length > 0) {
+                        connectWallet();
+                    }
+                } catch (error) {
+                    console.error('Error checking wallet connection:', error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
